@@ -325,11 +325,10 @@ class RejectedQuestion(db.Model):
     __tablename__ = "rejected_questions"
 
     id = db.Column(db.Integer, primary_key=True)
-    response_id = db.Column(db.Integer, db.ForeignKey("questionnaire_responses.id"), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     lead_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    question_text = db.Column(db.Text, nullable=False)  # Store question text directly
     reason = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending")  # pending, resolved, cancelled
     new_option = db.Column(db.String(200))
@@ -337,15 +336,12 @@ class RejectedQuestion(db.Model):
     resolved_at = db.Column(db.DateTime)
 
     # Relationships
-    response = db.relationship("QuestionnaireResponse", backref="rejected_questions")
     product = db.relationship("Product", backref="rejected_questions")
     user = db.relationship("User", foreign_keys=[user_id], backref="rejected_questions_as_client")
     lead = db.relationship("User", foreign_keys=[lead_id], backref="rejected_questions_as_lead")
 
     def __repr__(self):
-        return f"<RejectedQuestion {self.id}: {self.question_text[:50]}... by U{self.user_id}>"
-
-
+        return f"<RejectedQuestion {self.id}: Q{self.question_id} by U{self.user_id}>"
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -1314,19 +1310,7 @@ def dashboard():
         # Get unread comments count for this client
         unread_comments = LeadComment.query.filter_by(client_id=user_id, is_read=False).count()
 
-                # Get rejected questions for this client
-        rejected_questions = []
-        for product in products:
-            product_rejected = db.session.query(RejectedQuestion, QuestionnaireResponse).join(
-                QuestionnaireResponse, RejectedQuestion.response_id == QuestionnaireResponse.id
-            ).filter(
-                RejectedQuestion.user_id == user_id,
-                RejectedQuestion.product_id == product.id,
-                RejectedQuestion.status == 'pending'
-            ).all()
-            rejected_questions.extend(product_rejected)
-
-        return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments, rejected_questions=rejected_questions)
+        return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments)
     elif role == 'lead':
         # Get the current lead user to check their assigned client
         current_lead = User.query.get(user_id)
@@ -1750,14 +1734,6 @@ def product_results(product_id):
                 print(f"Error serializing response: {e}")
                 continue
         
-        # Calculate dimension-wise results from subdimension scores
-        try:
-            from ring_heatmap_implementation import get_dimension_wise_results
-            dimension_results = get_dimension_wise_results(subdimension_scores)
-        except Exception as e:
-            print(f'Error calculating dimension-wise results: {e}')
-            dimension_results = {}
-
         # Ensure all template variables are properly defined
         template_vars = {
             'product': product,
@@ -1766,7 +1742,6 @@ def product_results(product_id):
             'maturity_score': maturity_score,
             'dimension_scores': dimension_scores,  # Keep for backward compatibility
             'subdimension_scores': subdimension_scores,  # New sub-dimension scores
-            'dimension_results': dimension_results,  # New dimension-wise results
             'section_dimensions': section_dimensions,
             'heatmap_data': heatmap_data
         }
@@ -2221,23 +2196,13 @@ def admin_product_results(product_id):
         db.joinedload(LeadComment.lead)
     ).filter_by(product_id=product_id, client_id=owner.id).order_by(LeadComment.created_at.desc()).all()
     
-    # Calculate dimension-wise results from subdimension scores
-    try:
-        from ring_heatmap_implementation import get_dimension_wise_results
-        dimension_results = get_dimension_wise_results(subdimension_scores)
-    except Exception as e:
-        print(f'Error calculating dimension-wise results: {e}')
-        dimension_results = {}
-
     return render_template('product_results.html', 
                          responses=responses_data, 
                          lead_comments=lead_comments,
                          overall_score=overall_score,
-                         maturity_score=max(1, min(5, round(overall_score))) if overall_score and overall_score > 0 else 1,
                          maturity_level=maturity_level,
                          section_data=section_data,
                          subdimension_scores=subdimension_scores,
-                         dimension_results=dimension_results,
                          heatmap_data=heatmap_data,
                          ringwise_heatmap_data=ringwise_heatmap_data,
                          product=product,
@@ -2889,122 +2854,6 @@ def reply_to_conversation(comment_id):
     
     flash('Reply sent successfully.', 'success')
     return redirect(url_for('unified_communication', product_id=parent_comment.product_id))
-
-
-# Rejected Questions Routes
-@app.route("/reject_question", methods=["POST"])
-@login_required()
-def reject_question():
-    """Lead rejects a question and sends it back to client"""
-    if session.get("role") != "lead":
-        return jsonify({"error": "Unauthorized"}), 403
-    
-    data = request.get_json()
-    question_id = data.get("question_id")
-    product_id = data.get("product_id")
-    user_id = data.get("user_id")
-    reason = data.get("reason", "")
-    
-    try:
-        # Get the response to get question text
-        response = QuestionnaireResponse.query.get(question_id)  # question_id is actually response_id
-        if not response:
-            return jsonify({"error": "Response not found"}), 404
-            
-        # Create rejected question entry
-        rejected_question = RejectedQuestion(
-            response_id=question_id,  # question_id is actually response_id
-            product_id=product_id,
-            user_id=user_id,
-            lead_id=session["user_id"],
-            question_text=response.question,
-            reason=reason,
-            status="pending",
-            created_at=datetime.now(timezone.utc)
-        )
-        
-        db.session.add(rejected_question)
-        db.session.commit()
-        
-        return jsonify({"success": True, "message": "Question sent back to client for revision"})
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/submit_rejected_question_response", methods=["POST"])
-@login_required()
-def submit_rejected_question_response():
-    """Client submits updated response for rejected question"""
-    if session.get("role") != "client":
-        return jsonify({"error": "Unauthorized"}), 403
-    
-    data = request.get_json()
-    rejected_question_id = data.get("rejected_question_id")
-    new_option = data.get("new_option")
-    
-    try:
-        # Get the rejected question
-        rejected_question = RejectedQuestion.query.get(rejected_question_id)
-        if not rejected_question or rejected_question.user_id != session["user_id"]:
-            return jsonify({"error": "Invalid request"}), 400
-        
-        # Update the original response
-        response = QuestionnaireResponse.query.get(rejected_question.response_id)
-        
-        if response:
-            response.answer = new_option
-            response.updated_at = datetime.now(timezone.utc)
-        
-        # Mark rejected question as resolved
-        rejected_question.status = "resolved"
-        rejected_question.new_option = new_option
-        rejected_question.resolved_at = datetime.now(timezone.utc)
-        
-        db.session.commit()
-        
-        # Recalculate scores
-        try:
-            from ring_heatmap_implementation import RejectedQuestionsManager
-            rq_manager = RejectedQuestionsManager(db)
-            scores = rq_manager.recalculate_scores_after_update(
-                rejected_question.product_id, 
-                session["user_id"]
-            )
-        except Exception as score_error:
-            print(f"Error recalculating scores: {score_error}")
-            scores = None
-        
-        return jsonify({
-            "success": True, 
-            "message": "Response updated successfully",
-            "scores": scores
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/get_rejected_questions/<int:product_id>")
-@login_required()
-def get_rejected_questions(product_id):
-    """Get rejected questions for current user and product"""
-    try:
-        rejected_questions = db.session.query(RejectedQuestion, QuestionnaireResponse).join(
-            QuestionnaireResponse, RejectedQuestion.response_id == QuestionnaireResponse.id
-        ).filter(
-            RejectedQuestion.user_id == session["user_id"],
-            RejectedQuestion.product_id == product_id,
-            RejectedQuestion.status == "pending"
-        ).all()
-        
-        return render_template("dashboard_client.html", 
-                             rejected_questions=rejected_questions,
-                             product_id=product_id)
-        
-    except Exception as e:
-        flash(f"Error loading rejected questions: {str(e)}", "error")
-        return redirect(url_for("dashboard_client"))
 
 if __name__ == '__main__':
     print("🚀 Starting SecureSphere Application")

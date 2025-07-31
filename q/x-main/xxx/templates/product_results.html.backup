@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}Security Assessment Results - SecureSphere{% endblock %}
-<!-- This template is used for both client and admin views, showing maturity scores (1-5 scale) only -->
 
 {% block content %}
 <div class="dashboard-header text-center mb-4">
@@ -121,55 +120,20 @@
                     </div>
                 </div>
 
-                <!-- 5-Level Ring-based Heatmap Visualization -->
+                <!-- Circular Heatmap Visualization -->
                 {% if subdimension_scores %}
-                <div class="ring-heatmap-container mb-4">
+                <div class="circular-heatmap-container mb-4">
                     <h6 class="text-muted mb-3">
-                        <i class="bi bi-bullseye me-2"></i>5-Level Ring Security Maturity Heatmap
+                        <i class="bi bi-circle me-2"></i>Circular Security Sub-Dimension Heatmap
                     </h6>
                     <div class="row">
                         <div class="col-lg-8">
-                            <div class="ring-heatmap-wrapper">
-                                <svg id="ringHeatmap" viewBox="0 0 500 500" class="ring-heatmap-svg">
-                                </svg>
-                            </div>
+                            <div id="circularHeatmap" class="circular-heatmap"></div>
                         </div>
                         <div class="col-lg-4">
-                            <div class="ring-legend">
-                                <h6 class="mb-3">Maturity Levels</h6>
-                                <div class="legend-items">
-                                    <div class="legend-item">
-                                        <div class="legend-color level-1"></div>
-                                        <span>Level 1 - Initial</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-2"></div>
-                                        <span>Level 2 - Developing</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-3"></div>
-                                        <span>Level 3 - Defined</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-4"></div>
-                                        <span>Level 4 - Managed</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-5"></div>
-                                        <span>Level 5 - Optimized</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="dimension-labels mt-4">
-                                    <h6 class="mb-3">Dimensions</h6>
-                                    {% for dimension, data in subdimension_scores.items() %}
-                                    <div class="dimension-label-item mb-2">
-                                        <div class="dimension-color level-{{ data.average_score|round|int }}"></div>
-                                        <span class="dimension-name">{{ dimension }}</span>
-                                        <span class="dimension-score">{{ data.average_score|round(1) }}</span>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+                            <div class="dimension-legend">
+                                <h6 class="mb-3">Security Sub-Dimensions</h6>
+                                <div id="dimensionLegend" class="dimension-legend-items"></div>
                             </div>
                         </div>
                     </div>
@@ -221,42 +185,44 @@
                 </div>
                 {% endif %}
                 
-                <!-- Dimension-wise Results Display -->
-                <div class="dimension-results-container" id="dimensionResults">
+                <!-- Traditional Heatmap Grid -->
+                <div class="heatmap-container" id="traditionalHeatmap">
                     <h6 class="text-muted mb-3">
-                        <i class="bi bi-grid-3x2-gap me-2"></i>Security Dimensions Overview
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Sub-Dimension Maturity Grid
                     </h6>
                     <div class="row">
-                        {% for dimension, data in dimension_results.items() %}
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="dimension-card">
-                                <div class="dimension-header">
-                                    <h6 class="dimension-title">{{ dimension }}</h6>
-                                    <div class="dimension-score-badge level-{{ data.average_score|round|int }}">
-                                        {{ data.average_score|round(1) }}
+                        {% for subdimension, score_data in subdimension_scores.items() %}
+                        <div class="col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <div class="heatmap-cell level-{{ score_data.average_score|round|int }}" 
+                                 data-bs-toggle="tooltip" 
+                                 data-bs-placement="top" 
+                                 title="{{ subdimension }}: {{ score_data.average_score }}/5 ({{ score_data.question_count }} questions)">
+                                <div class="cell-header">
+                                    <h6 class="dimension-title">{{ subdimension }}</h6>
+                                    <span class="maturity-level">Level {{ score_data.average_score|round|int }}</span>
+                                </div>
+                                <div class="cell-body">
+                                    <div class="score-display">{{ score_data.average_score }}/5</div>
+                                    <div class="questions-count">{{ score_data.question_count }} questions</div>
+                                </div>
+                                <div class="cell-progress">
+                                    <div class="progress">
+                                        <div class="progress-bar level-{{ score_data.average_score|round|int }}-bg" 
+                                             style="width: {{ (score_data.average_score / 5 * 100)|round }}%"></div>
                                     </div>
                                 </div>
-                                <div class="dimension-details">
-                                    <div class="subdimensions-count">
-                                        {{ data.count }} Sub-dimensions
-                                    </div>
-                                    <div class="progress mt-2">
-                                        <div class="progress-bar level-{{ data.average_score|round|int }}" 
-                                             style="width: {{ (data.average_score / 5 * 100)|round }}%">
-                                        </div>
-                                    </div>
-                                    <div class="subdimensions-list mt-2">
-                                        {% for subdim in data.subdimensions %}
-                                        <small class="d-block text-muted">{{ subdim.name }}: {{ subdim.score|round(1) }}</small>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
+                                <div class="cell-footer">
+                                    <small class="improvement-indicator">
+                                        {% set level = score_data.average_score|round|int %}
+                                        {% if level >= 4 %}
+                                            <i class="bi bi-check-circle text-success"></i> Excellent
+                                        {% elif level == 3 %}
+                                            <i class="bi bi-shield-check text-info"></i> Good
+                                        {% elif level == 2 %}
+                                            <i class="bi bi-exclamation-triangle text-warning"></i> Needs Work
+                                        {% else %}
+                                            <i class="bi bi-x-circle text-danger"></i> Critical
+                                        {% endif %}
                                     </small>
                                 </div>
                             </div>
@@ -1866,165 +1832,6 @@ window.addEventListener('resize', function() {
     setTimeout(() => {
         createCircularHeatmap();
     }, 250);
-    {% endif %}
-});
-
-
-// Ring Heatmap JavaScript Functions
-
-// Ring Heatmap Visualization
-function generateRingHeatmap(subdimensionScores) {
-    const svg = document.getElementById('ringHeatmap');
-    const centerX = 250;
-    const centerY = 250;
-    const innerRadius = 50;
-    const ringWidth = 35;
-    
-    // Clear existing content
-    svg.innerHTML = '';
-    
-    // Group dimensions by level
-    const dimensionsByLevel = {1: [], 2: [], 3: [], 4: [], 5: []};
-    
-    Object.entries(subdimensionScores).forEach(([dimension, data]) => {
-        const level = Math.max(1, Math.min(5, Math.round(data.average_score)));
-        dimensionsByLevel[level].push({
-            name: dimension,
-            score: data.average_score,
-            level: level
-        });
-    });
-    
-    // Colors for each level
-    const colors = {
-        1: '#ff4444',
-        2: '#ff8800', 
-        3: '#ffcc00',
-        4: '#88cc00',
-        5: '#44cc44'
-    };
-    
-    // Generate rings
-    for (let level = 1; level <= 5; level++) {
-        const dimensions = dimensionsByLevel[level];
-        const ringRadius = innerRadius + (level - 1) * ringWidth;
-        const outerRadius = ringRadius + ringWidth;
-        
-        if (dimensions.length > 0) {
-            const anglePerSegment = (2 * Math.PI) / dimensions.length;
-            
-            dimensions.forEach((dimension, index) => {
-                const startAngle = index * anglePerSegment - Math.PI / 2;
-                const endAngle = (index + 1) * anglePerSegment - Math.PI / 2;
-                
-                // Create path for ring segment
-                const path = createRingSegmentPath(centerX, centerY, ringRadius, outerRadius, startAngle, endAngle);
-                
-                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                pathElement.setAttribute('d', path);
-                pathElement.setAttribute('fill', colors[level]);
-                pathElement.setAttribute('class', 'ring-segment');
-                pathElement.setAttribute('data-dimension', dimension.name);
-                pathElement.setAttribute('data-score', dimension.score);
-                pathElement.setAttribute('data-level', level);
-                
-                // Add tooltip
-                pathElement.addEventListener('mouseenter', function(e) {
-                    showRingTooltip(e, dimension.name, dimension.score, level);
-                });
-                
-                pathElement.addEventListener('mouseleave', hideRingTooltip);
-                
-                svg.appendChild(pathElement);
-            });
-        } else {
-            // Create empty ring
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', centerX);
-            circle.setAttribute('cy', centerY);
-            circle.setAttribute('r', ringRadius + ringWidth/2);
-            circle.setAttribute('fill', 'none');
-            circle.setAttribute('stroke', '#e9ecef');
-            circle.setAttribute('stroke-width', ringWidth);
-            svg.appendChild(circle);
-        }
-    }
-    
-    // Add center circle
-    const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    centerCircle.setAttribute('cx', centerX);
-    centerCircle.setAttribute('cy', centerY);
-    centerCircle.setAttribute('r', innerRadius);
-    centerCircle.setAttribute('fill', '#f8f9fa');
-    centerCircle.setAttribute('stroke', '#dee2e6');
-    centerCircle.setAttribute('stroke-width', '2');
-    svg.appendChild(centerCircle);
-    
-    // Add center text
-    const overallScore = Math.round(Object.values(subdimensionScores).reduce((sum, data) => sum + data.average_score, 0) / Object.keys(subdimensionScores).length);
-    
-    const scoreText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    scoreText.setAttribute('x', centerX);
-    scoreText.setAttribute('y', centerY - 5);
-    scoreText.setAttribute('text-anchor', 'middle');
-    scoreText.setAttribute('class', 'center-score-number');
-    scoreText.textContent = overallScore;
-    svg.appendChild(scoreText);
-    
-    const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    labelText.setAttribute('x', centerX);
-    labelText.setAttribute('y', centerY + 15);
-    labelText.setAttribute('text-anchor', 'middle');
-    labelText.setAttribute('class', 'center-score-label');
-    labelText.textContent = 'Overall';
-    svg.appendChild(labelText);
-}
-
-function createRingSegmentPath(centerX, centerY, innerRadius, outerRadius, startAngle, endAngle) {
-    const x1 = centerX + innerRadius * Math.cos(startAngle);
-    const y1 = centerY + innerRadius * Math.sin(startAngle);
-    const x2 = centerX + outerRadius * Math.cos(startAngle);
-    const y2 = centerY + outerRadius * Math.sin(startAngle);
-    const x3 = centerX + outerRadius * Math.cos(endAngle);
-    const y3 = centerY + outerRadius * Math.sin(endAngle);
-    const x4 = centerX + innerRadius * Math.cos(endAngle);
-    const y4 = centerY + innerRadius * Math.sin(endAngle);
-    
-    const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
-    
-    return 'M ' + x1 + ' ' + y1 + ' L ' + x2 + ' ' + y2 + ' A ' + outerRadius + ' ' + outerRadius + ' 0 ' + largeArcFlag + ' 1 ' + x3 + ' ' + y3 + ' L ' + x4 + ' ' + y4 + ' A ' + innerRadius + ' ' + innerRadius + ' 0 ' + largeArcFlag + ' 0 ' + x1 + ' ' + y1 + ' Z';
-}
-
-function showRingTooltip(event, dimension, score, level) {
-    const tooltip = document.createElement('div');
-    tooltip.className = 'ring-heatmap-tooltip';
-    tooltip.innerHTML = '<strong>' + dimension + '</strong><br>Score: ' + score.toFixed(1) + '<br>Level: ' + level;
-    tooltip.style.position = 'absolute';
-    tooltip.style.background = 'rgba(0,0,0,0.8)';
-    tooltip.style.color = 'white';
-    tooltip.style.padding = '8px 12px';
-    tooltip.style.borderRadius = '4px';
-    tooltip.style.fontSize = '12px';
-    tooltip.style.pointerEvents = 'none';
-    tooltip.style.zIndex = '1000';
-    tooltip.style.left = event.pageX + 10 + 'px';
-    tooltip.style.top = event.pageY - 30 + 'px';
-    
-    document.body.appendChild(tooltip);
-}
-
-function hideRingTooltip() {
-    const tooltip = document.querySelector('.ring-heatmap-tooltip');
-    if (tooltip) {
-        tooltip.remove();
-    }
-}
-
-// Initialize ring heatmap when page loads
-document.addEventListener("DOMContentLoaded", function() {
-    {% if subdimension_scores %}
-    const subdimensionScores = {{ subdimension_scores|tojson|safe }};
-    generateRingHeatmap(subdimensionScores);
     {% endif %}
 });
 </script>

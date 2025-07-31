@@ -72,14 +72,22 @@ class RejectedQuestionsManager:
     def create_rejected_question_entry(self, question_id, product_id, user_id, lead_id, reason=""):
         """Create a new rejected question entry"""
         try:
-            # Check if RejectedQuestion model exists, if not we'll need to create it
+            # Import here to avoid circular imports
             from app import RejectedQuestion
             
+            # Get the response to get question text
+            from app import QuestionnaireResponse
+            response = QuestionnaireResponse.query.get(question_id)  # question_id is actually response_id
+            if not response:
+                print('Response not found for question_id:', question_id)
+                return None
+                
             rejected_question = RejectedQuestion(
-                question_id=question_id,
+                response_id=question_id,  # question_id is actually response_id
                 product_id=product_id,
                 user_id=user_id,
                 lead_id=lead_id,
+                question_text=response.question,
                 reason=reason,
                 status='pending',
                 created_at=datetime.utcnow()
@@ -98,8 +106,9 @@ class RejectedQuestionsManager:
         try:
             from app import RejectedQuestion, Question
             
-            rejected_questions = self.db.session.query(RejectedQuestion, Question).join(
-                Question, RejectedQuestion.question_id == Question.id
+            from app import QuestionnaireResponse
+            rejected_questions = self.db.session.query(RejectedQuestion, QuestionnaireResponse).join(
+                QuestionnaireResponse, RejectedQuestion.response_id == QuestionnaireResponse.id
             ).filter(
                 RejectedQuestion.user_id == user_id,
                 RejectedQuestion.product_id == product_id,
@@ -123,11 +132,8 @@ class RejectedQuestionsManager:
                 return False
             
             # Update the original response with new option
-            response = Response.query.filter_by(
-                question_id=rejected_question.question_id,
-                product_id=rejected_question.product_id,
-                user_id=user_id
-            ).first()
+            from app import QuestionnaireResponse
+            response = QuestionnaireResponse.query.get(rejected_question.response_id)
             
             if response:
                 response.selected_option = new_option
@@ -148,6 +154,7 @@ class RejectedQuestionsManager:
     def recalculate_scores_after_update(self, product_id, user_id):
         """Recalculate all scores after a rejected question is updated"""
         try:
+            # Import the score calculation function
             from app import calculate_maturity_scores
             
             # This would call the existing score calculation function
