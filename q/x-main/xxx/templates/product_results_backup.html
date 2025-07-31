@@ -1,0 +1,1838 @@
+{% extends "base.html" %}
+
+{% block title %}Security Assessment Results - SecureSphere{% endblock %}
+
+{% block content %}
+<div class="dashboard-header text-center mb-4">
+    <h1 class="display-6 fw-bold mb-2">
+        <i class="bi bi-shield-check me-3"></i>Security Assessment Results
+    </h1>
+    <p class="lead mb-0">Comprehensive analysis of your security posture by dimension</p>
+</div>
+
+<!-- Key Metrics Dashboard -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="metric-card maturity-score-card">
+            <div class="metric-icon">
+                <i class="bi bi-award-fill"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ maturity_score|default(1) }}/5</h3>
+                <p class="metric-label">MATURITY SCORE</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ (responses|length) if responses else 0 }}</h3>
+                <p class="metric-label">Total Responses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="bi bi-layers"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ (subdimension_scores|length) if subdimension_scores else 0 }}</h3>
+                <p class="metric-label">Security Sub-Dimensions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ "%.1f"|format((subdimension_scores.values()|map(attribute='average_score')|sum / subdimension_scores|length) if subdimension_scores and subdimension_scores|length > 0 else 0) }}</h3>
+                <p class="metric-label">Average Score</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Security Maturity Heatmap -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-gradient-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="bi bi-grid-3x3-gap me-2"></i>Security Maturity Heatmap
+                        </h5>
+                        <small class="opacity-75">Color-coded visualization of your security maturity across all dimensions</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-light btn-sm" onclick="exportHeatmapData()" title="Export heatmap data">
+                            <i class="bi bi-download me-1"></i>Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <!-- Overall Maturity Level Display -->
+                <div class="maturity-level-display mb-4">
+                    <div class="text-center">
+                        <h4 class="mb-2">Overall Maturity Level</h4>
+                                                 <div class="maturity-badge-large level-{{ maturity_score|default(1) }}">
+                             <div class="level-number">{{ maturity_score|default(1) }}</div>
+                                                         <div class="level-text">
+                                 {% set score = maturity_score|default(1) %}
+                                 {% if score == 1 %}
+                                     Initial
+                                 {% elif score == 2 %}
+                                     Developing
+                                 {% elif score == 3 %}
+                                     Defined
+                                 {% elif score == 4 %}
+                                     Managed
+                                 {% elif score == 5 %}
+                                     Optimized
+                                 {% else %}
+                                     Not Assessed
+                                 {% endif %}
+                             </div>
+                        </div>
+                                                 <p class="text-muted mt-2">
+                             {% set score = maturity_score|default(1) %}
+                             {% if score == 1 %}
+                                 Basic security measures in place with ad-hoc processes
+                             {% elif score == 2 %}
+                                 Some security processes defined but inconsistently applied
+                             {% elif score == 3 %}
+                                 Well-defined security processes documented and followed
+                             {% elif score == 4 %}
+                                 Security processes are measured and controlled
+                             {% elif score == 5 %}
+                                 Continuous improvement with optimized security processes
+                             {% else %}
+                                 Complete your assessment to see your maturity level
+                             {% endif %}
+                         </p>
+                    </div>
+                </div>
+
+                <!-- Circular Heatmap Visualization -->
+                {% if subdimension_scores %}
+                <div class="circular-heatmap-container mb-4">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-circle me-2"></i>Circular Security Sub-Dimension Heatmap
+                    </h6>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div id="circularHeatmap" class="circular-heatmap"></div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="dimension-legend">
+                                <h6 class="mb-3">Security Sub-Dimensions</h6>
+                                <div id="dimensionLegend" class="dimension-legend-items"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ring-wise Maturity Heatmap -->
+                {% if ringwise_heatmap_data %}
+                <div class="ringwise-heatmap-container mb-4">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-target me-2"></i>Maturity Level Achievement Heatmap
+                    </h6>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div id="ringwiseHeatmap" class="ringwise-heatmap"></div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="maturity-legend">
+                                <h6 class="mb-3">Maturity Levels</h6>
+                                <div id="maturityLegend" class="maturity-legend-items">
+                                    <div class="legend-item">
+                                        <span class="legend-color achieved"></span>
+                                        <span>Achieved Level</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color not-achieved"></span>
+                                        <span>Not Achieved</span>
+                                    </div>
+                                </div>
+                                <div class="current-level mt-3">
+                                    <h6>Current Level</h6>
+                                    <div class="badge bg-primary fs-6">
+                                        Level {{ ringwise_heatmap_data.achieved_level }} - 
+                                        {% if ringwise_heatmap_data.achieved_level == 5 %}
+                                            Optimized
+                                        {% elif ringwise_heatmap_data.achieved_level == 4 %}
+                                            Managed
+                                        {% elif ringwise_heatmap_data.achieved_level == 3 %}
+                                            Defined
+                                        {% elif ringwise_heatmap_data.achieved_level == 2 %}
+                                            Developing
+                                        {% else %}
+                                            Initial
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Traditional Heatmap Grid -->
+                <div class="heatmap-container" id="traditionalHeatmap">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Sub-Dimension Maturity Grid
+                    </h6>
+                    <div class="row">
+                        {% for subdimension, score_data in subdimension_scores.items() %}
+                        <div class="col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <div class="heatmap-cell level-{{ score_data.average_score|round|int }}" 
+                                 data-bs-toggle="tooltip" 
+                                 data-bs-placement="top" 
+                                 title="{{ subdimension }}: {{ score_data.average_score }}/5 ({{ score_data.question_count }} questions)">
+                                <div class="cell-header">
+                                    <h6 class="dimension-title">{{ subdimension }}</h6>
+                                    <span class="maturity-level">Level {{ score_data.average_score|round|int }}</span>
+                                </div>
+                                <div class="cell-body">
+                                    <div class="score-display">{{ score_data.average_score }}/5</div>
+                                    <div class="questions-count">{{ score_data.question_count }} questions</div>
+                                </div>
+                                <div class="cell-progress">
+                                    <div class="progress">
+                                        <div class="progress-bar level-{{ score_data.average_score|round|int }}-bg" 
+                                             style="width: {{ (score_data.average_score / 5 * 100)|round }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="cell-footer">
+                                    <small class="improvement-indicator">
+                                        {% set level = score_data.average_score|round|int %}
+                                        {% if level >= 4 %}
+                                            <i class="bi bi-check-circle text-success"></i> Excellent
+                                        {% elif level == 3 %}
+                                            <i class="bi bi-shield-check text-info"></i> Good
+                                        {% elif level == 2 %}
+                                            <i class="bi bi-exclamation-triangle text-warning"></i> Needs Work
+                                        {% else %}
+                                            <i class="bi bi-x-circle text-danger"></i> Critical
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Maturity Legend -->
+                <div class="maturity-legend mt-4">
+                    <h6 class="mb-3">Maturity Levels</h6>
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4 col-6 mb-2">
+                            <div class="legend-item level-1">
+                                <span class="legend-color"></span>
+                                <span class="legend-text">Level 1 - Initial</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-2">
+                            <div class="legend-item level-2">
+                                <span class="legend-color"></span>
+                                <span class="legend-text">Level 2 - Developing</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-2">
+                            <div class="legend-item level-3">
+                                <span class="legend-color"></span>
+                                <span class="legend-text">Level 3 - Defined</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-2">
+                            <div class="legend-item level-4">
+                                <span class="legend-color"></span>
+                                <span class="legend-text">Level 4 - Managed</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-2">
+                            <div class="legend-item level-5">
+                                <span class="legend-color"></span>
+                                <span class="legend-text">Level 5 - Optimized</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Security Dimensions Results -->
+<div class="results-container">
+    {% if responses %}
+        {% set sections = {} %}
+        {% for resp in responses %}
+            {% if resp.section not in sections %}
+                {% set _ = sections.update({resp.section: []}) %}
+            {% endif %}
+            {% set _ = sections[resp.section].append(resp) %}
+        {% endfor %}
+
+        <!-- Section Navigation -->
+        <div class="section-navigation mb-4">
+            <nav class="nav nav-pills nav-fill">
+                {% for section_name in sections.keys() %}
+                    <button class="nav-link {% if loop.first %}active{% endif %}"
+                            data-bs-toggle="pill"
+                            data-bs-target="#section-{{ loop.index0 }}"
+                            type="button">
+                        <i class="bi bi-shield-shaded me-2"></i>
+                        {{ section_name }}
+                        <span class="badge bg-light text-dark ms-2">{{ sections[section_name]|length }}</span>
+                    </button>
+                {% endfor %}
+            </nav>
+        </div>
+
+        <!-- Section Content -->
+        <div class="tab-content" id="sectionsContent">
+            {% for section_name, section_responses in sections.items() %}
+                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                     id="section-{{ loop.index0 }}">
+
+                    <!-- Section Header -->
+                    <div class="section-header-card mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-1">
+                                    <i class="bi bi-shield-fill text-primary me-2"></i>
+                                    {{ section_name }}
+                                </h4>
+                                <p class="text-muted mb-0">{{ section_responses|length }} questions assessed</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="section-score">
+                                    <span class="score-value" data-section="{{ section_name }}">-</span>
+                                    <span class="score-label">Section Score</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Questions Grid -->
+                    <div class="questions-grid">
+                        {% for resp in section_responses %}
+                            {% set lead_comment = resp.lead_comments[0] if resp.lead_comments and resp.lead_comments|length > 0 else none %}
+                            <div class="question-card {% if lead_comment %}status-{{ lead_comment.status }}{% else %}status-pending{% endif %}">
+                                <div class="question-header">
+                                    <div class="question-number">
+                                        <span class="number">{{ loop.index }}</span>
+                                    </div>
+                                    <div class="question-status">
+                                        {% if lead_comment %}
+                                            {% if lead_comment.status == 'approved' %}
+                                                <span class="status-indicator approved">
+                                                    <i class="bi bi-check-circle-fill"></i>
+                                                </span>
+                                            {% elif lead_comment.status == 'needs_revision' %}
+                                                <span class="status-indicator revision">
+                                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                                </span>
+                                            {% elif lead_comment.status == 'rejected' %}
+                                                <span class="status-indicator rejected">
+                                                    <i class="bi bi-x-circle-fill"></i>
+                                                </span>
+                                            {% else %}
+                                                <span class="status-indicator pending">
+                                                    <i class="bi bi-clock-fill"></i>
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="status-indicator pending">
+                                                <i class="bi bi-clock-fill"></i>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="question-content">
+                                    <h6 class="question-text">{{ resp.question }}</h6>
+
+                                    <div class="answer-section">
+                                        <div class="answer-label">Your Answer:</div>
+                                        <div class="answer-value">{{ resp.answer }}</div>
+                                    </div>
+
+                                    {% if resp.client_comment %}
+                                        <div class="comment-section">
+                                            <div class="comment-label">
+                                                <i class="bi bi-chat-text me-1"></i>Your Comment:
+                                            </div>
+                                            <div class="comment-value">{{ resp.client_comment }}</div>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if resp.evidence_path %}
+                                        <div class="evidence-section">
+                                            <div class="evidence-label">
+                                                <i class="bi bi-paperclip me-1"></i>Evidence:
+                                            </div>
+                                            <a href="/{{ resp.evidence_path }}" target="_blank"
+                                               class="evidence-link">
+                                                <i class="bi bi-file-earmark"></i>
+                                                View Attachment
+                                            </a>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if lead_comment and lead_comment.comment %}
+                                        <div class="reviewer-feedback">
+                                            <div class="feedback-label">
+                                                <i class="bi bi-person-badge me-1"></i>Reviewer Feedback:
+                                            </div>
+                                            <div class="feedback-content">{{ lead_comment.comment }}</div>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Admin Review Actions -->
+                                    {% if is_admin_view %}
+                                        <div class="admin-review-section mt-3">
+                                            {% set question_status = lead_comment.status if lead_comment else 'pending' %}
+                                            {% if question_status in ['approved', 'rejected'] %}
+                                                <!-- Show disabled state after approval/rejection with conversation -->
+                                                <div class="review-completed">
+                                                    <div class="alert alert-info mb-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Review completed. 
+                                                        {% if question_status == 'approved' %}
+                                                            <strong>Status: Approved</strong>
+                                                        {% else %}
+                                                            <strong>Status: Rejected</strong>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                                            <i class="bi bi-check-circle me-1"></i>Approve
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                                            <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                                            <i class="bi bi-x-circle me-1"></i>Reject
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <!-- Show active review buttons -->
+                                                <div class="review-actions">
+                                                    <div class="review-header mb-2">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-person-gear me-1"></i>Admin Review Actions
+                                                        </small>
+                                                    </div>
+                                                    <div class="d-flex gap-2 mb-2">
+                                                        <button type="button" class="btn btn-sm btn-success review-btn" 
+                                                                data-response-id="{{ resp.id }}" 
+                                                                data-action="approved">
+                                                            <i class="bi bi-check-circle me-1"></i>Approve
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-warning review-btn" 
+                                                                data-response-id="{{ resp.id }}" 
+                                                                data-action="needs_revision">
+                                                            <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-danger review-btn" 
+                                                                data-response-id="{{ resp.id }}" 
+                                                                data-action="rejected">
+                                                            <i class="bi bi-x-circle me-1"></i>Reject
+                                                        </button>
+                                                    </div>
+                                                    <div class="review-comment-section" style="display: none;">
+                                                        <textarea class="form-control form-control-sm mb-2" 
+                                                                  id="comment-{{ resp.id }}" 
+                                                                  placeholder="Add a comment for the client (optional)..."
+                                                                  rows="2"></textarea>
+                                                        <div class="d-flex gap-2">
+                                                            <button type="button" class="btn btn-sm btn-primary confirm-review-btn"
+                                                                    data-response-id="{{ resp.id }}">
+                                                                <i class="bi bi-check me-1"></i>Confirm Review
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary cancel-review-btn">
+                                                                <i class="bi bi-x me-1"></i>Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-results">
+            <div class="text-center py-5">
+                <i class="bi bi-clipboard-data display-1 text-muted mb-3"></i>
+                <h5 class="text-muted">No Assessment Data</h5>
+                <p class="text-muted">Complete your security questionnaire to view results here.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Load D3.js for circular heatmap -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+/* Metric Cards */
+.metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.metric-card.maturity-score-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.metric-icon {
+    background: rgba(255,255,255,0.15);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px auto;
+    font-size: 1.5rem;
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 8px 0 0 0;
+    opacity: 0.8;
+}
+
+/* Maturity Badge */
+.maturity-badge-large {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 20px 0;
+}
+
+.level-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.level-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+}
+
+/* Circular Heatmap */
+.circular-heatmap {
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dimension-legend-items {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.legend-dimension-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.legend-dimension-item:last-child {
+    border-bottom: none;
+}
+
+.legend-dimension-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+}
+
+.legend-dimension-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    flex: 1;
+}
+
+.legend-dimension-score {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+}
+
+/* Ring-wise Heatmap Styles */
+.ringwise-heatmap {
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.maturity-legend-items {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.legend-item:last-child {
+    border-bottom: none;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+}
+
+.legend-color.achieved {
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.legend-color.not-achieved {
+    background: #e9ecef;
+}
+
+.current-level .badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
+
+/* Enhanced Heatmap Styles */
+.matrix-container {
+    display: flex;
+    align-items: stretch;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.matrix-labels {
+    display: flex;
+    align-items: stretch;
+    margin-right: 15px;
+}
+
+.y-axis-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    font-weight: bold;
+    color: #374151;
+    margin-right: 10px;
+}
+
+.y-axis-values {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 120px;
+}
+
+.matrix-content {
+    flex: 1;
+}
+
+.matrix-grid {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #e5e7eb;
+    border-radius: 4px;
+}
+
+.matrix-row {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.matrix-row:last-child {
+    border-bottom: none;
+}
+
+.matrix-cell {
+    flex: 1;
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #e5e7eb;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 80px;
+}
+
+.matrix-cell:last-child {
+    border-right: none;
+}
+
+.matrix-cell:hover {
+    transform: scale(1.05);
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.matrix-cell.low { background-color: #10b981; }
+.matrix-cell.low-medium { background-color: #f59e0b; }
+.matrix-cell.medium { background-color: #f59e0b; }
+.matrix-cell.medium-high { background-color: #ef4444; }
+.matrix-cell.high { background-color: #dc2626; }
+
+.cell-value {
+    font-weight: bold;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.cell-dimensions {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+}
+
+.dimension-tag {
+    background: rgba(255,255,255,0.8);
+    color: #374151;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.x-axis {
+    margin-top: 15px;
+}
+
+.x-axis-label {
+    text-align: center;
+    font-weight: bold;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.x-axis-values, .y-axis-values {
+    display: flex;
+    justify-content: space-between;
+    gap: 1px;
+}
+
+.x-axis-values {
+    margin-top: 8px;
+}
+
+.axis-value {
+    flex: 1;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+    padding: 4px 2px;
+}
+
+.y-axis-values .axis-value {
+    text-align: right;
+    padding-right: 8px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.matrix-legend {
+    text-align: center;
+}
+
+.matrix-legend .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 15px;
+}
+
+.matrix-legend .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+
+.matrix-legend .legend-color.low { background-color: #10b981; }
+.matrix-legend .legend-color.low-medium { background-color: #f59e0b; }
+.matrix-legend .legend-color.medium { background-color: #f59e0b; }
+.matrix-legend .legend-color.medium-high { background-color: #ef4444; }
+.matrix-legend .legend-color.high { background-color: #dc2626; }
+
+/* Enhanced Section Cards */
+.section-card {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.section-card.level-1 { border-left-color: #ef4444; }
+.section-card.level-2 { border-left-color: #f59e0b; }
+.section-card.level-3 { border-left-color: #eab308; }
+.section-card.level-4 { border-left-color: #22c55e; }
+.section-card.level-5 { border-left-color: #10b981; }
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.section-percentage {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+.section-progress .progress {
+    height: 8px;
+    border-radius: 4px;
+    background: #f3f4f6;
+}
+
+.section-details {
+    margin-top: 8px;
+    font-size: 0.8rem;
+}
+
+/* Enhanced Heatmap Cells */
+.heatmap-cell {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.heatmap-cell:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.heatmap-cell.level-1 { 
+    border-color: #ef4444; 
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+.heatmap-cell.level-2 { 
+    border-color: #f59e0b; 
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+.heatmap-cell.level-3 { 
+    border-color: #eab308; 
+    background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+}
+.heatmap-cell.level-4 { 
+    border-color: #22c55e; 
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+.heatmap-cell.level-5 { 
+    border-color: #10b981; 
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.dimension-title {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.maturity-level {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.score-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin: 8px 0;
+}
+
+.questions-count {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.cell-progress .progress {
+    height: 6px;
+    border-radius: 3px;
+    background: #f3f4f6;
+}
+
+.level-1-bg { background-color: #ef4444 !important; }
+.level-2-bg { background-color: #f59e0b !important; }
+.level-3-bg { background-color: #eab308 !important; }
+.level-4-bg { background-color: #22c55e !important; }
+.level-5-bg { background-color: #10b981 !important; }
+
+.cell-footer {
+    margin-top: 8px;
+    text-align: center;
+}
+
+.improvement-indicator {
+    font-weight: 500;
+}
+
+/* Dimension Score Cards */
+.dimension-score-card {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.dimension-score-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dimension-name {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.dimension-score {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.dimension-details {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* Questions Cards */
+.question-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.question-card.status-approved { border-left-color: #22c55e; }
+.question-card.status-needs_revision { border-left-color: #f59e0b; }
+.question-card.status-rejected { border-left-color: #ef4444; }
+.question-card.status-pending { border-left-color: #6b7280; }
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.question-number {
+    background: #f8f9fa;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #495057;
+}
+
+.status-indicator {
+    font-size: 1.2rem;
+}
+
+.status-indicator.approved { color: #22c55e; }
+.status-indicator.revision { color: #f59e0b; }
+.status-indicator.rejected { color: #ef4444; }
+.status-indicator.pending { color: #6b7280; }
+
+.question-text {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 15px;
+}
+
+.answer-section, .comment-section, .evidence-section {
+    margin-bottom: 15px;
+}
+
+.answer-label, .comment-label, .evidence-label, .feedback-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.answer-value, .comment-value, .feedback-content {
+    color: #374151;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.evidence-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.evidence-link:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+.reviewer-feedback {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.section-header-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section-score {
+    text-align: center;
+}
+
+.score-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #1f2937;
+    display: block;
+}
+
+.score-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .matrix-container {
+        flex-direction: column;
+        padding: 15px;
+    }
+    
+    .matrix-labels {
+        flex-direction: row;
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .y-axis-label {
+        writing-mode: horizontal-tb;
+        width: auto;
+        height: 30px;
+        margin-right: 15px;
+        margin-bottom: 0;
+    }
+    
+    .y-axis-values {
+        flex-direction: row;
+        width: auto;
+    }
+    
+    .y-axis-values .axis-value {
+        height: auto;
+        padding: 4px 8px;
+        text-align: center;
+    }
+    
+    .matrix-cell {
+        min-height: 60px;
+    }
+    
+    .axis-value {
+        font-size: 0.65rem;
+    }
+    
+    .heatmap-cell {
+        padding: 15px;
+    }
+    
+    .score-display {
+        font-size: 1.25rem;
+    }
+    
+    .metric-card {
+        height: 120px;
+        padding: 15px;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+    }
+    
+    .circular-heatmap {
+        height: 300px;
+    }
+}
+
+/* Admin Review Section Styles */
+.admin-review-section {
+    border-top: 1px solid #e9ecef;
+    padding-top: 12px;
+}
+
+.review-actions {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.review-header small {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.review-btn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.review-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.review-comment-section {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 8px;
+}
+
+.review-comment-section textarea {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.review-comment-section textarea:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.review-completed {
+    background: #e7f3ff;
+    border: 1px solid #b6d7ff;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.review-completed .alert {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+.review-completed .btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.confirm-review-btn {
+    font-size: 0.8rem;
+    padding: 4px 12px;
+}
+
+.cancel-review-btn {
+    font-size: 0.8rem;
+    padding: 4px 12px;
+}
+
+/* Status indicators for questions */
+.question-card.status-approved {
+    border-left: 4px solid #198754;
+}
+
+.question-card.status-needs_revision {
+    border-left: 4px solid #ffc107;
+}
+
+.question-card.status-rejected {
+    border-left: 4px solid #dc3545;
+}
+
+.question-card.status-pending {
+    border-left: 4px solid #6c757d;
+}
+
+/* Ring-wise Heatmap Styles */
+.ringwise-heatmap {
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.maturity-legend-items {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.legend-item:last-child {
+    border-bottom: none;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+}
+
+.legend-color.achieved {
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.legend-color.not-achieved {
+    background: #e9ecef;
+}
+
+.current-level .badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
+</style>
+
+<script>
+// Calculate and display scores
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const responses = {{ responses_json | tojson | safe }};
+        const sections = {};
+
+        // Group responses by section
+        if (Array.isArray(responses)) {
+            responses.forEach(resp => {
+                if (resp && resp.section) {
+                    if (!sections[resp.section]) {
+                        sections[resp.section] = [];
+                    }
+                    sections[resp.section].push(resp);
+                }
+            });
+        }
+
+    // Calculate section scores
+    let totalScore = 0;
+    let totalQuestions = 0;
+    const sectionCount = Object.keys(sections).length;
+
+    Object.keys(sections).forEach(sectionName => {
+        const sectionResponses = sections[sectionName];
+        const sectionScore = calculateSectionScore(sectionResponses);
+
+        // Update section score display
+        const scoreElement = document.querySelector(`[data-section="${sectionName}"]`);
+        if (scoreElement) {
+            scoreElement.textContent = sectionScore + '%';
+        }
+
+        totalScore += sectionScore;
+        totalQuestions += sectionResponses.length;
+    });
+
+        // Initialize circular heatmap
+        {% if subdimension_scores %}
+        createCircularHeatmap();
+        {% endif %}
+        
+        // Initialize tooltips
+        initializeTooltips();
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-warning';
+        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Some features may not be available. Please refresh the page.';
+        document.querySelector('.dashboard-header').appendChild(errorDiv);
+    }
+});
+
+function calculateSectionScore(responses) {
+    if (responses.length === 0) return 0;
+
+    let approvedCount = 0;
+    responses.forEach(resp => {
+        // Check if response has approved status
+        if (resp.lead_comments && resp.lead_comments.length > 0) {
+            if (resp.lead_comments[0].status === 'approved') {
+                approvedCount++;
+            }
+        }
+    });
+
+    return Math.round((approvedCount / responses.length) * 100);
+}
+
+// Circular Heatmap Implementation
+function createCircularHeatmap() {
+    try {
+        const subdimensionData = {{ subdimension_scores | tojson | safe }};
+        
+        if (!subdimensionData || typeof subdimensionData !== 'object' || Object.keys(subdimensionData).length === 0) {
+            console.warn('No sub-dimension data available for heatmap');
+            return;
+        }
+    
+    const dimensions = Object.keys(subdimensionData).map(key => ({
+        name: key,
+        score: subdimensionData[key].average_score,
+        count: subdimensionData[key].question_count
+    }));
+    
+    const container = d3.select('#circularHeatmap');
+    container.selectAll('*').remove(); // Clear existing content
+    
+    const containerNode = document.getElementById('circularHeatmap');
+    const containerRect = containerNode.getBoundingClientRect();
+    const width = Math.min(containerRect.width, 400);
+    const height = Math.min(containerRect.height, 400);
+    const radius = Math.min(width, height) / 2 - 40;
+    
+    const svg = container
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
+    const g = svg.append('g')
+        .attr('transform', `translate(${width/2}, ${height/2})`);
+    
+    // Color scale for scores
+    const colorScale = d3.scaleSequential()
+        .domain([1, 5])
+        .interpolator(d3.interpolateRdYlGn);
+    
+    // Create arcs
+    const pie = d3.pie()
+        .value(1) // Equal segments
+        .sort(null);
+    
+    const arc = d3.arc()
+        .innerRadius(radius * 0.3)
+        .outerRadius(radius * 0.8);
+    
+    const labelArc = d3.arc()
+        .innerRadius(radius * 0.9)
+        .outerRadius(radius * 0.9);
+    
+    // Create pie segments
+    const arcs = g.selectAll('.arc')
+        .data(pie(dimensions))
+        .enter().append('g')
+        .attr('class', 'arc');
+    
+    // Add colored segments
+    arcs.append('path')
+        .attr('d', arc)
+        .style('fill', d => colorScale(d.data.score))
+        .style('stroke', '#fff')
+        .style('stroke-width', 2)
+        .style('cursor', 'pointer')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+            
+            showTooltip(event, d.data);
+        })
+        .on('mouseout', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+            
+            hideTooltip();
+        });
+    
+    // Add labels
+    arcs.append('text')
+        .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+        .attr('dy', '.35em')
+        .style('text-anchor', 'middle')
+        .style('font-size', '10px')
+        .style('font-weight', 'bold')
+        .style('fill', '#333')
+        .text(d => d.data.name.length > 10 ? d.data.name.substring(0, 10) + '...' : d.data.name);
+    
+    // Add center circle with overall score
+    const overallScore = dimensions.reduce((sum, d) => sum + d.score, 0) / dimensions.length;
+    
+    g.append('circle')
+        .attr('r', radius * 0.25)
+        .style('fill', colorScale(overallScore))
+        .style('stroke', '#fff')
+        .style('stroke-width', 3);
+    
+    g.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '-0.2em')
+        .style('font-size', '20px')
+        .style('font-weight', 'bold')
+        .style('fill', '#fff')
+        .text(overallScore.toFixed(1));
+    
+    g.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '1em')
+        .style('font-size', '10px')
+        .style('font-weight', 'bold')
+        .style('fill', '#fff')
+        .text('Overall');
+    
+        // Create legend
+        createCircularHeatmapLegend(dimensions, colorScale);
+    } catch (error) {
+        console.error('Error creating circular heatmap:', error);
+        // Show fallback message
+        const container = document.getElementById('circularHeatmap');
+        if (container) {
+            container.innerHTML = '<div class="text-center text-muted"><i class="bi bi-exclamation-circle"></i><br>Heatmap unavailable</div>';
+        }
+    }
+}
+
+function createCircularHeatmapLegend(dimensions, colorScale) {
+    const legendContainer = d3.select('#dimensionLegend');
+    legendContainer.selectAll('*').remove();
+    
+    const legendItems = legendContainer.selectAll('.legend-dimension-item')
+        .data(dimensions)
+        .enter()
+        .append('div')
+        .attr('class', 'legend-dimension-item');
+    
+    legendItems.append('div')
+        .attr('class', 'legend-dimension-color')
+        .style('background-color', d => colorScale(d.score));
+    
+    legendItems.append('div')
+        .attr('class', 'legend-dimension-name')
+        .text(d => d.name);
+    
+    legendItems.append('div')
+        .attr('class', 'legend-dimension-score')
+        .text(d => `${d.score.toFixed(1)}/5`);
+}
+
+// Tooltip functions
+let tooltip;
+
+function showTooltip(event, data) {
+    if (!tooltip) {
+        tooltip = d3.select('body').append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('padding', '10px')
+            .style('background', 'rgba(0, 0, 0, 0.8)')
+            .style('color', 'white')
+            .style('border-radius', '5px')
+            .style('pointer-events', 'none')
+            .style('opacity', 0);
+    }
+    
+    tooltip.transition()
+        .duration(200)
+        .style('opacity', 1);
+    
+    tooltip.html(`
+        <strong>${data.name}</strong><br/>
+        Score: ${data.score.toFixed(1)}/5<br/>
+        Questions: ${data.count}
+    `)
+    .style('left', (event.pageX + 10) + 'px')
+    .style('top', (event.pageY - 10) + 'px');
+}
+
+function hideTooltip() {
+    if (tooltip) {
+        tooltip.transition()
+            .duration(200)
+            .style('opacity', 0);
+    }
+}
+
+// Heatmap interaction functions
+function toggleHeatmapView() {
+    const traditionalHeatmap = document.getElementById('traditionalHeatmap');
+    const isVisible = traditionalHeatmap.style.display !== 'none';
+    traditionalHeatmap.style.display = isVisible ? 'none' : 'block';
+    
+    const toggleBtn = event.target.closest('button');
+    const icon = toggleBtn.querySelector('i');
+    
+    if (isVisible) {
+        icon.className = 'bi bi-eye-slash me-1';
+    } else {
+        icon.className = 'bi bi-eye me-1';
+    }
+}
+
+// Initialize tooltips for heatmap cells
+function initializeTooltips() {
+    // Initialize Bootstrap tooltips if available
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+    
+    // Add click animation to maturity badge
+    const maturityBadge = document.querySelector('.maturity-badge-large');
+    if (maturityBadge) {
+        maturityBadge.addEventListener('click', function() {
+            this.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
+        });
+    }
+    
+    // Add matrix cell interactions
+    const matrixCells = document.querySelectorAll('.matrix-cell');
+    matrixCells.forEach(cell => {
+        cell.addEventListener('click', function() {
+            const impact = this.dataset.impact;
+            const likelihood = this.dataset.likelihood;
+            const value = this.dataset.value;
+            
+            showMatrixCellDetails(impact, likelihood, value, this);
+        });
+    });
+}
+
+function showMatrixCellDetails(impact, likelihood, value, cellElement) {
+    const dimensions = cellElement.querySelectorAll('.dimension-tag');
+    const dimensionNames = Array.from(dimensions).map(d => d.textContent);
+    
+    let riskLevel = 'Low';
+    if (value >= 20) riskLevel = 'High';
+    else if (value >= 15) riskLevel = 'Medium-High';
+    else if (value >= 10) riskLevel = 'Medium';
+    else if (value >= 5) riskLevel = 'Low-Medium';
+    
+    const details = `
+        Risk Level: ${riskLevel}
+        Risk Score: ${value}
+        Impact Level: ${impact}
+        Likelihood Level: ${likelihood}
+        ${dimensionNames.length > 0 ? 'Related Dimensions: ' + dimensionNames.join(', ') : ''}
+    `;
+    
+    // Create a simple alert for now - could be enhanced with a modal
+    alert(details);
+}
+
+// Function to export heatmap data
+function exportHeatmapData() {
+    try {
+        {% if maturity_score and subdimension_scores %}
+        const heatmapData = {
+        product: '{{ product.name|escape if product else "Unknown" }}',
+        overallMaturityScore: {{ maturity_score }},
+        assessmentDate: new Date().toISOString(),
+        subDimensions: [
+            {% for subdimension, score_data in subdimension_scores.items() %}
+            {
+                name: '{{ subdimension|escape }}',
+                score: {{ score_data.average_score }},
+                level: {{ score_data.average_score|round|int }},
+                questionCount: {{ score_data.question_count }},
+                totalScore: {{ score_data.total_score }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        {% if section_dimensions %}
+        sections: [
+            {% for section, data in section_dimensions.items() %}
+            {
+                name: '{{ section|escape }}',
+                percentage: {{ data.percentage }},
+                questionCount: {{ data.question_count }},
+                totalScore: {{ data.total_score }},
+                maxPossibleScore: {{ data.max_possible_score }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+        {% endif %}
+    };
+    
+    // Download as JSON
+    const dataStr = JSON.stringify(heatmapData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${heatmapData.product}_maturity_heatmap_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    // Show success message
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            Heatmap data exported successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+        }, 3000);
+        {% else %}
+        // Show error if no data available
+        alert('No assessment data available for export');
+        {% endif %}
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        alert('Error exporting data. Please try again.');
+    }
+}
+
+// Admin Review Functionality
+{% if is_admin_view %}
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle review button clicks
+    document.querySelectorAll('.review-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const responseId = this.dataset.responseId;
+            const commentSection = this.closest('.review-actions').querySelector('.review-comment-section');
+            const confirmBtn = commentSection.querySelector('.confirm-review-btn');
+            
+            // Store selected action on confirm button
+            confirmBtn.dataset.action = action;
+            
+            // Show comment section
+            commentSection.style.display = 'block';
+            
+            // Focus on textarea for better UX
+            const textarea = commentSection.querySelector('textarea');
+            textarea.focus();
+        });
+    });
+    
+    // Handle confirm review
+    document.querySelectorAll('.confirm-review-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const responseId = this.dataset.responseId;
+            const action = this.dataset.action;
+            const comment = document.getElementById(`comment-${responseId}`).value;
+            
+            // Show loading state
+            this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Processing...';
+            this.disabled = true;
+            
+            // Submit review
+            submitReview(responseId, action, comment);
+        });
+    });
+    
+    // Handle cancel review
+    document.querySelectorAll('.cancel-review-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentSection = this.closest('.review-comment-section');
+            const textarea = commentSection.querySelector('textarea');
+            
+            // Hide comment section and clear textarea
+            commentSection.style.display = 'none';
+            textarea.value = '';
+        });
+    });
+});
+
+function submitReview(responseId, action, comment) {
+    fetch('/api/admin/review_response', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            response_id: responseId,
+            action: action,
+            comment: comment
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show updated state
+            window.location.reload();
+        } else {
+            alert('Error submitting review: ' + data.message);
+            // Reset button state
+            const confirmBtn = document.querySelector(`[data-response-id="${responseId}"].confirm-review-btn`);
+            confirmBtn.innerHTML = '<i class="bi bi-check me-1"></i>Confirm Review';
+            confirmBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting review. Please try again.');
+        // Reset button state
+        const confirmBtn = document.querySelector(`[data-response-id="${responseId}"].confirm-review-btn`);
+        confirmBtn.innerHTML = '<i class="bi bi-check me-1"></i>Confirm Review';
+        confirmBtn.disabled = false;
+    });
+}
+
+function getCsrfToken() {
+    // Try to get CSRF token from meta tag or return empty string
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+{% endif %}
+
+// Resize circular heatmap on window resize
+window.addEventListener('resize', function() {
+    {% if subdimension_scores %}
+    setTimeout(() => {
+        createCircularHeatmap();
+    }, 250);
+    {% endif %}
+});
+</script>
+{% endblock %}
