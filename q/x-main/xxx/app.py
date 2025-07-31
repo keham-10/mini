@@ -24,6 +24,15 @@ from datetime import timedelta
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey-change-in-production')
 
+# Import and setup template error handlers
+try:
+    from template_error_handler import setup_template_error_handlers, setup_custom_filters
+    setup_template_error_handlers(app)
+    setup_custom_filters(app)
+    print("✅ Template error handlers and custom filters loaded")
+except ImportError:
+    print("⚠️  Template error handler not found, using default error handling")
+
 # Security Configuration
 limiter = Limiter(
     key_func=get_remote_address,
