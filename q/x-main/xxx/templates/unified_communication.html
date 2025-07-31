@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Communications - {{ product.name }} - SecureSphere{% endblock %}
+
+{% block head %}
+<style>
+.communication-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.conversation-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.conversation-thread {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.thread-header {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.thread-context {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.thread-title {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.message-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.message-item:last-child {
+    border-bottom: none;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.sender-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sender-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+}
+
+.lead-avatar {
+    background: #667eea;
+}
+
+.client-avatar {
+    background: #28a745;
+}
+
+.message-content {
+    color: #2c3e50;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.message-meta {
+    font-size: 12px;
+    color: #868e96;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-approved { background: #d1edff; color: #0c5460; }
+.status-needs_revision { background: #f8d7da; color: #721c24; }
+.status-rejected { background: #f5c6cb; color: #721c24; }
+
+.reply-section {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.quick-reply {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.quick-reply textarea {
+    flex: 1;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.reply-button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.reply-button:hover {
+    background: #5a6fd8;
+}
+
+.new-conversation-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.new-conversation-btn:hover {
+    background: #218838;
+    color: white;
+    text-decoration: none;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.unread-indicator {
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="communication-container">
+    <!-- Header -->
+    <div class="conversation-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-2">
+                    <i class="bi bi-chat-dots me-2"></i>
+                    Communications - {{ product.name }}
+                </h3>
+                <p class="mb-0 opacity-90">
+                    {% if current_user_role == 'lead' %}
+                        Review and respond to client communications
+                    {% else %}
+                        Communicate with your security reviewer
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                {% if current_user_role == 'lead' %}
+                    <button class="new-conversation-btn" onclick="showNewConversationModal()">
+                        <i class="bi bi-plus-lg me-2"></i>Start New Conversation
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversations -->
+    {% if conversations %}
+        {% for thread in conversations %}
+            <div class="conversation-thread">
+                <!-- Thread Header -->
+                <div class="thread-header">
+                    <div class="thread-context">
+                        {% if thread.root_comment.response %}
+                            {% set question_num = thread.root_comment.response.question | question_number %}
+                            Question #{{ question_num if question_num else 'N/A' }}: {{ thread.root_comment.response.question[:100] }}{% if thread.root_comment.response.question|length > 100 %}...{% endif %}
+                        {% else %}
+                            General Discussion
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="thread-title">
+                            Conversation between {{ thread.root_comment.lead.username }} and {{ thread.root_comment.client.username }}
+                        </div>
+                        {% if thread.unread_count > 0 %}
+                            <div class="unread-indicator">{{ thread.unread_count }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Root Message -->
+                <div class="message-item">
+                    <div class="message-header">
+                        <div class="sender-info">
+                            <div class="sender-avatar lead-avatar">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                            <div>
+                                <strong>{{ thread.root_comment.lead.username }}</strong>
+                                <small class="text-muted">(Lead Reviewer)</small>
+                            </div>
+                        </div>
+                        <div class="message-meta">
+                            <span>{{ thread.root_comment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                            <span class="status-badge status-{{ thread.root_comment.status }}">
+                                {{ thread.root_comment.status.replace('_', ' ').title() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="message-content">
+                        {{ thread.root_comment.comment }}
+                    </div>
+                </div>
+
+                <!-- Replies -->
+                {% for reply in thread.replies %}
+                    <div class="message-item">
+                        <div class="message-header">
+                            <div class="sender-info">
+                                {% if reply.lead_id == user_id or current_user_role == 'lead' %}
+                                    <div class="sender-avatar lead-avatar">
+                                        <i class="bi bi-person-badge"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ reply.lead.username }}</strong>
+                                        <small class="text-muted">(Lead Reviewer)</small>
+                                    </div>
+                                {% else %}
+                                    <div class="sender-avatar client-avatar">
+                                        <i class="bi bi-person-circle"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ reply.client.username }}</strong>
+                                        <small class="text-muted">(Client)</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="message-meta">
+                                <span>{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                {% if not reply.is_read %}
+                                    <span class="badge bg-primary">New</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="message-content">
+                            {{ reply.comment }}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Reply Section -->
+                <div class="reply-section">
+                    <form method="post" action="{{ url_for('reply_to_conversation', comment_id=thread.root_comment.id) }}">
+                        <div class="quick-reply">
+                            <textarea name="reply" placeholder="Type your reply..." required></textarea>
+                            <button type="submit" class="reply-button">
+                                <i class="bi bi-send me-1"></i>Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-chat-text display-4 mb-3"></i>
+            <h4>No conversations yet</h4>
+            <p class="mb-3">
+                {% if current_user_role == 'lead' %}
+                    Start a new conversation with your clients to provide feedback and guidance.
+                {% else %}
+                    Your security reviewer will start conversations here to provide feedback.
+                {% endif %}
+            </p>
+            {% if current_user_role == 'lead' %}
+                <button class="new-conversation-btn" onclick="showNewConversationModal()">
+                    <i class="bi bi-plus-lg me-2"></i>Start First Conversation
+                </button>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- New Conversation Modal (for leads) -->
+{% if current_user_role == 'lead' %}
+<div class="modal fade" id="newConversationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Start New Conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('create_new_conversation', product_id=product.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Client</label>
+                        <select name="client_id" class="form-select" required>
+                            <option value="">Select a client...</option>
+                            <!-- This would be populated with clients who have access to this product -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Related Question (Optional)</label>
+                        <select name="response_id" class="form-select">
+                            <option value="">General discussion</option>
+                            <!-- This would be populated with questions from the assessment -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select" required>
+                            <option value="pending">Pending Review</option>
+                            <option value="needs_revision">Needs Revision</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="comment" class="form-control" rows="4" placeholder="Type your message..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Start Conversation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function showNewConversationModal() {
+    const modal = new bootstrap.Modal(document.getElementById('newConversationModal'));
+    modal.show();
+}
+
+// Auto-scroll to bottom of conversations
+document.addEventListener('DOMContentLoaded', function() {
+    const conversationThreads = document.querySelectorAll('.conversation-thread');
+    conversationThreads.forEach(thread => {
+        const replySection = thread.querySelector('.reply-section');
+        if (replySection) {
+            replySection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    });
+});
+</script>
+{% endblock %}
