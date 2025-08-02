@@ -1,6 +1,6 @@
 import os
 import csv
-from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from flask_limiter import Limiter
@@ -1110,6 +1110,11 @@ def login_required(role=None):
 def index():
     return render_template('index.html')
 
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    """Serve uploaded files from the uploads directory"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")
 def register():
@@ -1324,7 +1329,29 @@ def dashboard():
                 RejectedQuestion.product_id == product.id,
                 RejectedQuestion.status == 'pending'
             ).all()
-            rejected_questions.extend(product_rejected)
+            
+            # Convert to format expected by template with question data from CSV
+            for rejected_question, response in product_rejected:
+                # Find the question data from QUESTIONNAIRE
+                question_data = None
+                question_number = 1
+                for section_name, section_questions in QUESTIONNAIRE.items():
+                    for i, q in enumerate(section_questions):
+                        if q['question'] == rejected_question.question_text:
+                            question_data = {
+                                'id': rejected_question.id,
+                                'question_text': q['question'],
+                                'question_number': question_number,
+                                'options': q['options']
+                            }
+                            break
+                        question_number += 1
+                    if question_data:
+                        break
+                
+                # Add to rejected questions if found
+                if question_data:
+                    rejected_questions.append((rejected_question, question_data))
 
         return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments, rejected_questions=rejected_questions)
     elif role == 'lead':
@@ -1553,7 +1580,7 @@ def fill_questionnaire_section(product_id, section_idx):
                 filename = secure_filename(f"{product_id}_{section_idx}_{i}_{file.filename}")
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
-                evidence_path = filepath
+                evidence_path = f"static/uploads/{filename}"
             elif i in existing_answers:
                 evidence_path = existing_answers[i].evidence_path or ''
 
@@ -1835,9 +1862,10 @@ def client_reply_comment(comment_id):
             valid, message = validate_file_security(evidence_file)
             if valid:
                 filename = secure_filename_hash(evidence_file.filename)
-                evidence_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                os.makedirs(os.path.dirname(evidence_path), exist_ok=True)
-                evidence_file.save(evidence_path)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                evidence_file.save(filepath)
+                evidence_path = f"static/uploads/{filename}"
             else:
                 flash(f'File upload failed: {message}', 'error')
                 return redirect(request.referrer or url_for('client_comments'))
@@ -2061,6 +2089,25 @@ def review_questionnaire(response_id):
                 resp.is_reviewed = False  # Allow client to modify rejected responses
                 resp.needs_client_response = True  # Mark for client attention
                 resp.is_approved = False  # Reset approval status
+                
+                # Create a RejectedQuestion entry for this specific question
+                try:
+                    rejected_question = RejectedQuestion(
+                        response_id=response_id,
+                        user_id=resp.user_id,
+                        product_id=resp.product_id,
+                        lead_id=session['user_id'],
+                        question_text=resp.question,
+                        original_option=resp.answer,
+                        reason=comment,
+                        status='pending',
+                        created_at=datetime.now(timezone.utc)
+                    )
+                    db.session.add(rejected_question)
+                except Exception as e:
+                    print(f"Error creating rejected question: {e}")
+                    # Continue without failing the entire process
+                    
             elif status == 'approved':
                 resp.is_reviewed = True
                 resp.is_approved = True  # Mark as finally approved

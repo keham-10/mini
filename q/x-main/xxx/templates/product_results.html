@@ -125,8 +125,11 @@
                 {% if subdimension_scores %}
                 <div class="ring-heatmap-container mb-4">
                     <h6 class="text-muted mb-3">
-                        <i class="bi bi-bullseye me-2"></i>5-Level Ring Security Maturity Heatmap
+                        <i class="bi bi-bullseye me-2"></i>Security Maturity Spiral Heatmap
                     </h6>
+                    <p class="text-muted small mb-3">
+                        Each section represents a sub-dimension with 5 concentric rings. Rings are colored based on achieved maturity level (score 3 = rings 1-3 colored).
+                    </p>
                     <div class="row">
                         <div class="col-lg-8">
                             <div class="ring-heatmap-wrapper">
@@ -221,49 +224,7 @@
                 </div>
                 {% endif %}
                 
-                <!-- Dimension-wise Results Display -->
-                <div class="dimension-results-container" id="dimensionResults">
-                    <h6 class="text-muted mb-3">
-                        <i class="bi bi-grid-3x2-gap me-2"></i>Security Dimensions Overview
-                    </h6>
-                    <div class="row">
-                        {% for dimension, data in dimension_results.items() %}
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="dimension-card">
-                                <div class="dimension-header">
-                                    <h6 class="dimension-title">{{ dimension }}</h6>
-                                    <div class="dimension-score-badge level-{{ data.average_score|round|int }}">
-                                        {{ data.average_score|round(1) }}
-                                    </div>
-                                </div>
-                                <div class="dimension-details">
-                                    <div class="subdimensions-count">
-                                        {{ data.count }} Sub-dimensions
-                                    </div>
-                                    <div class="progress mt-2">
-                                        <div class="progress-bar level-{{ data.average_score|round|int }}" 
-                                             style="width: {{ (data.average_score / 5 * 100)|round }}%">
-                                        </div>
-                                    </div>
-                                    <div class="subdimensions-list mt-2">
-                                        {% for subdim in data.subdimensions %}
-                                        <small class="d-block text-muted">{{ subdim.name }}: {{ subdim.score|round(1) }}</small>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
                 {% endif %}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
 
                 <!-- Maturity Legend -->
                 <div class="maturity-legend mt-4">
@@ -301,7 +262,6 @@
                         </div>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -660,6 +620,80 @@
     font-size: 0.8rem;
     color: #666;
     font-weight: 600;
+}
+
+/* Ring Heatmap SVG Styles */
+.ring-heatmap-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.ring-heatmap-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.ring-heatmap-svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    width: 500px;
+    height: 500px;
+}
+
+.ring-segment {
+    stroke: #ffffff;
+    stroke-width: 2;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.ring-segment:hover {
+    opacity: 0.8;
+    stroke-width: 3;
+}
+
+.ring-legend {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.dimension-labels {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dimension-label-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.dimension-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    margin-right: 8px;
+    border: 1px solid #ddd;
+}
+
+.dimension-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.dimension-score {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
 }
 
 /* Ring-wise Heatmap Styles */
@@ -1872,85 +1906,125 @@ window.addEventListener('resize', function() {
 
 // Ring Heatmap JavaScript Functions
 
-// Ring Heatmap Visualization
+// Ring Heatmap Visualization with Spiral Effect
 function generateRingHeatmap(subdimensionScores) {
     const svg = document.getElementById('ringHeatmap');
     const centerX = 250;
     const centerY = 250;
-    const innerRadius = 50;
-    const ringWidth = 35;
+    const innerRadius = 60;
+    const ringWidth = 25;
+    const maxRings = 5;
     
     // Clear existing content
     svg.innerHTML = '';
     
-    // Group dimensions by level
-    const dimensionsByLevel = {1: [], 2: [], 3: [], 4: [], 5: []};
+    // Convert subdimensionScores to array for consistent ordering
+    const dimensions = Object.entries(subdimensionScores).map(([name, data]) => ({
+        name: name,
+        score: data.average_score,
+        level: Math.max(1, Math.min(5, Math.round(data.average_score)))
+    }));
     
-    Object.entries(subdimensionScores).forEach(([dimension, data]) => {
-        const level = Math.max(1, Math.min(5, Math.round(data.average_score)));
-        dimensionsByLevel[level].push({
-            name: dimension,
-            score: data.average_score,
-            level: level
-        });
-    });
-    
-    // Colors for each level
-    const colors = {
-        1: '#ff4444',
-        2: '#ff8800', 
-        3: '#ffcc00',
-        4: '#88cc00',
-        5: '#44cc44'
+    // Colors for each ring level (from inner to outer)
+    const ringColors = {
+        1: '#ff4444',  // Red - Initial
+        2: '#ff8800',  // Orange - Developing  
+        3: '#ffcc00',  // Yellow - Defined
+        4: '#88cc00',  // Light Green - Managed
+        5: '#44cc44'   // Green - Optimized
     };
     
-    // Generate rings
-    for (let level = 1; level <= 5; level++) {
-        const dimensions = dimensionsByLevel[level];
-        const ringRadius = innerRadius + (level - 1) * ringWidth;
-        const outerRadius = ringRadius + ringWidth;
-        
-        if (dimensions.length > 0) {
-            const anglePerSegment = (2 * Math.PI) / dimensions.length;
-            
-            dimensions.forEach((dimension, index) => {
-                const startAngle = index * anglePerSegment - Math.PI / 2;
-                const endAngle = (index + 1) * anglePerSegment - Math.PI / 2;
-                
-                // Create path for ring segment
-                const path = createRingSegmentPath(centerX, centerY, ringRadius, outerRadius, startAngle, endAngle);
-                
-                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                pathElement.setAttribute('d', path);
-                pathElement.setAttribute('fill', colors[level]);
-                pathElement.setAttribute('class', 'ring-segment');
-                pathElement.setAttribute('data-dimension', dimension.name);
-                pathElement.setAttribute('data-score', dimension.score);
-                pathElement.setAttribute('data-level', level);
-                
-                // Add tooltip
-                pathElement.addEventListener('mouseenter', function(e) {
-                    showRingTooltip(e, dimension.name, dimension.score, level);
-                });
-                
-                pathElement.addEventListener('mouseleave', hideRingTooltip);
-                
-                svg.appendChild(pathElement);
-            });
-        } else {
-            // Create empty ring
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', centerX);
-            circle.setAttribute('cy', centerY);
-            circle.setAttribute('r', ringRadius + ringWidth/2);
-            circle.setAttribute('fill', 'none');
-            circle.setAttribute('stroke', '#e9ecef');
-            circle.setAttribute('stroke-width', ringWidth);
-            svg.appendChild(circle);
-        }
-    }
+    const anglePerSegment = (2 * Math.PI) / dimensions.length;
     
-    // Add center circle
+    // Generate segments for each sub-dimension
+    dimensions.forEach((dimension, index) => {
+        const startAngle = index * anglePerSegment - Math.PI / 2;
+        const endAngle = (index + 1) * anglePerSegment - Math.PI / 2;
+        const achievedLevel = Math.floor(dimension.score);
+        
+        // Create rings for this segment based on the score
+        for (let ring = 1; ring <= maxRings; ring++) {
+            const ringInnerRadius = innerRadius + (ring - 1) * ringWidth;
+            const ringOuterRadius = ringInnerRadius + ringWidth;
+            
+            // Create path for this ring segment
+            const path = createRingSegmentPath(centerX, centerY, ringInnerRadius, ringOuterRadius, startAngle, endAngle);
+            
+            const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            pathElement.setAttribute('d', path);
+            pathElement.setAttribute('stroke', '#ffffff');
+            pathElement.setAttribute('stroke-width', '1');
+            pathElement.setAttribute('class', 'ring-segment');
+            pathElement.setAttribute('data-dimension', dimension.name);
+            pathElement.setAttribute('data-score', dimension.score);
+            pathElement.setAttribute('data-ring', ring);
+            
+            // Color the ring if the score reaches this level
+            if (ring <= achievedLevel) {
+                pathElement.setAttribute('fill', ringColors[ring]);
+                pathElement.setAttribute('opacity', '0.9');
+            } else {
+                // Unachieved rings are light gray
+                pathElement.setAttribute('fill', '#e9ecef');
+                pathElement.setAttribute('opacity', '0.3');
+            }
+            
+            // Add hover effects
+            pathElement.addEventListener('mouseenter', function(e) {
+                // Highlight all rings of this dimension
+                const allSegments = svg.querySelectorAll(`[data-dimension="${dimension.name}"]`);
+                allSegments.forEach(segment => {
+                    segment.style.strokeWidth = '2';
+                    segment.style.opacity = segment.style.opacity === '0.3' ? '0.5' : '1';
+                });
+                showRingTooltip(e, dimension.name, dimension.score, achievedLevel);
+            });
+            
+            pathElement.addEventListener('mouseleave', function() {
+                // Reset all rings of this dimension
+                const allSegments = svg.querySelectorAll(`[data-dimension="${dimension.name}"]`);
+                allSegments.forEach(segment => {
+                    segment.style.strokeWidth = '1';
+                    const ring = parseInt(segment.getAttribute('data-ring'));
+                    segment.style.opacity = ring <= achievedLevel ? '0.9' : '0.3';
+                });
+                hideRingTooltip();
+            });
+            
+            svg.appendChild(pathElement);
+        }
+        
+        // Add dimension label
+        const labelAngle = (startAngle + endAngle) / 2;
+        const labelRadius = innerRadius + (maxRings * ringWidth) + 15;
+        const labelX = centerX + labelRadius * Math.cos(labelAngle);
+        const labelY = centerY + labelRadius * Math.sin(labelAngle);
+        
+        const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        labelText.setAttribute('x', labelX);
+        labelText.setAttribute('y', labelY);
+        labelText.setAttribute('text-anchor', 'middle');
+        labelText.setAttribute('dominant-baseline', 'middle');
+        labelText.setAttribute('font-size', '10');
+        labelText.setAttribute('font-weight', '500');
+        labelText.setAttribute('fill', '#495057');
+        labelText.textContent = dimension.name.length > 15 ? dimension.name.substring(0, 15) + '...' : dimension.name;
+        svg.appendChild(labelText);
+        
+        // Add score text
+        const scoreText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        scoreText.setAttribute('x', labelX);
+        scoreText.setAttribute('y', labelY + 12);
+        scoreText.setAttribute('text-anchor', 'middle');
+        scoreText.setAttribute('dominant-baseline', 'middle');
+        scoreText.setAttribute('font-size', '9');
+        scoreText.setAttribute('font-weight', 'bold');
+        scoreText.setAttribute('fill', ringColors[achievedLevel] || '#666');
+        scoreText.textContent = dimension.score.toFixed(1);
+        svg.appendChild(scoreText);
+    });
+    
+    // Add center circle with overall score
     const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     centerCircle.setAttribute('cx', centerX);
     centerCircle.setAttribute('cy', centerY);
@@ -1961,23 +2035,38 @@ function generateRingHeatmap(subdimensionScores) {
     svg.appendChild(centerCircle);
     
     // Add center text
-    const overallScore = Math.round(Object.values(subdimensionScores).reduce((sum, data) => sum + data.average_score, 0) / Object.keys(subdimensionScores).length);
+    const centerText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    centerText.setAttribute('x', centerX);
+    centerText.setAttribute('y', centerY - 10);
+    centerText.setAttribute('text-anchor', 'middle');
+    centerText.setAttribute('dominant-baseline', 'middle');
+    centerText.setAttribute('font-size', '14');
+    centerText.setAttribute('font-weight', 'bold');
+    centerText.setAttribute('fill', '#495057');
+    centerText.textContent = 'Overall';
+    svg.appendChild(centerText);
     
+    const avgScore = dimensions.reduce((sum, dim) => sum + dim.score, 0) / dimensions.length;
     const scoreText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     scoreText.setAttribute('x', centerX);
-    scoreText.setAttribute('y', centerY - 5);
+    scoreText.setAttribute('y', centerY + 5);
     scoreText.setAttribute('text-anchor', 'middle');
-    scoreText.setAttribute('class', 'center-score-number');
-    scoreText.textContent = overallScore;
+    scoreText.setAttribute('dominant-baseline', 'middle');
+    scoreText.setAttribute('font-size', '16');
+    scoreText.setAttribute('font-weight', 'bold');
+    scoreText.setAttribute('fill', '#007bff');
+    scoreText.textContent = avgScore.toFixed(1);
     svg.appendChild(scoreText);
     
-    const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    labelText.setAttribute('x', centerX);
-    labelText.setAttribute('y', centerY + 15);
-    labelText.setAttribute('text-anchor', 'middle');
-    labelText.setAttribute('class', 'center-score-label');
-    labelText.textContent = 'Overall';
-    svg.appendChild(labelText);
+    const levelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    levelText.setAttribute('x', centerX);
+    levelText.setAttribute('y', centerY + 20);
+    levelText.setAttribute('text-anchor', 'middle');
+    levelText.setAttribute('dominant-baseline', 'middle');
+    levelText.setAttribute('font-size', '12');
+    levelText.setAttribute('fill', '#666');
+    levelText.textContent = `Level ${Math.round(avgScore)}`;
+    svg.appendChild(levelText);
 }
 
 function createRingSegmentPath(centerX, centerY, innerRadius, outerRadius, startAngle, endAngle) {
