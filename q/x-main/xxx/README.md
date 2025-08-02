@@ -4,7 +4,6 @@ A comprehensive, professional-grade security assessment platform with client-spe
 
 ## 🌟 Key Features
 
-### ✅ Fully Implemented & Working
 - **🔐 Role-Based Access Control**: Superuser, Lead, Client roles with strict permissions
 - **🎯 Client-Specific Lead Assignment**: Leads can only access assigned client data
 - **🧮 Mathematical Scoring**: Proper dimension averaging and overall maturity calculation
@@ -19,27 +18,6 @@ A comprehensive, professional-grade security assessment platform with client-spe
 3. **Clients** complete security questionnaires for their products
 4. **Assigned leads** review responses and communicate with their client only
 5. **Mathematical scoring** provides accurate maturity levels and insights
-
-## 🚀 Quick Start
-
-### Option 1: Use Startup Script (Recommended)
-```bash
-cd xxx
-./start_securesphere.sh
-```
-
-### Option 2: Manual Setup
-```bash
-cd xxx
-pip3 install -r requirements.txt --break-system-packages
-python3 init_database.py --reset
-python3 app.py
-```
-
-### 🌐 Access the Application
-- **URL**: http://localhost:5001
-- **Admin Login**: `admin` / `AdminPass123`
-- **Organization**: `ACCORIAN`
 
 ## 🔒 Security Features
 
@@ -65,11 +43,11 @@ Overall Maturity Score = Sum of dimension averages / Number of dimensions
 ```
 
 ### Maturity Levels
-- **Level 5 - Optimized** (90%+)
-- **Level 4 - Managed** (75-89%)
-- **Level 3 - Defined** (60-74%)
-- **Level 2 - Developing** (40-59%)
-- **Level 1 - Initial** (<40%)
+- **Level 5 - Optimized**
+- **Level 4 - Managed** 
+- **Level 3 - Defined** 
+- **Level 2 - Developing** 
+- **Level 1 - Initial** 
 
 ## 🏗️ Architecture
 
@@ -79,7 +57,6 @@ Overall Maturity Score = Sum of dimension averages / Number of dimensions
 - ✅ Create and manage all users
 - ✅ Access ALL client data
 - ✅ Assign leads to specific clients
-- ✅ System analytics and configuration
 - ✅ Organization: ACCORIAN
 
 #### 🟢 Lead Reviewer
@@ -94,7 +71,7 @@ Overall Maturity Score = Sum of dimension averages / Number of dimensions
 - ✅ Complete security questionnaires
 - ✅ View own results and maturity scores
 - ✅ Communicate with assigned lead
-- ✅ Organization: ACCORIAN
+
 
 ## 📱 Features by User Type
 
@@ -192,12 +169,6 @@ xxx/
 - **No merge conflicts**
 - **Clean application startup**
 - **Proper error handling**
-
-## 📋 Default Credentials
-- **Username**: `admin`
-- **Password**: `AdminPass123`
-- **Role**: `superuser`
-- **Organization**: `ACCORIAN`
 
 ⚠️ **Change these in production using environment variables!**
 
