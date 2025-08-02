@@ -221,49 +221,7 @@
                 </div>
                 {% endif %}
                 
-                <!-- Dimension-wise Results Display -->
-                <div class="dimension-results-container" id="dimensionResults">
-                    <h6 class="text-muted mb-3">
-                        <i class="bi bi-grid-3x2-gap me-2"></i>Security Dimensions Overview
-                    </h6>
-                    <div class="row">
-                        {% for dimension, data in dimension_results.items() %}
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="dimension-card">
-                                <div class="dimension-header">
-                                    <h6 class="dimension-title">{{ dimension }}</h6>
-                                    <div class="dimension-score-badge level-{{ data.average_score|round|int }}">
-                                        {{ data.average_score|round(1) }}
-                                    </div>
-                                </div>
-                                <div class="dimension-details">
-                                    <div class="subdimensions-count">
-                                        {{ data.count }} Sub-dimensions
-                                    </div>
-                                    <div class="progress mt-2">
-                                        <div class="progress-bar level-{{ data.average_score|round|int }}" 
-                                             style="width: {{ (data.average_score / 5 * 100)|round }}%">
-                                        </div>
-                                    </div>
-                                    <div class="subdimensions-list mt-2">
-                                        {% for subdim in data.subdimensions %}
-                                        <small class="d-block text-muted">{{ subdim.name }}: {{ subdim.score|round(1) }}</small>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
                 {% endif %}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
 
                 <!-- Maturity Legend -->
                 <div class="maturity-legend mt-4">
@@ -660,6 +618,78 @@
     font-size: 0.8rem;
     color: #666;
     font-weight: 600;
+}
+
+/* Ring Heatmap SVG Styles */
+.ring-heatmap-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.ring-heatmap-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.ring-heatmap-svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.ring-segment {
+    stroke: #ffffff;
+    stroke-width: 2;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.ring-segment:hover {
+    opacity: 0.8;
+    stroke-width: 3;
+}
+
+.ring-legend {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.dimension-labels {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dimension-label-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.dimension-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    margin-right: 8px;
+    border: 1px solid #ddd;
+}
+
+.dimension-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.dimension-score {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
 }
 
 /* Ring-wise Heatmap Styles */
