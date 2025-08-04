@@ -107,12 +107,18 @@ class User(db.Model):
     responses = db.relationship('QuestionnaireResponse', backref='user', lazy=True)
     assigned_client = db.relationship('User', remote_side=[id], backref='assigned_leads', foreign_keys=[assigned_client_id])
     
+    # Many-to-many relationships for multiple client assignments
+    # Note: We'll define this after the table is created
+    # assigned_clients will be added dynamically
+    
     def can_access_client_data(self, client_id):
         """Check if this user can access data for a specific client"""
         if self.role == 'superuser':
             return True
         elif self.role == 'lead':
-            return self.assigned_client_id == client_id
+            # Check both old assignment (for backward compatibility) and new many-to-many
+            return (self.assigned_client_id == client_id or 
+                   self.assigned_clients.filter_by(id=client_id).first() is not None)
         elif self.role == 'client':
             return self.id == client_id
         return False
@@ -121,21 +127,67 @@ class User(db.Model):
         """Get list of clients this user can access"""
         if self.role == 'superuser':
             return User.query.filter_by(role='client', is_active=True).all()
-        elif self.role == 'lead' and self.assigned_client_id:
-            client = User.query.filter_by(id=self.assigned_client_id, role='client', is_active=True).first()
-            return [client] if client else []
+        elif self.role == 'lead':
+            # Combine old assignment (for backward compatibility) and new many-to-many
+            clients = []
+            # Add old assignment client if exists
+            if self.assigned_client_id:
+                old_client = User.query.filter_by(id=self.assigned_client_id, role='client', is_active=True).first()
+                if old_client:
+                    clients.append(old_client)
+            # Add new assignment clients
+            new_clients = self.assigned_clients.filter_by(role='client', is_active=True).all()
+            # Combine and deduplicate
+            all_clients = {client.id: client for client in clients + new_clients}
+            return list(all_clients.values())
         elif self.role == 'client':
             return [self]
         return []
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
+    
+    def assign_client(self, client_id):
+        """Assign a client to this lead user"""
+        if self.role != 'lead':
+            return False
+        client = User.query.filter_by(id=client_id, role='client').first()
+        if client and client not in self.assigned_clients:
+            self.assigned_clients.append(client)
+            return True
+        return False
+    
+    def unassign_client(self, client_id):
+        """Unassign a client from this lead user"""
+        if self.role != 'lead':
+            return False
+        client = User.query.filter_by(id=client_id, role='client').first()
+        if client and client in self.assigned_clients:
+            self.assigned_clients.remove(client)
+            return True
+        return False
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
+    
     def __repr__(self):
         return f'<User {self.username}>'
+
+# Association table for many-to-many relationship between leads and clients
+# Define after User class to avoid circular reference issues
+lead_client_association = db.Table('lead_client_associations',
+    db.Column('lead_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('client_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=lambda: datetime.now(timezone.utc))
+)
+
+# Add the many-to-many relationship to the User model
+User.assigned_clients = db.relationship('User',
+                                       secondary=lead_client_association,
+                                       primaryjoin=User.id == lead_client_association.c.lead_id,
+                                       secondaryjoin=User.id == lead_client_association.c.client_id,
+                                       backref=db.backref('assigned_to_leads', lazy='dynamic'),
+                                       lazy='dynamic')
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -2863,6 +2915,36 @@ def revoke_invitation(invitation_id):
     flash('Invitation revoked successfully.')
     return redirect(url_for('manage_users'))
 
+@app.route('/admin/assign_client/<int:lead_id>/<int:client_id>', methods=['POST'])
+@login_required('superuser')
+def assign_client_to_lead(lead_id, client_id):
+    """Assign a client to a lead"""
+    lead = User.query.filter_by(id=lead_id, role='lead').first_or_404()
+    client = User.query.filter_by(id=client_id, role='client').first_or_404()
+    
+    if lead.assign_client(client_id):
+        db.session.commit()
+        flash(f'Client {client.username} assigned to lead {lead.username} successfully.')
+    else:
+        flash(f'Client {client.username} is already assigned to lead {lead.username}.')
+    
+    return redirect(url_for('manage_users'))
+
+@app.route('/admin/unassign_client/<int:lead_id>/<int:client_id>', methods=['POST'])
+@login_required('superuser')
+def unassign_client_from_lead(lead_id, client_id):
+    """Unassign a client from a lead"""
+    lead = User.query.filter_by(id=lead_id, role='lead').first_or_404()
+    client = User.query.filter_by(id=client_id, role='client').first_or_404()
+    
+    if lead.unassign_client(client_id):
+        db.session.commit()
+        flash(f'Client {client.username} unassigned from lead {lead.username} successfully.')
+    else:
+        flash(f'Client {client.username} was not assigned to lead {lead.username}.')
+    
+    return redirect(url_for('manage_users'))
+
 @app.route('/communication/<int:product_id>')
 @login_required()
 def unified_communication(product_id):
@@ -2876,21 +2958,34 @@ def unified_communication(product_id):
     # Get all conversations for this product, grouped by question/response
     # Include all statuses for proper conversation flow
     if current_user_role == 'lead':
-        # Lead can see conversations for all clients on this product (exclude approved conversations)
-        conversations = db.session.query(LeadComment).options(
-            db.joinedload(LeadComment.response),
-            db.joinedload(LeadComment.lead),
-            db.joinedload(LeadComment.client)
-        ).filter(
-            LeadComment.product_id == product_id,
-            LeadComment.parent_comment_id.is_(None),  # Only root comments
-            LeadComment.status.in_(['needs_revision', 'rejected', 'pending', 'client_reply', 'client_response'])
-        ).order_by(LeadComment.created_at.desc()).all()
-        
-        # Get assigned client and responses for modal
+        # Lead can see conversations for all their assigned clients on this product
         current_lead = User.query.get(user_id)
-        assigned_client = User.query.get(current_lead.assigned_client_id) if current_lead.assigned_client_id else None
-        responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all() if assigned_client else []
+        accessible_clients = current_lead.get_accessible_clients()
+        client_ids = [client.id for client in accessible_clients]
+        
+        if client_ids:
+            conversations = db.session.query(LeadComment).options(
+                db.joinedload(LeadComment.response),
+                db.joinedload(LeadComment.lead),
+                db.joinedload(LeadComment.client)
+            ).filter(
+                LeadComment.product_id == product_id,
+                LeadComment.client_id.in_(client_ids),  # Only clients assigned to this lead
+                LeadComment.parent_comment_id.is_(None),  # Only root comments
+                LeadComment.status.in_(['needs_revision', 'rejected', 'pending', 'client_reply', 'client_response'])
+            ).order_by(LeadComment.created_at.desc()).all()
+        else:
+            conversations = []
+        
+        # Get all assigned clients and their responses for modal
+        assigned_client = accessible_clients[0] if accessible_clients else None  # For backward compatibility
+        responses = []
+        for client in accessible_clients:
+            client_responses = QuestionnaireResponse.query.filter_by(
+                product_id=product_id, 
+                user_id=client.id
+            ).all()
+            responses.extend(client_responses)
         
     elif current_user_role == 'client':
         # Client can only see their own conversations (exclude approved conversations)
@@ -2958,12 +3053,19 @@ def unified_communication(product_id):
             conversations_by_dimension[dimension] = []
         conversations_by_dimension[dimension].append(thread)
     
+    # Pass accessible clients for leads
+    accessible_clients = []
+    if current_user_role == 'lead':
+        current_lead = User.query.get(user_id)
+        accessible_clients = current_lead.get_accessible_clients()
+    
     return render_template('unified_communication.html', 
                          product=product,
                          conversations_by_dimension=conversations_by_dimension,
                          current_user_role=current_user_role,
                          user_id=user_id,
                          assigned_client=assigned_client,
+                         accessible_clients=accessible_clients,
                          responses=responses)
 
 @app.route('/communication/<int:product_id>/new', methods=['POST'])

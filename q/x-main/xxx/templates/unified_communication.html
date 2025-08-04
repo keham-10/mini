@@ -96,7 +96,7 @@
 
 .conversation-meta {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     font-size: 0.75rem;
     color: #999;
@@ -528,7 +528,8 @@
                             <span class="badge bg-light text-dark ms-2">{{ threads|length }}</span>
                         </div>
                         {% for thread in threads %}
-                            <div class="conversation-list-item {% if loop.parent.loop.first and loop.first %}active{% endif %}" 
+                            {% set is_first_conversation = loop.index0 == 0 and loop.previtem is undefined %}
+                            <div class="conversation-list-item {% if is_first_conversation and dimension == conversations_by_dimension.keys()|first %}active{% endif %}" 
                                  onclick="selectConversation('{{ dimension|replace(' ', '_') }}_{{ loop.index }}')"
                                  data-conversation-id="{{ dimension|replace(' ', '_') }}_{{ loop.index }}">
                                 <div class="conversation-preview">
@@ -569,9 +570,10 @@
             {% if conversations_by_dimension %}
                 {% for dimension, threads in conversations_by_dimension.items() %}
                     {% for thread in threads %}
-                        <div class="chat-conversation {% if loop.parent.loop.first and loop.first %}active{% endif %}" 
+                        {% set is_first_conversation = loop.index0 == 0 and dimension == conversations_by_dimension.keys()|first %}
+                        <div class="chat-conversation {% if is_first_conversation %}active{% endif %}" 
                              id="conversation_{{ dimension|replace(' ', '_') }}_{{ loop.index }}"
-                             style="{% if not (loop.parent.loop.first and loop.first) %}display: none;{% endif %}">
+                             style="{% if not is_first_conversation %}display: none;{% endif %}">
                             
                             <!-- Chat Header -->
                             <div class="chat-header">
@@ -741,7 +743,11 @@
                         <label class="form-label">Client</label>
                         <select name="client_id" class="form-select" required>
                             <option value="">Select a client...</option>
-                            {% if assigned_client %}
+                            {% if current_user_role == 'lead' and accessible_clients %}
+                                {% for client in accessible_clients %}
+                                    <option value="{{ client.id }}">{{ client.username }} ({{ client.email }})</option>
+                                {% endfor %}
+                            {% elif assigned_client %}
                                 <option value="{{ assigned_client.id }}">{{ assigned_client.username }}</option>
                             {% endif %}
                         </select>
