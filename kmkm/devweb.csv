@@ -1,0 +1,241 @@
+Dimensions,Sub-Dimensions,Questions,Description,Options,Scores
+Build and Deployment,Build,Do you have a defined and documented build process?,"This refers to having a detailed step-by-step guide or set of instructions for how software is built from source code, ensuring everyone involved follows the same procedures.",A) No defined process; builds are manual or ad hoc.,1
+,,,,"B) Some projects have defined processes, but these are inconsistent.",2
+,,,,C) A documented process exists but lacks adoption in all teams.,3
+,,,,"D) All teams follow a consistent, well-documented process.",4
+,,,,E) Processes are optimized and integrated with advanced tools for automation and scaling.,5
+,,Are your builds and tests performed in isolated environments?,"This involves running builds and tests in a controlled and independent setup, such as virtual machines or containers, that are separate from production or shared environments.",A) Builds occur on shared systems with no isolation.,1
+,,,,"B) Some builds use isolated environments, but only occasionally.",2
+,,,,C) Builds are performed in isolated environments for most projects.,3
+,,,,D) All builds use isolated environments destroyed after each use.,4
+,,,,E) Advanced security checks and isolation methods ensure scalability and performance.,5
+,,Are artifacts signed to ensure integrity and authenticity?,"Signing artifacts involves attaching a cryptographic signature to software packages or files, ensuring that they have not been tampered with and are verified as genuine.",A) No artifacts are signed.,1
+,,,,"B) Some critical artifacts are signed, but verification is inconsistent.",2
+,,,,"C) Most artifacts are signed, but verification is inconsistent or manual.",3
+,,,,D) All artifacts are signed and verified manually.,4
+,,,,"E) All artifacts are signed, and verification is automated as part of the CI/CD process.",5
+,Deployment,Do you have a defined and documented deployment process?,"This means having a clear and written workflow that outlines how software is released or deployed into production, including the steps, roles, and systems involved.",A) No defined deployment process; deployments are manual or inconsistent.,1
+,,,,"B) Some teams follow a deployment process, but it is undocumented and inconsistent.",2
+,,,,C) A documented deployment process exists but is not consistently followed.,3
+,,,,D) All teams consistently follow a documented deployment process.,4
+,,,,"E) The deployment process is optimized, automated, and integrated with monitoring for continuous improvement.",5
+,,Do you use rolling updates during deployment to minimize downtime?,"Rolling updates involve deploying new versions of software incrementally across servers or systems, reducing the risk of downtime or service disruption.","A) Deployments result in downtime, with no strategy to minimize it.",1
+,,,,B) Rolling updates are occasionally used but not consistently.,2
+,,,,C) Rolling updates are used for most deployments but lack automation or monitoring.,3
+,,,,"D) Rolling updates are consistently implemented, automated, and monitored for critical systems.",4
+,,,,"E) Rolling updates are automated, monitored, and integrated with advanced traffic-shifting strategies like canary or blue/green deployments.",5
+,,Are artifacts built once and deployed across all environments?,"This pertains to ensuring that the same version of software, created in a single build process, is used consistently across different environments like staging, testing, and production.","A) Artifacts are rebuilt for every environment, increasing inconsistencies.",1
+,,,,"B) Some artifacts are reused, but builds for different environments are still frequent.",2
+,,,,C) Artifacts are built once but inconsistently deployed across environments.,3
+,,,,D) Artifacts are built once and consistently deployed across all environments.,4
+,,,,"E) A single artifact is built, signed, and deployed across environments with strict versioning and monitoring for consistency.",5
+,Patch Management,"Has a patch policy been defined and implemented for all artifacts (e.g., container images)?","A patch policy defines the rules and schedules for applying updates or fixes to software components, ensuring they are updated to address vulnerabilities or improve functionality.","A) No patch policy exists, and patches are applied inconsistently.",1
+,,,,B) A patch policy exists but is not consistently followed across teams.,2
+,,,,C) A patch policy is defined and followed by most teams but lacks strict enforcement.,3
+,,,,"D) A patch policy is defined, enforced, and regularly reviewed for effectiveness.",4
+,,,,"E) A comprehensive patch policy is in place, automated, and integrated with CI/CD pipelines for immediate updates.",5
+,,Are automated pull requests (PRs) for patching dependencies integrated into your workflows?,"This refers to incorporating automated systems that generate PRs whenever updates or patches are available for software dependencies, streamlining the patching process.",A) No automated PRs; patches are handled manually.,1
+,,,,B) Automated PRs are used occasionally but are not integrated into workflows.,2
+,,,,C) Automated PRs are integrated into workflows but require significant manual intervention.,3
+,,,,"D) Automated PRs are integrated and monitored, with minimal manual intervention required.",4
+,,,,"E) Automated PRs are seamlessly integrated, monitored, and auto-merged with extensive testing to ensure stability and security.",5
+,,Are nightly builds of base images conducted to ensure up-to-date dependencies?,Nightly builds involve the automatic generation of new versions of base images every night to ensure all software dependencies are updated and secure.,A) No regular builds are conducted; updates are applied sporadically.,1
+,,,,B) Builds are conducted occasionally but not consistently on a nightly basis.,2
+,,,,C) Nightly builds are conducted for most base images but lack proper monitoring or validation.,3
+,,,,"D) Nightly builds are conducted, validated, and monitored for all critical base images.",4
+,,,,"E) Nightly builds are fully automated, validated, and monitored, with alerts for outdated dependencies or failed builds.",5
+Culture and Organization,Design,Is threat modeling conducted at the technical feature level during sprint planning?,This involves identifying potential security risks and vulnerabilities in specific technical features of the product during the planning of development sprints.,A) No threat modeling is conducted.,1
+,,,,B) Threat modeling is occasionally conducted but not consistently during sprint planning.,2
+,,,,C) Threat modeling is conducted for major technical features during sprint planning but lacks depth or structure.,3
+,,,,D) Threat modeling is conducted consistently for all technical features during sprint planning with defined processes.,4
+,,,,"E) Comprehensive threat modeling is conducted consistently during sprint planning, identifying risks and guiding security improvements proactively.",5
+,,Are abuse stories created alongside user stories to address security considerations?,"Abuse stories describe potential misuse scenarios of the application, created during development to proactively identify and mitigate security risks.",A) No abuse stories are created during the development process.,1
+,,,,B) Abuse stories are occasionally created but lack proper alignment with user stories.,2
+,,,,C) Abuse stories are created alongside user stories for critical components but are not applied consistently.,3
+,,,,"D) Abuse stories are created consistently for all user stories, ensuring security concerns are addressed systematically.",4
+,,,,"E) Abuse stories are an integral part of the development process and include comprehensive security considerations, validated by security specialists.",5
+,,Are advanced threat modeling practices implemented to identify risks?,Advanced practices involve detailed analysis of business and technical processes to identify potential threats and design appropriate safeguards.,A) No advanced threat modeling practices are in place.,1
+,,,,B) Advanced practices are occasionally used but are inconsistent and lack proper documentation.,2
+,,,,C) Advanced practices are applied to specific projects or features but lack broader organizational adoption.,3
+,,,,"D) Advanced threat modeling practices are consistently applied across projects, with defined processes and tools.",4
+,,,,"E) Advanced practices are integrated organization-wide, leveraging automation and expert validation for identifying and mitigating risks.",5
+,Education and Guidance,How frequently do you conduct ad-hoc security trainings for your software developers?,This refers to the on-demand or impromptu sessions held to educate developers on addressing specific security challenges or emerging threats.,A) No ad-hoc security training is conducted.,1
+,,,,B) Security trainings are conducted rarely and only in response to specific incidents.,2
+,,,,C) Ad-hoc trainings are occasionally conducted but lack a structured approach.,3
+,,,,D) Regular ad-hoc trainings are conducted to address emerging threats and vulnerabilities.,4
+,,,,"E) Comprehensive, on-demand security trainings are consistently provided and tailored to developer needs and evolving risks.",5
+,,How accessible are security consultants for your development teams?,"Accessibility of security consultants refers to their availability to provide expertise, guidance, or reviews when developers face security-related questions.",A) Security consultants are not available for the development teams.,1
+,,,,B) Security consultants are occasionally accessible but not in a structured or timely manner.,2
+,,,,C) Security consultants are accessible for most development teams but may lack immediate availability.,3
+,,,,D) Security consultants are consistently accessible and provide timely guidance to development teams.,4
+,,,,"E) Security consultants are integrated into development workflows, providing proactive and immediate support for all teams.",5
+,,How often do you conduct collaborative security checks with developers and system administrators?,This involves organizing joint reviews or workshops between developers and system administrators to identify and resolve security gaps collectively.,A) Collaborative security checks are not conducted.,1
+,,,,B) Collaborative security checks are rarely conducted and lack formal processes.,2
+,,,,"C) Collaborative security checks are occasionally conducted, focusing on critical areas but lacking regular frequency.",3
+,,,,"D) Collaborative security checks are regularly conducted with defined processes, engaging both developers and system administrators effectively.",4
+,,,,"E) Collaborative security checks are conducted systematically and include advanced practices, fostering a culture of shared security responsibility.",5
+,Process,How well-defined and documented are your business continuity and disaster recovery (BCDR) practices?,This means having comprehensive plans and procedures documented to ensure the continuity of business operations and recovery in case of disruptions or disasters.,A) No BCDR practices are defined or documented.,1
+,,,,B) Basic BCDR practices exist but lack documentation or consistency across the organization.,2
+,,,,C) BCDR practices are defined and documented but lack comprehensive testing and periodic updates.,3
+,,,,D) Well-defined and documented BCDR practices are consistently updated and periodically tested.,4
+,,,,"E) Comprehensive BCDR practices are fully integrated into operations, regularly updated, tested, and optimized for rapid recovery.",5
+,,How thoroughly are new versions of source code or infrastructure components reviewed for security measures?,This involves assessing all updates or new implementations in code or infrastructure to ensure compliance with security standards and to identify vulnerabilities.,A) No security reviews are conducted for new versions.,1
+,,,,B) Security reviews are sporadic and conducted for critical components only.,2
+,,,,C) Security reviews are conducted for most new versions but lack consistency in thoroughness and scope.,3
+,,,,"D) Security reviews are systematically conducted for all new versions, covering key security measures.",4
+,,,,"E) Security reviews are comprehensive, automated where possible, and integrated into the CI/CD pipeline for every update.",5
+,,How well-defined and implemented is your change management process?,"This refers to having clear, documented procedures to manage system changes, ensuring they are tracked, reviewed, and implemented securely and consistently.",A) Change management processes are not defined or documented.,1
+,,,,B) Basic change management processes exist but are not consistently followed.,2
+,,,,C) Change management processes are well-defined but lack complete adoption across the organization.,3
+,,,,"D) Change management processes are thoroughly implemented, with clear documentation and organization-wide adherence.",4
+,,,,E) Change management processes are fully integrated with advanced monitoring and rollback mechanisms for seamless operations.,5
+Implementation,Application Hardening,How effectively does your organization implement contextualized encoding to prevent injection vulnerabilities?,"Contextualized encoding ensures that user inputs are encoded appropriately for their intended context (e.g., HTML, JavaScript, SQL), preventing injection attacks.",A) No contextualized encoding is performed.,1
+,,,,B) Some encoding is done but lacks a consistent approach across all input fields.,2
+,,,,C) Contextualized encoding is implemented for key parts of the application but not for all possible injection points.,3
+,,,,"D) Contextualized encoding is systematically applied across the application, minimizing injection risks.",4
+,,,,"E) Comprehensive contextualized encoding is fully automated, ensuring secure input handling throughout the application lifecycle.",5
+,,"How well does your organization implement application hardening practices, following frameworks like OWASP ASVS?","Application hardening involves using recognized frameworks, such as the OWASP Application Security Verification Standard (ASVS), to enhance application security.",A) No use of frameworks like OWASP ASVS for application hardening.,1
+,,,,B) Basic hardening practices are followed but not consistently aligned with frameworks like OWASP ASVS.,2
+,,,,C) OWASP ASVS practices are followed for most application components but not integrated into the full lifecycle.,3
+,,,,D) OWASP ASVS is systematically applied to most components with strong integration into development processes.,4
+,,,,"E) OWASP ASVS is fully integrated into the development lifecycle, with automated testing and continuous improvements based on feedback.",5
+,Development and Source Control,Are versioning practices implemented to track artifacts and prevent untracked deployments?,"Versioning ensures every build or deployment artifact is assigned a unique version, enabling traceability and preventing the use of untracked or outdated artifacts.",A) No versioning practices are implemented.,1
+,,,,B) Versioning practices are inconsistently applied or tracked manually.,2
+,,,,"C) Versioning is implemented for some components, but not across the entire system.",3
+,,,,"D) Versioning is applied consistently across all components, ensuring full traceability of artifacts.",4
+,,,,"E) Versioning practices are fully automated, with traceability integrated into the deployment pipeline and artifact management systems.",5
+,,"Are branch protection measures like PRs, force push blocks, and status checks enforced?","This refers to enforcing security measures on version control branches, including requiring pull requests, disabling force pushes, and mandating status checks before merging.",A) No branch protection measures are in place.,1
+,,,,"B) Basic branch protection is implemented, but enforcement is not consistent.",2
+,,,,"C) Branch protection measures, such as PRs and status checks, are implemented for some branches.",3
+,,,,"D) Branch protection measures, including PRs, force push blocks, and status checks, are consistently enforced for all branches.",4
+,,,,"E) Branch protection measures are highly automated, ensuring strict enforcement across all projects and developers.",5
+,,Are tools like .gitignore and static analysis integrated to enhance code quality?,"Tools like .gitignore prevent the inclusion of unnecessary files in repositories, while static analysis tools scan code to detect vulnerabilities or quality issues.",A) No static analysis or .gitignore tools are used.,1
+,,,,"B) Some basic static analysis is done manually, but not fully integrated with version control.",2
+,,,,"C) .gitignore is used, and static analysis tools are integrated into some parts of the development workflow.",3
+,,,,"D) .gitignore and static analysis tools are integrated across all components, improving code quality and security.",4
+,,,,"E) Static analysis and .gitignore tools are fully automated and continuously integrated, preventing security and quality issues in code.",5
+,Infrastructure Hardening,Are applications isolated in virtualized environments to prevent cross-service vulnerabilities?,"Isolating applications in virtualized environments, such as containers or sandboxes, prevents vulnerabilities in one service from affecting others.",A) No isolation exists; services run in shared environments.,1
+,,,,"B) Some applications are isolated, but many still share environments.",2
+,,,,C) Most applications are isolated in virtualized environments.,3
+,,,,D) All applications are consistently isolated in virtualized environments to prevent cross-service vulnerabilities.,4
+,,,,E) Applications are isolated with advanced measures like container orchestration and enforced network segmentation.,5
+,,Are environments hardened using baseline security practices?,"This refers to applying security best practices at the OS, infrastructure, and network level to reduce the attack surface before deploying applications.",A) No baseline security practices are applied.,1
+,,,,"B) Some environments are hardened, but this is inconsistent.",2
+,,,,C) Most environments follow baseline security hardening practices.,3
+,,,,D) All environments are hardened consistently using industry-standard baseline practices.,4
+,,,,E) Hardened environments are reviewed regularly and leverage advanced security measures such as automated compliance scanning.,5
+Information Gathering,Logging,Is centralized system logging implemented to prevent unauthorized manipulation and corruption?,"Centralized logging ensures that logs are aggregated in secure systems, reducing the risk of tampering or loss and facilitating easier analysis.",A) No centralized logging is implemented.,1
+,,,,"B) Some systems have centralized logging, but it is incomplete.",2
+,,,,C) Centralized logging is implemented for most critical systems.,3
+,,,,D) Centralized logging is consistently implemented across all systems.,4
+,,,,E) Centralized logging with advanced features like tamper-proof mechanisms and access controls is fully operational.,5
+,,"Are security-relevant events logged (e.g., login attempts, user management, input validation)?",Logging security-critical events like authentication attempts or changes in user permissions helps detect and respond to malicious activities.,A) No security-relevant events are logged.,1
+,,,,B) Limited logging of security events is performed.,2
+,,,,C) Security-relevant events are logged for most systems.,3
+,,,,D) All security-relevant events are consistently logged and monitored.,4
+,,,,"E) Logs are enriched with context, monitored in real-time, and integrated with incident response processes.",5
+,,Are logs visualized in a real-time monitoring system for easy assessment?,"This involves integrating logs into a real-time dashboard, enabling teams to quickly detect, assess, and respond to potential security incidents.",A) No log visualization or monitoring system is in place.,1
+,,,,"B) Some logs are visualized, but the system lacks real-time capabilities.",2
+,,,,C) Logs are visualized in a monitoring system for most critical components.,3
+,,,,D) A real-time monitoring system is implemented for all logs.,4
+,,,,E) Real-time monitoring with advanced analytics and automated alerting is fully operational.,5
+,Monitoring,"Are system metrics like CPU, memory, and disk usage monitored for performance and bottlenecks?","Monitoring system metrics ensures optimal performance by tracking resource usage, identifying bottlenecks, and preventing system failures due to overload.",A) No system metrics are monitored.,1
+,,,,"B) Some metrics are monitored, but coverage is inconsistent.",2
+,,,,C) Most critical metrics are monitored for key systems.,3
+,,,,D) Comprehensive monitoring of system metrics is implemented.,4
+,,,,E) Metrics are monitored with advanced analytics and integrated with automated incident responses.,5
+,,Are metrics visualized in real-time for quick assessment and analysis?,Real-time metric visualization provides dashboards or alerts that allow teams to promptly identify and address performance or security issues.,A) Metrics are not visualized.,1
+,,,,"B) Some metrics are visualized, but not in real-time.",2
+,,,,C) Real-time visualization is implemented for critical metrics.,3
+,,,,D) Real-time visualization is consistently implemented across all metrics.,4
+,,,,E) Advanced real-time visualization with custom dashboards and stakeholder alerts is in place.,5
+,,Are incidents triggered based on metric thresholds and alerts set for relevant stakeholders?,"Incident management involves setting thresholds for metrics like CPU usage or latency, automatically triggering alerts when exceeded, and notifying stakeholders.",A) No incident triggers or alerts are set.,1
+,,,,B) Basic threshold-based alerts are set for some metrics.,2
+,,,,C) Threshold-based alerts are consistently configured for most metrics.,3
+,,,,D) Alerts are well-configured and integrated with incident management workflows.,4
+,,,,"E) Automated, dynamic thresholding with advanced alerts and incident response processes is implemented.",5
+,Test KPI,Are vulnerabilities tracked by severity and communicated to relevant teams quarterly?,"Vulnerability tracking involves classifying issues based on severity, such as critical or low risk, and regularly communicating updates to relevant teams.",A) Vulnerabilities are not tracked or communicated.,1
+,,,,"B) Some vulnerabilities are tracked, but communication is inconsistent.",2
+,,,,"C) Most vulnerabilities are tracked, and severity is prioritized during quarterly communications.",3
+,,,,D) Comprehensive vulnerability tracking is performed and consistently communicated to relevant teams quarterly.,4
+,,,,E) Vulnerabilities are dynamically tracked with real-time updates and detailed communications.,5
+,,Is response statistics such as Mean Time to Resolution (MTTR) for patching vulnerabilities measured and communicated?,"MTTR measurement tracks how quickly vulnerabilities are resolved, helping improve efficiency and ensuring timely remediation efforts.",A) No response statistics tracked or communicated.,1
+,,,,B) Response statistics tracked but not communicated regularly.,2
+,,,,"C) Response statistics, including MTTR, tracked and communicated quarterly.",3
+,,,,"D) Response statistics tracked and communicated regularly, with MTTR addressed for each component/project/team.",4
+,,,,"E) Response statistics and MTTR communicated regularly, covering all vulnerabilities with timely fixes.",5
+Test and Verification,Application Tests,Are unit tests implemented for critical security-related features like authentication and authorization?,"Security-focused unit tests validate that sensitive functionalities, such as login and access control, work as intended and remain protected from vulnerabilities.",A) No unit tests are implemented for security-related features.,1
+,,,,"B) Few unit tests cover some security features, but coverage is inconsistent.",2
+,,,,C) Most critical security features have unit test coverage.,3
+,,,,D) Comprehensive unit test coverage exists for all critical security features.,4
+,,,,"E) Advanced unit tests are implemented, with continuous monitoring and frequent updates for new security risks.",5
+,,Is there a smoke test performed after each deployment to verify basic functionality and security?,"Smoke tests check key system functionalities after deployment, ensuring the system operates correctly and securely before full testing or usage.",A) No smoke tests are conducted after deployments.,1
+,,,,B) Smoke tests are conducted irregularly or only for specific deployments.,2
+,,,,C) Basic smoke tests are conducted for most deployments to verify functionality.,3
+,,,,D) Comprehensive smoke tests are routinely conducted after every deployment.,4
+,,,,E) Automated and optimized smoke tests validate functionality and security after every deployment.,5
+,,Are vulnerabilities identified during application tests visually represented in an easy-to-understand format?,"Clear visualization of detected vulnerabilities allows teams to quickly grasp security issues, prioritize fixes, and communicate risks effectively.",A) Vulnerabilities are not visually represented.,1
+,,,,"B) Some vulnerabilities are visualized, but the format is unclear or inconsistent.",2
+,,,,"C) Vulnerabilities are presented in a clear format for most tests, with key insights highlighted.",3
+,,,,"D) Detailed, visually appealing reports are consistently generated to represent vulnerabilities clearly.",4
+,,,,E) Sophisticated visualizations with actionable insights are generated automatically to ensure clarity and prioritization.,5
+,Consolidation,"Are vulnerabilities tracked across different layers (e.g., application, infrastructure) and communicated?",Tracking vulnerabilities at various system layers helps ensure comprehensive coverage and enables effective communication across development and operations teams.,A) Vulnerabilities are not tracked or communicated across layers.,1
+,,,,B) Tracking is minimal and communication is irregular or incomplete.,2
+,,,,C) Vulnerabilities are tracked across most layers and communicated to relevant stakeholders.,3
+,,,,"D) Vulnerabilities are consistently tracked across all layers, with clear and timely communication to relevant teams.",4
+,,,,E) Advanced tracking and communication processes ensure seamless coordination across layers for vulnerability management.,5
+,,Are vulnerabilities prioritized for remediation based on their severity and accessibility?,"Prioritizing vulnerabilities ensures that the most critical and exploitable issues are addressed first, reducing the risk to the system.",A) Vulnerabilities are not prioritized for remediation.,1
+,,,,B) Prioritization is ad hoc and does not fully consider severity or accessibility.,2
+,,,,"C) Vulnerabilities are prioritized based on severity for most cases, with occasional gaps in addressing accessibility.",3
+,,,,D) All vulnerabilities are prioritized for remediation with a well-defined framework considering both severity and accessibility.,4
+,,,,"E) Advanced prioritization frameworks dynamically evaluate severity, accessibility, and potential impact to ensure optimal remediation strategies.",5
+,Dynamic Depth for Applications,"Does the vulnerability scan cover client-side dynamic components (e.g., JavaScript execution)?","Scanning client-side dynamic components ensures vulnerabilities in areas such as JavaScript execution are identified and addressed, reducing risks in user-facing elements.",A) No vulnerability scans are conducted for client-side dynamic components.,1
+,,,,B) Scans are conducted occasionally but do not fully cover client-side dynamic components.,2
+,,,,C) Scans are conducted for most client-side dynamic components but lack thoroughness.,3
+,,,,"D) Comprehensive scans are conducted regularly, covering all client-side dynamic components.",4
+,,,,"E) Advanced scans with automated tools ensure full coverage of client-side dynamic components, including rare edge cases.",5
+,,Are multiple roles authenticated and tested during vulnerability scans?,"Testing multiple roles during scans ensures that all access levels, permissions, and potential vulnerabilities in role-specific functionality are covered.",A) No roles are authenticated or tested during vulnerability scans.,1
+,,,,"B) Scans include authentication for some roles, but many are overlooked.",2
+,,,,"C) Most roles are authenticated and tested during scans, but some gaps remain.",3
+,,,,"D) All roles are authenticated and tested, ensuring comprehensive vulnerability coverage.",4
+,,,,E) Advanced practices ensure dynamic role-based testing with extensive scenario coverage.,5
+,Dynamic Depth for Infrastructure,Are network configurations tested to identify unintentionally exposed services?,"Verifying network configurations ensures that services not meant to be publicly accessible are identified and secured, reducing potential attack surfaces.",A) No network configuration tests are conducted.,1
+,,,,B) Network configurations are tested infrequently or inconsistently.,2
+,,,,"C) Network configurations are tested regularly, but some exposure risks may remain undetected.",3
+,,,,D) Comprehensive network configuration tests are conducted regularly to identify and remediate exposed services.,4
+,,,,E) Advanced tools and automation are used to ensure continuous testing and proactive detection of exposed services.,5
+,,Are cloud environments tested for configuration hardening?,"Cloud configuration hardening tests evaluate if best practices like restricting access, enabling encryption, and limiting permissions are implemented.",A) No testing for configuration hardening is conducted in cloud environments.,1
+,,,,B) Basic configuration hardening tests are conducted but lack depth or regularity.,2
+,,,,"C) Cloud configurations are tested regularly, but some critical aspects may be overlooked.",3
+,,,,D) Comprehensive tests ensure cloud configurations meet hardening standards.,4
+,,,,E) Continuous automated testing with advanced tools ensures optimal cloud hardening practices.,5
+,Static Depth for Applications,Are static analysis tools used for source code vulnerabilities?,"Using static analysis tools ensures code is systematically checked for vulnerabilities like hardcoded secrets, insecure functions, or potential injection points.",A) No static analysis tools are used for source code.,1
+,,,,"B) Static analysis tools are used occasionally, but not for all parts of the codebase.",2
+,,,,"C) Static analysis tools are used for the majority of codebase, but some key areas are missed.",3
+,,,,D) Comprehensive static analysis is conducted regularly across the full codebase.,4
+,,,,E) Static analysis is fully automated and continuously integrated into the development pipeline.,5
+,, Are stylistic rules and best practices enforced in the codebase?,"Enforcing stylistic rules promotes consistent coding practices, improving code readability, maintainability, and early detection of potential issues.",A) No stylistic rules are enforced.,1
+,,,,B) Style guides are partially followed with limited enforcement.,2
+,,,,C) Style guides are followed and checked manually during reviews.,3
+,,,,D) Automated stylistic analysis tools enforce compliance.,4
+,,,,E) Comprehensive style compliance checks are fully automated and integrated into workflows.,5
+,Static Depth for Infrastructure,Are static analysis tools used for infrastructure vulnerabilities?,"Static analysis tools assess configuration files and scripts for security gaps, ensuring infrastructure components are secure and compliant with standards.",A) No static analysis tools are used for infrastructure.,1
+,,,,"B) Some tools are used for static analysis of infrastructure, but coverage is incomplete.",2
+,,,,"C) Static analysis tools are regularly used for infrastructure, but some areas are missed.",3
+,,,,D) Comprehensive static analysis is regularly conducted across all infrastructure components.,4
+,,,,"E) Static analysis for infrastructure is automated, fully integrated, and continuously run across all infrastructure components.",5
+,,"Are unused resources, such as secrets, identified and removed from infrastructure?",Identifying and removing unused resources prevents potential security risks from orphaned secrets or inactive infrastructure elements.,A) Unused resources are not identified or removed.,1
+,,,,"B) Some unused resources are identified, but not consistently.",2
+,,,,"C) Unused resources, including secrets, are regularly identified and removed from infrastructure.",3
+,,,,"D) Tools are used to automatically identify and remove unused resources, including secrets, from infrastructure.",4
+,,,,"E) Unused resources are proactively managed, with continuous monitoring and removal of outdated or unneeded resources.",5
+,Test-Intensity,Are test intensity and confidence thresholds optimized to balance accuracy and time?,Optimizing test intensity and confidence ensures effective vulnerability detection while maintaining reasonable testing durations and accuracy levels.,"A) Test intensity and confidence are not considered, leading to inefficient or incomplete testing.",1
+,,,,"B) Some consideration is given to test intensity and confidence thresholds, but they are not well optimized.",2
+,,,,C) Test intensity and confidence thresholds are set but might not be consistent across all tests.,3
+,,,,D) Test intensity and confidence thresholds are well-defined and optimized for most tests.,4
+,,,,"E) Test intensity and confidence thresholds are continuously optimized, ensuring the balance between test depth and time across all tests.",5
+,,Are regular automated security tests performed?,"Regular automated tests ensure consistent, ongoing identification of vulnerabilities, keeping systems secure without relying solely on manual reviews.",A) No automated security tests are performed.,1
+,,,,"B) Some automated security tests are performed, but they are irregular or incomplete.",2
+,,,,"C) Regular automated security tests are performed, but coverage is inconsistent.",3
+,,,,D) Automated security tests are regularly performed with good coverage across key components.,4
+,,,,"E) A fully automated security testing process is integrated into the CI/CD pipeline, with regular and comprehensive testing coverage.",5
