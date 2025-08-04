@@ -158,7 +158,7 @@
                                                 <strong class="text-primary">Evidence Attached</strong>
                                             </div>
                                             <div class="evidence-content mt-2">
-                                                <a href="/{{ reply.response.evidence_path }}" 
+                                                <a href="{{ url_for('uploaded_file', filename=reply.response.evidence_path.split('/')[-1]) }}" 
                                                    target="_blank" 
                                                    class="btn btn-outline-primary btn-sm">
                                                     <i class="bi bi-download me-1"></i>View Evidence

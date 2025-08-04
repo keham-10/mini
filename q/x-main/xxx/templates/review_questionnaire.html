@@ -47,7 +47,7 @@
                                     <div class="detail-content d-flex align-items-center">
                                         <span class="badge bg-success me-2">{{ response.answer }}</span>
                                         {% if response.evidence_path %}
-                                            <a href="/{{ response.evidence_path }}" target="_blank"
+                                            <a href="{{ url_for('uploaded_file', filename=response.evidence_path.split('/')[-1]) }}" target="_blank"
                                                class="btn btn-link btn-sm p-0 text-decoration-none"
                                                title="View Evidence File">
                                                 <i class="bi bi-paperclip text-primary"></i>

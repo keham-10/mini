@@ -211,7 +211,7 @@
                                     </td>
                                     <td>
                                         {% if r.evidence_path %}
-                                            <a href="/{{ r.evidence_path }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <a href="{{ url_for('uploaded_file', filename=r.evidence_path.split('/')[-1]) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-eye me-2"></i>View
                                             </a>
                                         {% else %}
