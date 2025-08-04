@@ -162,12 +162,14 @@
                                 
                                 <div class="dimension-labels mt-4">
                                     <h6 class="mb-3">Dimensions</h6>
-                                    {% for dimension, data in (subdimension_scores.items() | list | sort(attribute='1.average_score', reverse=true))[:5] %}
+                                    {% for dimension, data in subdimension_scores.items() %}
+                                    {% if loop.index <= 5 %}
                                     <div class="dimension-label-item mb-2">
                                         <div class="dimension-color level-{{ data.average_score|round|int }}"></div>
                                         <span class="dimension-name">{{ dimension }}</span>
                                         <span class="dimension-score">{{ data.average_score|round(1) }}</span>
                                     </div>
+                                    {% endif %}
                                     {% endfor %}
                                 </div>
                             </div>
@@ -344,7 +346,7 @@
                                     {% endif %}
 
                                     <!-- Admin Review Actions -->
-                                    {% if session.role == 'lead' %}
+                                    {% if session['role'] == 'lead' %}
                                         <div class="admin-review-section mt-3">
                                             {% set question_status = lead_comment.status if lead_comment else 'pending' %}
                                             {% if question_status in ['approved', 'rejected'] %}
