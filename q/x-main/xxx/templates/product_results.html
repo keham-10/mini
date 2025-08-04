@@ -162,7 +162,7 @@
                                 
                                 <div class="dimension-labels mt-4">
                                     <h6 class="mb-3">Dimensions</h6>
-                                    {% for dimension, data in subdimension_scores.items() %}
+                                    {% for dimension, data in (subdimension_scores.items() | list | sort(attribute='1.average_score', reverse=true))[:5] %}
                                     <div class="dimension-label-item mb-2">
                                         <div class="dimension-color level-{{ data.average_score|round|int }}"></div>
                                         <span class="dimension-name">{{ dimension }}</span>
@@ -175,51 +175,7 @@
                     </div>
                 </div>
 
-                <!-- Ring-wise Maturity Heatmap -->
-                {% if ringwise_heatmap_data %}
-                <div class="ringwise-heatmap-container mb-4">
-                    <h6 class="text-muted mb-3">
-                        <i class="bi bi-target me-2"></i>Maturity Level Achievement Heatmap
-                    </h6>
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div id="ringwiseHeatmap" class="ringwise-heatmap"></div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div class="maturity-legend">
-                                <h6 class="mb-3">Maturity Levels</h6>
-                                <div id="maturityLegend" class="maturity-legend-items">
-                                    <div class="legend-item">
-                                        <span class="legend-color achieved"></span>
-                                        <span>Achieved Level</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-color not-achieved"></span>
-                                        <span>Not Achieved</span>
-                                    </div>
-                                </div>
-                                <div class="current-level mt-3">
-                                    <h6>Current Level</h6>
-                                    <div class="badge bg-primary fs-6">
-                                        Level {{ ringwise_heatmap_data.achieved_level }} - 
-                                        {% if ringwise_heatmap_data.achieved_level == 5 %}
-                                            Optimized
-                                        {% elif ringwise_heatmap_data.achieved_level == 4 %}
-                                            Managed
-                                        {% elif ringwise_heatmap_data.achieved_level == 3 %}
-                                            Defined
-                                        {% elif ringwise_heatmap_data.achieved_level == 2 %}
-                                            Developing
-                                        {% else %}
-                                            Initial
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+
                 
                 {% endif %}
 
@@ -388,7 +344,7 @@
                                     {% endif %}
 
                                     <!-- Admin Review Actions -->
-                                    {% if is_admin_view %}
+                                    {% if session.role == 'lead' %}
                                         <div class="admin-review-section mt-3">
                                             {% set question_status = lead_comment.status if lead_comment else 'pending' %}
                                             {% if question_status in ['approved', 'rejected'] %}
