@@ -2268,6 +2268,61 @@ def admin_product_results(product_id):
         db.joinedload(LeadComment.lead)
     ).filter_by(product_id=product_id, client_id=owner.id).order_by(LeadComment.created_at.desc()).all()
     
+    # Create serializable responses JSON for JavaScript (like in client product_results)
+    responses_json = []
+    for resp_data in responses_data:
+        try:
+            responses_json.append({
+                'section': str(resp_data.get('section', '')),
+                'question': str(resp_data.get('question', '')),
+                'answer': str(resp_data.get('answer', '')),
+                'score': float(resp_data.get('score', 0)) if resp_data.get('score') is not None else 0.0,
+                'lead_comments': resp_data.get('lead_comments', [])
+            })
+        except Exception as e:
+            print(f"Error serializing response: {e}")
+            continue
+
+    # Calculate additional variables needed by template (like client route)
+    dimension_scores = {}  # Keep for backward compatibility
+    section_dimensions = {}
+    
+    # Keep original dimension scores for backward compatibility
+    if section_data and isinstance(section_data, dict):
+        for section_name, data in section_data.items():
+            try:
+                if not isinstance(data, dict):
+                    continue
+                    
+                avg_score = data.get('average_score', 0)
+                question_count = data.get('questions_count', 0)
+                total_score = data.get('total_score', 0)
+                
+                # Ensure numeric values
+                avg_score = float(avg_score) if avg_score is not None else 0.0
+                question_count = int(question_count) if question_count is not None else 0
+                total_score = float(total_score) if total_score is not None else 0.0
+                
+                dimension_scores[str(section_name)] = {
+                    'average_score': round(avg_score, 2),
+                    'question_count': question_count,
+                    'total_score': round(total_score, 2)
+                }
+                
+                # Calculate section percentage for section_dimensions
+                max_possible = question_count * 5  # Assuming max score of 5 per question
+                percentage = (total_score / max_possible * 100) if max_possible > 0 else 0
+                
+                section_dimensions[str(section_name)] = {
+                    'percentage': round(max(0, min(100, percentage)), 1),
+                    'question_count': question_count,
+                    'total_score': round(total_score, 2),
+                    'max_possible_score': max_possible
+                }
+            except Exception as e:
+                print(f"Error processing section {section_name}: {e}")
+                continue
+
     # Calculate dimension-wise results from subdimension scores
     try:
         from ring_heatmap_implementation import get_dimension_wise_results
@@ -2276,20 +2331,27 @@ def admin_product_results(product_id):
         print(f'Error calculating dimension-wise results: {e}')
         dimension_results = {}
 
-    return render_template('product_results.html', 
-                         responses=responses_data, 
-                         lead_comments=lead_comments,
-                         overall_score=overall_score,
-                         maturity_score=max(1, min(5, round(overall_score))) if overall_score and overall_score > 0 else 1,
-                         maturity_level=maturity_level,
-                         section_data=section_data,
-                         subdimension_scores=subdimension_scores,
-                         dimension_results=dimension_results,
-                         heatmap_data=heatmap_data,
-                         ringwise_heatmap_data=ringwise_heatmap_data,
-                         product=product,
-                         owner=owner,
-                         is_admin_view=True)
+    # Ensure all template variables are properly defined (matching client route)
+    template_vars = {
+        'product': product,
+        'responses': responses_data,
+        'responses_json': responses_json,
+        'lead_comments': lead_comments,
+        'overall_score': overall_score,
+        'maturity_score': max(1, min(5, round(overall_score))) if overall_score and overall_score > 0 else 1,
+        'maturity_level': maturity_level,
+        'section_data': section_data,
+        'dimension_scores': dimension_scores,  # Keep for backward compatibility
+        'subdimension_scores': subdimension_scores,  # New sub-dimension scores
+        'dimension_results': dimension_results,  # New dimension-wise results
+        'section_dimensions': section_dimensions,
+        'heatmap_data': heatmap_data,
+        'ringwise_heatmap_data': ringwise_heatmap_data,
+        'owner': owner,
+        'is_admin_view': True
+    }
+    
+    return render_template('product_results.html', **template_vars)
 
 @app.route('/admin/create_product', methods=['GET', 'POST'])
 @login_required('superuser')

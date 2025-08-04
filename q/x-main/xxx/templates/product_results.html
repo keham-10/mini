@@ -124,12 +124,9 @@
                 <!-- 5-Level Ring-based Heatmap Visualization -->
                 {% if subdimension_scores %}
                 <div class="ring-heatmap-container mb-4">
-                    <h6 class="text-muted mb-3">
+                    <h6 class="mb-3">
                         <i class="bi bi-bullseye me-2"></i>Security Maturity Spiral Heatmap
                     </h6>
-                    <p class="text-muted small mb-3">
-                        Each section represents a sub-dimension with 5 concentric rings. Rings are colored based on achieved maturity level (score 3 = rings 1-3 colored).
-                    </p>
                     <div class="row">
                         <div class="col-lg-8">
                             <div class="ring-heatmap-wrapper">
@@ -305,18 +302,12 @@
                     <!-- Section Header -->
                     <div class="section-header-card mb-4">
                         <div class="row align-items-center">
-                            <div class="col-md-8">
+                            <div class="col-12">
                                 <h4 class="mb-1">
                                     <i class="bi bi-shield-fill text-primary me-2"></i>
                                     {{ section_name }}
                                 </h4>
                                 <p class="text-muted mb-0">{{ section_responses|length }} questions assessed</p>
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <div class="section-score">
-                                    <span class="score-value" data-section="{{ section_name }}">-</span>
-                                    <span class="score-label">Section Score</span>
-                                </div>
                             </div>
                         </div>
                     </div>
