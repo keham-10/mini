@@ -67,7 +67,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-0">
-                            <i class="bi bi-grid-3x3-gap me-2"></i>Security Maturity Heatmap
+                            <i class="bi bi-bullseye me-2"></i>Security Maturity Spiral Heatmap
                         </h5>
                         <small class="opacity-75">Color-coded visualization of your security maturity across all dimensions</small>
                     </div>
@@ -124,9 +124,7 @@
                 <!-- 5-Level Ring-based Heatmap Visualization -->
                 {% if subdimension_scores %}
                 <div class="ring-heatmap-container mb-4">
-                    <h6 class="mb-3">
-                        <i class="bi bi-bullseye me-2"></i>Security Maturity Spiral Heatmap
-                    </h6>
+
                     <div class="row">
                         <div class="col-lg-8">
                             <div class="ring-heatmap-wrapper">
@@ -181,42 +179,7 @@
                 
                 {% endif %}
 
-                <!-- Maturity Legend -->
-                <div class="maturity-legend mt-4">
-                    <h6 class="mb-3">Maturity Levels</h6>
-                    <div class="row">
-                        <div class="col-md-2 col-sm-4 col-6 mb-2">
-                            <div class="legend-item level-1">
-                                <span class="legend-color"></span>
-                                <span class="legend-text">Level 1 - Initial</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-4 col-6 mb-2">
-                            <div class="legend-item level-2">
-                                <span class="legend-color"></span>
-                                <span class="legend-text">Level 2 - Developing</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-4 col-6 mb-2">
-                            <div class="legend-item level-3">
-                                <span class="legend-color"></span>
-                                <span class="legend-text">Level 3 - Defined</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-4 col-6 mb-2">
-                            <div class="legend-item level-4">
-                                <span class="legend-color"></span>
-                                <span class="legend-text">Level 4 - Managed</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-4 col-6 mb-2">
-                            <div class="legend-item level-5">
-                                <span class="legend-color"></span>
-                                <span class="legend-text">Level 5 - Optimized</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
@@ -1960,17 +1923,7 @@ function generateRingHeatmap(subdimensionScores) {
         labelText.textContent = dimension.name.length > 15 ? dimension.name.substring(0, 15) + '...' : dimension.name;
         svg.appendChild(labelText);
         
-        // Add score text
-        const scoreText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        scoreText.setAttribute('x', labelX);
-        scoreText.setAttribute('y', labelY + 12);
-        scoreText.setAttribute('text-anchor', 'middle');
-        scoreText.setAttribute('dominant-baseline', 'middle');
-        scoreText.setAttribute('font-size', '9');
-        scoreText.setAttribute('font-weight', 'bold');
-        scoreText.setAttribute('fill', ringColors[achievedLevel] || '#666');
-        scoreText.textContent = dimension.score.toFixed(1);
-        svg.appendChild(scoreText);
+
     });
     
     // Add center circle with overall score
