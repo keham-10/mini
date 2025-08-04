@@ -237,7 +237,7 @@
                                                  </small>
                                              {% endif %}
                                              {% if response.evidence_path %}
-                                                 <a href="/{{ response.evidence_path }}" target="_blank" class="btn btn-outline-info btn-xs" title="View Evidence">
+                                                 <a href="{{ url_for('uploaded_file', filename=response.evidence_path.split('/')[-1]) }}" target="_blank" class="btn btn-outline-info btn-xs" title="View Evidence">
                                                      <i class="bi bi-paperclip"></i>
                                                  </a>
                                              {% endif %}

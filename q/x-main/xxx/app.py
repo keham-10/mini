@@ -1111,9 +1111,24 @@ def index():
     return render_template('index.html')
 
 @app.route('/static/uploads/<filename>')
+@login_required()
 def uploaded_file(filename):
     """Serve uploaded files from the uploads directory"""
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    try:
+        # Security: Only allow access to files that exist and are in the uploads folder
+        upload_folder = app.config['UPLOAD_FOLDER']
+        file_path = os.path.join(upload_folder, filename)
+        
+        # Check if file exists and is within the upload folder
+        if not os.path.exists(file_path) or not os.path.commonpath([upload_folder, file_path]) == upload_folder:
+            flash('File not found or access denied.', 'error')
+            return redirect(url_for('dashboard'))
+            
+        return send_from_directory(upload_folder, filename)
+    except Exception as e:
+        print(f"Error serving file {filename}: {e}")
+        flash('Error accessing file.', 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")

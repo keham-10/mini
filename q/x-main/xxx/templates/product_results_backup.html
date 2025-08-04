@@ -385,7 +385,7 @@
                                             <div class="evidence-label">
                                                 <i class="bi bi-paperclip me-1"></i>Evidence:
                                             </div>
-                                            <a href="/{{ resp.evidence_path }}" target="_blank"
+                                            <a href="{{ url_for('uploaded_file', filename=resp.evidence_path.split('/')[-1]) }}" target="_blank"
                                                class="evidence-link">
                                                 <i class="bi bi-file-earmark"></i>
                                                 View Attachment
