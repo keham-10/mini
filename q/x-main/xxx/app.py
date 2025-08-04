@@ -2393,8 +2393,6 @@ def admin_create_product():
     clients = User.query.filter_by(role='client').all()
     return render_template('admin_create_product.html', clients=clients)
 
-
-
 @app.route('/admin/products/delete/<int:product_id>')
 @login_required('superuser')
 def admin_delete_product(product_id):
