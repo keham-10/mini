@@ -108,13 +108,7 @@
                             </a>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <a href="{{ url_for('admin_analytics') }}" class="btn btn-outline-success rounded-pill">
-                                <i class="bi bi-graph-up me-2"></i>Analytics Dashboard
-                            </a>
-                        </div>
-                    </div>
+
                     <div class="col-md-3 mb-3">
                         <div class="d-grid">
                             <a href="{{ url_for('manage_users') }}" class="btn btn-primary rounded-pill">
@@ -143,13 +137,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="d-grid">
-                            <button class="btn btn-outline-warning rounded-pill" onclick="showMaintenanceModal()">
-                                <i class="bi bi-gear me-2"></i>Maintenance
-                            </button>
-                        </div>
-                    </div>
+
                     <div class="col-md-3">
                         <div class="d-grid">
                             <button class="btn btn-outline-info rounded-pill" onclick="showHelpModal()">
@@ -848,9 +836,7 @@ function showBackupModal() {
     new bootstrap.Modal(document.getElementById('backupModal')).show();
 }
 
-function showMaintenanceModal() {
-    alert('Maintenance mode - Feature coming soon!');
-}
+
 
 function showHelpModal() {
     alert('Help documentation - Feature coming soon!');

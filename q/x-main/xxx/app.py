@@ -2393,44 +2393,7 @@ def admin_create_product():
     clients = User.query.filter_by(role='client').all()
     return render_template('admin_create_product.html', clients=clients)
 
-@app.route('/admin/analytics')
-@login_required('superuser')
-def admin_analytics():
-    # Get all products and their scores for analytics
-    products = Product.query.all()
-    analytics_data = []
 
-    for product in products:
-        responses = QuestionnaireResponse.query.filter_by(product_id=product.id).all()
-        if responses:
-            # Calculate average score for this product
-            total_score = 0
-            total_questions = 0
-            section_scores = {}
-
-            for response in responses:
-                if response.answer.isdigit():
-                    score = int(response.answer)
-                    total_score += score
-                    total_questions += 1
-
-                    if response.section not in section_scores:
-                        section_scores[response.section] = []
-                    section_scores[response.section].append(score)
-
-            if total_questions > 0:
-                avg_score = total_score / total_questions
-                owner = User.query.get(product.owner_id)
-
-                analytics_data.append({
-                    'product': product,
-                    'owner': owner,
-                    'avg_score': avg_score,
-                    'total_responses': len(responses),
-                    'section_scores': {k: sum(v)/len(v) for k, v in section_scores.items()}
-                })
-
-    return render_template('admin_analytics.html', analytics_data=analytics_data)
 
 @app.route('/admin/products/delete/<int:product_id>')
 @login_required('superuser')
