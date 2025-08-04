@@ -19,6 +19,14 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
+.dimension-header {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 15px 20px;
+    margin: 20px 0 15px 0;
+    border-radius: 0 8px 8px 0;
+}
+
 .conversation-thread {
     background: white;
     border: 1px solid #e9ecef;
@@ -112,6 +120,8 @@
 .status-approved { background: #d1edff; color: #0c5460; }
 .status-needs_revision { background: #f8d7da; color: #721c24; }
 .status-rejected { background: #f5c6cb; color: #721c24; }
+.status-client_reply { background: #d1ecf1; color: #0c5460; }
+.status-client_response { background: #d1ecf1; color: #0c5460; }
 
 .reply-section {
     background: #f8f9fa;
@@ -185,6 +195,33 @@
     font-size: 11px;
     font-weight: bold;
 }
+
+.evidence-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 3px solid #007bff;
+    margin-top: 10px;
+}
+
+.evidence-header {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.evidence-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.evidence-content .btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+}
 </style>
 {% endblock %}
 
@@ -216,102 +253,143 @@
         </div>
     </div>
 
-    <!-- Conversations -->
-    {% if conversations %}
-        {% for thread in conversations %}
-            <div class="conversation-thread">
-                <!-- Thread Header -->
-                <div class="thread-header">
-                    <div class="thread-context">
-                        {% if thread.root_comment.response %}
-                            {% set question_num = thread.root_comment.response.question | question_number %}
-                            Question #{{ question_num if question_num else 'N/A' }}: {{ thread.root_comment.response.question[:100] }}{% if thread.root_comment.response.question|length > 100 %}...{% endif %}
-                        {% else %}
-                            General Discussion
-                        {% endif %}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="thread-title">
-                            Conversation between {{ thread.root_comment.lead.username }} and {{ thread.root_comment.client.username }}
-                        </div>
-                        {% if thread.unread_count > 0 %}
-                            <div class="unread-indicator">{{ thread.unread_count }}</div>
-                        {% endif %}
-                    </div>
-                </div>
+    <!-- Conversations organized by dimension -->
+    {% if conversations_by_dimension %}
+        {% for dimension, threads in conversations_by_dimension.items() %}
+            <!-- Dimension Header -->
+            <div class="dimension-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-collection me-2"></i>{{ dimension }}
+                    <span class="badge bg-primary ms-2">{{ threads|length }} conversation{{ 's' if threads|length != 1 else '' }}</span>
+                </h5>
+            </div>
 
-                <!-- Root Message -->
-                <div class="message-item">
-                    <div class="message-header">
-                        <div class="sender-info">
-                            <div class="sender-avatar lead-avatar">
-                                <i class="bi bi-person-badge"></i>
-                            </div>
-                            <div>
-                                <strong>{{ thread.root_comment.lead.username }}</strong>
-                                <small class="text-muted">(Lead Reviewer)</small>
-                            </div>
+            {% for thread in threads %}
+                <div class="conversation-thread">
+                    <!-- Thread Header -->
+                    <div class="thread-header">
+                        <div class="thread-context">
+                            {% if thread.root_comment.response %}
+                                {% set question_num = thread.root_comment.response.question | question_number %}
+                                Question #{{ question_num if question_num else 'N/A' }}: {{ thread.root_comment.response.question[:100] }}{% if thread.root_comment.response.question|length > 100 %}...{% endif %}
+                            {% else %}
+                                General Discussion
+                            {% endif %}
                         </div>
-                        <div class="message-meta">
-                            <span>{{ thread.root_comment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
-                            <span class="status-badge status-{{ thread.root_comment.status }}">
-                                {{ thread.root_comment.status.replace('_', ' ').title() }}
-                            </span>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="thread-title">
+                                Conversation between {{ thread.root_comment.lead.username }} and {{ thread.root_comment.client.username }}
+                            </div>
+                            {% if thread.unread_count > 0 %}
+                                <div class="unread-indicator">{{ thread.unread_count }}</div>
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="message-content">
-                        {{ thread.root_comment.comment }}
-                    </div>
-                </div>
 
-                <!-- Replies -->
-                {% for reply in thread.replies %}
+                    <!-- Root Message -->
                     <div class="message-item">
                         <div class="message-header">
                             <div class="sender-info">
-                                {% if reply.lead_id == user_id or current_user_role == 'lead' %}
-                                    <div class="sender-avatar lead-avatar">
-                                        <i class="bi bi-person-badge"></i>
-                                    </div>
-                                    <div>
-                                        <strong>{{ reply.lead.username }}</strong>
-                                        <small class="text-muted">(Lead Reviewer)</small>
-                                    </div>
-                                {% else %}
-                                    <div class="sender-avatar client-avatar">
-                                        <i class="bi bi-person-circle"></i>
-                                    </div>
-                                    <div>
-                                        <strong>{{ reply.client.username }}</strong>
-                                        <small class="text-muted">(Client)</small>
-                                    </div>
-                                {% endif %}
+                                <div class="sender-avatar lead-avatar">
+                                    <i class="bi bi-person-badge"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ thread.root_comment.lead.username }}</strong>
+                                    <small class="text-muted">(Lead Reviewer)</small>
+                                </div>
                             </div>
                             <div class="message-meta">
-                                <span>{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
-                                {% if not reply.is_read %}
-                                    <span class="badge bg-primary">New</span>
-                                {% endif %}
+                                <span>{{ thread.root_comment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                <span class="status-badge status-{{ thread.root_comment.status }}">
+                                    {{ thread.root_comment.status.replace('_', ' ').title() }}
+                                </span>
                             </div>
                         </div>
                         <div class="message-content">
-                            {{ reply.comment }}
+                            {{ thread.root_comment.comment }}
                         </div>
                     </div>
-                {% endfor %}
 
-                <!-- Reply Section -->
-                <div class="reply-section">
-                    <form method="post" action="{{ url_for('reply_to_conversation', comment_id=thread.root_comment.id) }}">
-                        <div class="quick-reply">
-                            <textarea name="reply" placeholder="Type your reply..." required></textarea>
-                            <button type="submit" class="reply-button">
-                                <i class="bi bi-send me-1"></i>Send
-                            </button>
+                    <!-- Replies -->
+                    {% for reply in thread.replies %}
+                        <div class="message-item">
+                            <div class="message-header">
+                                <div class="sender-info">
+                                    {% if reply.status in ['client_reply', 'client_response'] %}
+                                        <div class="sender-avatar client-avatar">
+                                            <i class="bi bi-person-circle"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ reply.client.username }}</strong>
+                                            <small class="text-muted">(Client)</small>
+                                        </div>
+                                    {% else %}
+                                        <div class="sender-avatar lead-avatar">
+                                            <i class="bi bi-person-badge"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ reply.lead.username }}</strong>
+                                            <small class="text-muted">(Lead Reviewer)</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="message-meta">
+                                    <span>{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                    {% if not reply.is_read %}
+                                        <span class="badge bg-primary">New</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="message-content">
+                                {{ reply.comment }}
+                            </div>
+                            
+                            <!-- Show evidence if available for client replies -->
+                            {% if reply.status in ['client_reply', 'client_response'] and reply.response and reply.response.evidence_path %}
+                            <div class="evidence-section">
+                                <div class="evidence-header">
+                                    <i class="bi bi-paperclip text-primary me-2"></i>
+                                    <strong class="text-primary">Evidence Attached</strong>
+                                </div>
+                                <div class="evidence-content">
+                                    <a href="{{ url_for('uploaded_file', filename=reply.response.evidence_path.split('/')[-1]) }}" 
+                                       target="_blank" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-download me-1"></i>View Evidence
+                                    </a>
+                                    <small class="text-muted ms-2">
+                                        Updated: {{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
-                    </form>
+                    {% endfor %}
+
+                    <!-- Reply Section -->
+                    <div class="reply-section">
+                        <form method="post" action="{{ url_for('reply_to_conversation', comment_id=thread.root_comment.id) }}" enctype="multipart/form-data">
+                            <div class="quick-reply">
+                                <div style="flex: 1;">
+                                    <textarea name="reply" placeholder="Type your reply..." required></textarea>
+                                    {% if current_user_role == 'client' and thread.root_comment.status in ['needs_revision', 'rejected'] %}
+                                        <div class="mt-2">
+                                            <label class="form-label">
+                                                <i class="bi bi-paperclip me-1"></i>Attach Evidence (Optional)
+                                            </label>
+                                            <input type="file" class="form-control form-control-sm" name="evidence"
+                                                   accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="reply-button">
+                                    <i class="bi bi-send me-1"></i>Send
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            {% endfor %}
         {% endfor %}
     {% else %}
         <div class="empty-state">
@@ -348,14 +426,20 @@
                         <label class="form-label">Client</label>
                         <select name="client_id" class="form-select" required>
                             <option value="">Select a client...</option>
-                            <!-- This would be populated with clients who have access to this product -->
+                            {% if assigned_client %}
+                                <option value="{{ assigned_client.id }}">{{ assigned_client.username }}</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Related Question (Optional)</label>
                         <select name="response_id" class="form-select">
                             <option value="">General discussion</option>
-                            <!-- This would be populated with questions from the assessment -->
+                            {% if responses %}
+                                {% for response in responses %}
+                                    <option value="{{ response.id }}">Q{{ loop.index }}: {{ response.question[:50] }}...</option>
+                                {% endfor %}
+                            {% endif %}
                         </select>
                     </div>
                     <div class="mb-3">

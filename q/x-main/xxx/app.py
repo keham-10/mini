@@ -2199,6 +2199,49 @@ def admin_product_details(product_id):
         overall_score = 0
         maturity_level = "No Data"
     
+    # Get lead-client communications for this product
+    conversations = db.session.query(LeadComment).options(
+        db.joinedload(LeadComment.response),
+        db.joinedload(LeadComment.lead),
+        db.joinedload(LeadComment.client)
+    ).filter(
+        LeadComment.product_id == product_id,
+        LeadComment.parent_comment_id.is_(None)  # Only root comments
+    ).order_by(LeadComment.created_at.desc()).all()
+    
+    # Group conversations and build conversation threads
+    conversation_threads = []
+    for conv in conversations:
+        # Get all replies for this conversation
+        replies = db.session.query(LeadComment).options(
+            db.joinedload(LeadComment.response),
+            db.joinedload(LeadComment.lead),
+            db.joinedload(LeadComment.client)
+        ).filter(
+            LeadComment.parent_comment_id == conv.id
+        ).order_by(LeadComment.created_at.asc()).all()
+        
+        conversation_threads.append({
+            'root_comment': conv,
+            'replies': replies,
+            'unread_count': len([r for r in replies if not r.is_read]),
+            'last_activity': replies[-1].created_at if replies else conv.created_at
+        })
+    
+    # Sort by last activity
+    conversation_threads.sort(key=lambda x: x['last_activity'], reverse=True)
+    
+    # Group conversations by dimension/section
+    communications_by_dimension = {}
+    for thread in conversation_threads:
+        dimension = 'General'
+        if thread['root_comment'].response and thread['root_comment'].response.section:
+            dimension = thread['root_comment'].response.section
+        
+        if dimension not in communications_by_dimension:
+            communications_by_dimension[dimension] = []
+        communications_by_dimension[dimension].append(thread)
+    
     return render_template('admin_product_details.html', 
                          responses=resps, 
                          product=product, 
@@ -2206,7 +2249,8 @@ def admin_product_details(product_id):
                          dimension_data=dimension_data,
                          overall_score=overall_score,
                          maturity_level=maturity_level,
-                         product_id=product_id)
+                         product_id=product_id,
+                         communications_by_dimension=communications_by_dimension)
 
 @app.route('/admin/product/<int:product_id>/results')
 @login_required('superuser')
@@ -2822,7 +2866,7 @@ def revoke_invitation(invitation_id):
 @app.route('/communication/<int:product_id>')
 @login_required()
 def unified_communication(product_id):
-    """Unified communication interface for lead-client conversations without repetition"""
+    """Unified communication interface for lead-client conversations organized by dimension"""
     current_user_role = session.get('role')
     user_id = session['user_id']
     
@@ -2830,35 +2874,64 @@ def unified_communication(product_id):
     product = Product.query.get_or_404(product_id)
     
     # Get all conversations for this product, grouped by question/response
-    # Filter out approved conversations (only show needs revision ones)
+    # Include all statuses for proper conversation flow
     if current_user_role == 'lead':
         # Lead can see conversations for all clients on this product
-        conversations = db.session.query(LeadComment).filter(
+        conversations = db.session.query(LeadComment).options(
+            db.joinedload(LeadComment.response),
+            db.joinedload(LeadComment.lead),
+            db.joinedload(LeadComment.client)
+        ).filter(
             LeadComment.product_id == product_id,
             LeadComment.parent_comment_id.is_(None),  # Only root comments
-            LeadComment.status.in_(['needs_revision', 'rejected', 'pending'])  # Exclude approved
+            LeadComment.status.in_(['needs_revision', 'rejected', 'pending', 'client_reply', 'client_response'])
         ).order_by(LeadComment.created_at.desc()).all()
+        
+        # Get assigned client and responses for modal
+        current_lead = User.query.get(user_id)
+        assigned_client = User.query.get(current_lead.assigned_client_id) if current_lead.assigned_client_id else None
+        responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all() if assigned_client else []
+        
     elif current_user_role == 'client':
         # Client can only see their own conversations
-        conversations = db.session.query(LeadComment).filter(
+        conversations = db.session.query(LeadComment).options(
+            db.joinedload(LeadComment.response),
+            db.joinedload(LeadComment.lead),
+            db.joinedload(LeadComment.client)
+        ).filter(
             LeadComment.product_id == product_id,
             LeadComment.client_id == user_id,
             LeadComment.parent_comment_id.is_(None),  # Only root comments
-            LeadComment.status.in_(['needs_revision', 'rejected', 'pending'])  # Exclude approved
+            LeadComment.status.in_(['needs_revision', 'rejected', 'pending', 'client_reply', 'client_response'])
         ).order_by(LeadComment.created_at.desc()).all()
+        
+        assigned_client = None
+        responses = []
+        
     else:
         # Admin/superuser can see all conversations
-        conversations = db.session.query(LeadComment).filter(
+        conversations = db.session.query(LeadComment).options(
+            db.joinedload(LeadComment.response),
+            db.joinedload(LeadComment.lead),
+            db.joinedload(LeadComment.client)
+        ).filter(
             LeadComment.product_id == product_id,
             LeadComment.parent_comment_id.is_(None),  # Only root comments
-            LeadComment.status.in_(['needs_revision', 'rejected', 'pending'])  # Exclude approved
+            LeadComment.status.in_(['needs_revision', 'rejected', 'pending', 'client_reply', 'client_response'])
         ).order_by(LeadComment.created_at.desc()).all()
+        
+        assigned_client = None
+        responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all()
     
     # Group conversations and build conversation threads
     conversation_threads = []
     for conv in conversations:
         # Get all replies for this conversation
-        replies = db.session.query(LeadComment).filter(
+        replies = db.session.query(LeadComment).options(
+            db.joinedload(LeadComment.response),
+            db.joinedload(LeadComment.lead),
+            db.joinedload(LeadComment.client)
+        ).filter(
             LeadComment.parent_comment_id == conv.id
         ).order_by(LeadComment.created_at.asc()).all()
         
@@ -2866,19 +2939,32 @@ def unified_communication(product_id):
             'root_comment': conv,
             'replies': replies,
             'unread_count': len([r for r in replies if not r.is_read and 
-                               ((current_user_role == 'client' and r.lead_id == user_id) or
-                                (current_user_role == 'lead' and r.client_id == user_id))]),
+                               ((current_user_role == 'client' and r.status in ['lead_reply']) or
+                                (current_user_role == 'lead' and r.status in ['client_reply', 'client_response']))]),
             'last_activity': replies[-1].created_at if replies else conv.created_at
         })
     
     # Sort by last activity
     conversation_threads.sort(key=lambda x: x['last_activity'], reverse=True)
     
+    # Group conversations by dimension/section
+    conversations_by_dimension = {}
+    for thread in conversation_threads:
+        dimension = 'General'
+        if thread['root_comment'].response and thread['root_comment'].response.section:
+            dimension = thread['root_comment'].response.section
+        
+        if dimension not in conversations_by_dimension:
+            conversations_by_dimension[dimension] = []
+        conversations_by_dimension[dimension].append(thread)
+    
     return render_template('unified_communication.html', 
                          product=product,
-                         conversations=conversation_threads,
+                         conversations_by_dimension=conversations_by_dimension,
                          current_user_role=current_user_role,
-                         user_id=user_id)
+                         user_id=user_id,
+                         assigned_client=assigned_client,
+                         responses=responses)
 
 @app.route('/communication/<int:product_id>/new', methods=['POST'])
 @login_required('lead')
@@ -2944,9 +3030,10 @@ def approve_client_reply(comment_id):
 @app.route('/communication/reply/<int:comment_id>', methods=['POST'])
 @login_required()
 def reply_to_conversation(comment_id):
-    """Reply to an existing conversation"""
+    """Reply to an existing conversation with evidence support"""
     parent_comment = LeadComment.query.get_or_404(comment_id)
     reply_text = request.form.get('reply')
+    evidence_file = request.files.get('evidence')
     
     if not reply_text:
         flash('Reply cannot be empty.', 'error')
@@ -2954,6 +3041,20 @@ def reply_to_conversation(comment_id):
     
     current_user_role = session.get('role')
     user_id = session['user_id']
+    
+    # Handle evidence upload for client replies
+    evidence_path = None
+    if evidence_file and evidence_file.filename and current_user_role == 'client':
+        valid, message = validate_file_security(evidence_file)
+        if valid:
+            filename = secure_filename_hash(evidence_file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            evidence_file.save(filepath)
+            evidence_path = f"static/uploads/{filename}"
+        else:
+            flash(f'File upload failed: {message}', 'error')
+            return redirect(url_for('unified_communication', product_id=parent_comment.product_id))
     
     # Determine the reply structure based on user role
     if current_user_role == 'lead':
@@ -2963,8 +3064,9 @@ def reply_to_conversation(comment_id):
             client_id=parent_comment.client_id,
             product_id=parent_comment.product_id,
             comment=reply_text,
-            status='client_reply',  # Lead replying to client
-            parent_comment_id=parent_comment.id if parent_comment.parent_comment_id is None else parent_comment.parent_comment_id
+            status='lead_reply',  # Lead replying to client
+            parent_comment_id=parent_comment.id if parent_comment.parent_comment_id is None else parent_comment.parent_comment_id,
+            is_read=False
         )
     else:  # client
         reply = LeadComment(
@@ -2973,9 +3075,17 @@ def reply_to_conversation(comment_id):
             client_id=user_id,
             product_id=parent_comment.product_id,
             comment=reply_text,
-            status='client_response',  # Client replying to lead
-            parent_comment_id=parent_comment.id if parent_comment.parent_comment_id is None else parent_comment.parent_comment_id
+            status='client_reply',  # Client replying to lead
+            parent_comment_id=parent_comment.id if parent_comment.parent_comment_id is None else parent_comment.parent_comment_id,
+            is_read=False
         )
+        
+        # If evidence provided, update the original response
+        if evidence_path and parent_comment.response_id:
+            original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
+            if original_response:
+                original_response.evidence_path = evidence_path
+                original_response.client_comment = reply_text
     
     db.session.add(reply)
     db.session.commit()

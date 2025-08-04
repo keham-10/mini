@@ -146,6 +146,114 @@
 </div>
 {% endif %}
 
+<!-- Lead-Client Communications -->
+{% if communications_by_dimension %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-gradient-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-dots me-2"></i>Lead-Client Communications
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for dimension, communications in communications_by_dimension.items() %}
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <h6 class="mb-0 text-primary">
+                                <i class="bi bi-collection me-2"></i>{{ dimension }}
+                            </h6>
+                            <span class="badge bg-primary ms-2">{{ communications|length }} conversation{{ 's' if communications|length != 1 else '' }}</span>
+                        </div>
+                        
+                        {% for thread in communications %}
+                            <div class="card mb-3 border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ thread.root_comment.lead.username }}</strong> 
+                                            <i class="bi bi-arrow-left-right mx-2"></i> 
+                                            <strong>{{ thread.root_comment.client.username }}</strong>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-{{ 'success' if thread.root_comment.status == 'approved' else 'warning' if thread.root_comment.status == 'pending' else 'danger' }}">
+                                                {{ thread.root_comment.status.replace('_', ' ').title() }}
+                                            </span>
+                                            {% if thread.unread_count > 0 %}
+                                                <span class="badge bg-primary">{{ thread.unread_count }} unread</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if thread.root_comment.response %}
+                                        <small class="text-muted">
+                                            Question: {{ thread.root_comment.response.question[:80] }}{% if thread.root_comment.response.question|length > 80 %}...{% endif %}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <!-- Root Comment -->
+                                    <div class="mb-3 p-3 bg-light rounded">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-badge text-primary me-2"></i>
+                                                <strong>{{ thread.root_comment.lead.username }}</strong>
+                                                <small class="text-muted ms-2">(Lead)</small>
+                                            </div>
+                                            <small class="text-muted">{{ thread.root_comment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</small>
+                                        </div>
+                                        <p class="mb-0">{{ thread.root_comment.comment }}</p>
+                                    </div>
+                                    
+                                    <!-- Replies -->
+                                    {% if thread.replies %}
+                                        {% for reply in thread.replies %}
+                                            <div class="mb-3 p-3 {{ 'bg-info bg-opacity-10' if reply.status in ['client_reply', 'client_response'] else 'bg-primary bg-opacity-10' }} rounded">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        {% if reply.status in ['client_reply', 'client_response'] %}
+                                                            <i class="bi bi-person-circle text-success me-2"></i>
+                                                            <strong>{{ reply.client.username }}</strong>
+                                                            <small class="text-muted ms-2">(Client)</small>
+                                                        {% else %}
+                                                            <i class="bi bi-person-badge text-primary me-2"></i>
+                                                            <strong>{{ reply.lead.username }}</strong>
+                                                            <small class="text-muted ms-2">(Lead)</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="text-muted">{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</small>
+                                                </div>
+                                                <p class="mb-0">{{ reply.comment }}</p>
+                                                
+                                                <!-- Evidence if available -->
+                                                {% if reply.status in ['client_reply', 'client_response'] and reply.response and reply.response.evidence_path %}
+                                                    <div class="mt-2 p-2 bg-white rounded">
+                                                        <small class="text-primary">
+                                                            <i class="bi bi-paperclip me-1"></i>
+                                                            <a href="{{ url_for('uploaded_file', filename=reply.response.evidence_path.split('/')[-1]) }}" target="_blank">
+                                                                Evidence Attached
+                                                            </a>
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <small class="text-muted">
+                                        Last activity: {{ thread.last_activity.strftime('%m/%d/%Y %I:%M %p') }}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 
 
 <!-- Action Buttons -->
