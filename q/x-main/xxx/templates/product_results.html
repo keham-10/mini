@@ -26,34 +26,25 @@
     </div>
     <div class="col-md-3 col-sm-6 mb-3">
         <div class="metric-card">
-            <div class="metric-icon">
-                <i class="bi bi-check2-circle"></i>
-            </div>
             <div class="metric-content">
                 <h3 class="metric-value">{{ (responses|length) if responses else 0 }}</h3>
-                <p class="metric-label">Total Responses</p>
+                <p class="metric-label">TOTAL RESPONSES</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6 mb-3">
         <div class="metric-card">
-            <div class="metric-icon">
-                <i class="bi bi-layers"></i>
-            </div>
             <div class="metric-content">
                 <h3 class="metric-value">{{ (subdimension_scores|length) if subdimension_scores else 0 }}</h3>
-                <p class="metric-label">Security Sub-Dimensions</p>
+                <p class="metric-label">SECURITY SUB-DIMENSIONS</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6 mb-3">
         <div class="metric-card">
-            <div class="metric-icon">
-                <i class="bi bi-graph-up"></i>
-            </div>
             <div class="metric-content">
                 <h3 class="metric-value">{{ "%.1f"|format((subdimension_scores.values()|map(attribute='average_score')|sum / subdimension_scores|length) if subdimension_scores and subdimension_scores|length > 0 else 0) }}</h3>
-                <p class="metric-label">Average Score</p>
+                <p class="metric-label">AVERAGE SCORE</p>
             </div>
         </div>
     </div>
@@ -578,8 +569,7 @@
 }
 
 .dimension-labels {
-    max-height: 300px;
-    overflow-y: auto;
+    /* Removed max-height and overflow to show all 5 dimensions without scrolling */
 }
 
 .dimension-label-item {

@@ -1313,6 +1313,13 @@ def dashboard():
             else:
                 overall_maturity_score = 0
 
+            # Get unread comments count for this specific product
+            product_unread_comments = LeadComment.query.filter_by(
+                client_id=user_id, 
+                product_id=product.id, 
+                is_read=False
+            ).count()
+
             product_info = {
                 'id': product.id,
                 'name': product.name,
@@ -1327,7 +1334,8 @@ def dashboard():
                 'total_questions': status_record.total_questions,
                 'overall_score': round(overall_maturity_score, 2),
                 'last_updated': status_record.last_updated,
-                'rejected_count': rejected_count
+                'rejected_count': rejected_count,
+                'unread_comments': product_unread_comments
             }
             products_with_status.append(product_info)
 

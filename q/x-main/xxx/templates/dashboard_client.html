@@ -66,12 +66,6 @@
                 <a href="{{ url_for('add_product') }}" class="btn btn-gradient-primary btn-lg rounded-pill px-4 me-3">
                     <i class="bi bi-plus-lg me-2"></i>Add New Product
                 </a>
-                <a href="{{ url_for('client_comments') }}" class="btn btn-outline-info btn-lg rounded-pill px-4 me-3">
-                    <i class="bi bi-chat-left-text me-2"></i>Reviewer Comments
-                    {% if unread_comments > 0 %}
-                        <span class="badge bg-warning text-dark ms-1">{{ unread_comments }}</span>
-                    {% endif %}
-                </a>
                 <button class="btn btn-outline-primary btn-lg rounded-pill px-4" onclick="showHelpModal()">
                     <i class="bi bi-question-circle me-2"></i>Need Help?
                 </button>
@@ -222,6 +216,45 @@
                                 </div>
                                 {% endif %}
 
+                                <!-- Product-specific Communications -->
+                                {% if product.status in ['completed', 'review_done', 'questions_done', 'under_review', 'needs_client_response'] %}
+                                <div class="product-communications mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-chat-left-text me-2"></i>Communications
+                                        </h6>
+                                        <a href="{{ url_for('unified_communication', product_id=product.id) }}"
+                                           class="btn btn-outline-info btn-sm rounded-pill">
+                                            <i class="bi bi-chat-dots me-1"></i>View All
+                                        </a>
+                                    </div>
+                                    <!-- Show latest communication or status -->
+                                    <div class="communication-preview">
+                                        {% if product.unread_comments and product.unread_comments > 0 %}
+                                            <div class="alert alert-warning py-2 px-3 mb-2">
+                                                <i class="bi bi-bell-fill me-2"></i>
+                                                <strong>{{ product.unread_comments }} new message{{ 's' if product.unread_comments != 1 else '' }}</strong>
+                                            </div>
+                                        {% elif product.status == 'under_review' %}
+                                            <div class="alert alert-info py-2 px-3 mb-2">
+                                                <i class="bi bi-eye me-2"></i>
+                                                <small>Your assessment is currently under review</small>
+                                            </div>
+                                        {% elif product.status == 'needs_client_response' %}
+                                            <div class="alert alert-danger py-2 px-3 mb-2">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <small>Reviewer feedback requires your attention</small>
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-light py-2 px-3 mb-2">
+                                                <i class="bi bi-check-circle me-2"></i>
+                                                <small>No pending communications</small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
                                 <!-- Action Buttons -->
                                 <div class="d-grid gap-2">
                                     {% if product.status in ['completed', 'review_done', 'questions_done', 'under_review'] %}
@@ -244,11 +277,12 @@
                                             <i class="bi bi-clock me-2"></i>Awaiting Review
                                         </button>
                                     {% elif product.status == 'under_review' %}
-                                        <button class="btn btn-info rounded-pill" disabled>
-                                            <i class="bi bi-eye me-2"></i>Under Review
-                                        </button>
+                                        <a href="{{ url_for('unified_communication', product_id=product.id) }}"
+                                           class="btn btn-info rounded-pill">
+                                            <i class="bi bi-eye me-2"></i>View Review Progress
+                                        </a>
                                     {% elif product.status == 'needs_client_response' %}
-                                        <a href="{{ url_for('client_comments') }}"
+                                        <a href="{{ url_for('unified_communication', product_id=product.id) }}"
                                            class="btn btn-danger rounded-pill">
                                             <i class="bi bi-exclamation-triangle me-2"></i>Review Feedback
                                         </a>
