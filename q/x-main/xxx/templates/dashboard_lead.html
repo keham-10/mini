@@ -253,7 +253,11 @@
                                                                 </td>
                                                                 <td>
                                                                     {% set lead_comment = resp.lead_comments|first %}
-                                                                    {% if lead_comment %}
+                                                                    {% if resp.is_approved %}
+                                                                        <span class="badge bg-success">
+                                                                            <i class="bi bi-check-circle me-1"></i>Approved
+                                                                        </span>
+                                                                    {% elif lead_comment %}
                                                                         {% if lead_comment.status == 'approved' %}
                                                                             <span class="badge bg-success">
                                                                                 <i class="bi bi-check-circle me-1"></i>Approved
@@ -275,14 +279,24 @@
                                                                 </td>
                                                                 <td>
                                                                     {% set lead_comment = resp.lead_comments|first %}
-                                                                    {% if lead_comment and lead_comment.status == 'approved' %}
+                                                                    {% if resp.is_approved or (lead_comment and lead_comment.status == 'approved') %}
                                                                         <button class="btn btn-success btn-sm" disabled>
                                                                             <i class="bi bi-check-circle-fill me-1"></i>Approved
                                                                         </button>
+                                                                        <a href="{{ url_for('unified_communication', product_id=resp.product_id) }}" 
+                                                                           class="btn btn-outline-secondary btn-sm ms-1"
+                                                                           title="View Communication History">
+                                                                            <i class="bi bi-chat-dots"></i>
+                                                                        </a>
                                                                     {% else %}
                                                                         <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}"
                                                                            class="btn btn-outline-primary btn-sm">
                                                                             <i class="bi bi-pencil-square me-1"></i>Review
+                                                                        </a>
+                                                                        <a href="{{ url_for('unified_communication', product_id=resp.product_id) }}" 
+                                                                           class="btn btn-outline-info btn-sm ms-1"
+                                                                           title="Communication">
+                                                                            <i class="bi bi-chat-dots"></i>
                                                                         </a>
                                                                     {% endif %}
                                                                 </td>

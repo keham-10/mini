@@ -2876,7 +2876,7 @@ def unified_communication(product_id):
     # Get all conversations for this product, grouped by question/response
     # Include all statuses for proper conversation flow
     if current_user_role == 'lead':
-        # Lead can see conversations for all clients on this product
+        # Lead can see conversations for all clients on this product (exclude approved conversations)
         conversations = db.session.query(LeadComment).options(
             db.joinedload(LeadComment.response),
             db.joinedload(LeadComment.lead),
@@ -2893,7 +2893,7 @@ def unified_communication(product_id):
         responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all() if assigned_client else []
         
     elif current_user_role == 'client':
-        # Client can only see their own conversations
+        # Client can only see their own conversations (exclude approved conversations)
         conversations = db.session.query(LeadComment).options(
             db.joinedload(LeadComment.response),
             db.joinedload(LeadComment.lead),
@@ -2909,7 +2909,7 @@ def unified_communication(product_id):
         responses = []
         
     else:
-        # Admin/superuser can see all conversations
+        # Admin/superuser can see all conversations (exclude approved conversations)
         conversations = db.session.query(LeadComment).options(
             db.joinedload(LeadComment.response),
             db.joinedload(LeadComment.lead),
@@ -3022,9 +3022,22 @@ def approve_client_reply(comment_id):
             response.is_reviewed = True
             response.needs_client_response = False
     
+    # Mark the root comment thread as resolved/approved to remove from active communication
+    root_comment = client_reply
+    if client_reply.parent_comment_id:
+        root_comment = LeadComment.query.get(client_reply.parent_comment_id)
+    
+    if root_comment:
+        root_comment.status = 'approved'
+        # Mark all replies in this thread as read and approved
+        replies = LeadComment.query.filter_by(parent_comment_id=root_comment.id).all()
+        for reply in replies:
+            if reply.id != client_reply.id:  # Don't update the current reply again
+                reply.is_read = True
+    
     db.session.commit()
-    flash('Client reply approved successfully.', 'success')
-    return redirect(request.referrer or url_for('lead_comments'))
+    flash('Client reply approved successfully. Conversation resolved and moved to approved responses.', 'success')
+    return redirect(request.referrer or url_for('unified_communication', product_id=client_reply.product_id))
 
 
 @app.route('/communication/reply/<int:comment_id>', methods=['POST'])
