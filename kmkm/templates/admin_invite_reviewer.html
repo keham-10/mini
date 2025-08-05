@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Create Reviewer - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Page Header -->
+    <div class="dashboard-header text-center mb-4">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-person-gear me-3"></i>Create New Reviewer
+        </h1>
+        <p class="lead mb-0">Create lead reviewers to evaluate client security assessments</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Navigation Pills -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <nav class="nav nav-pills nav-justified">
+                        <a class="nav-link" href="{{ url_for('invite_client') }}">
+                            <i class="bi bi-person-plus me-2"></i>Invite Client
+                        </a>
+                        <a class="nav-link active" href="{{ url_for('invite_reviewer') }}">
+                            <i class="bi bi-person-gear me-2"></i>Create Reviewer
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Create Reviewer Form -->
+            <div class="card shadow">
+                <div class="card-header bg-gradient-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-check me-2"></i>Reviewer Creation Form
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('create_lead') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="username" name="username"
+                                           placeholder="username" required>
+                                    <label for="username">Username</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           placeholder="reviewer@example.com" required>
+                                    <label for="email">Email Address</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="first_name" name="first_name"
+                                           placeholder="First Name">
+                                    <label for="first_name">First Name (Optional)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="last_name" name="last_name"
+                                           placeholder="Last Name">
+                                    <label for="last_name">Last Name (Optional)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="password" class="form-control" id="password" name="password"
+                                           placeholder="password" required minlength="6">
+                                    <label for="password">Password</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                                           placeholder="confirm password" required minlength="6">
+                                    <label for="confirm_password">Confirm Password</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="organization" name="organization"
+                                   placeholder="Organization Name">
+                            <label for="organization">Organization (Optional)</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="assigned_client_id" name="assigned_client_id">
+                                <option value="">Select Client to Assign (Optional)</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.username }} ({{ client.email }})</option>
+                                {% endfor %}
+                            </select>
+                            <label for="assigned_client_id">Assign to Client</label>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Reviewer Capabilities:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Assessment Review:</strong> Review and evaluate client security questionnaire responses</li>
+                                <li><strong>Scoring Authority:</strong> Assign maturity scores based on client responses and evidence</li>
+                                <li><strong>Communication:</strong> Chat directly with clients to request additional evidence or clarification</li>
+                                <li><strong>Status Management:</strong> Approve, request revisions, or reject client responses</li>
+                                <li><strong>Client Assignment:</strong> Can be assigned to multiple clients for ongoing reviews</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Review Workflow:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Approve:</strong> Accept the response and freeze the question</li>
+                                <li><strong>Needs Revision:</strong> Request more evidence through chat</li>
+                                <li><strong>Reject:</strong> Require client to re-select their answer</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Important Notes:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Reviewers will be created immediately with the provided credentials</li>
+                                <li>You can assign clients to reviewers later from the user management page</li>
+                                <li>Reviewers can access all assigned client assessments and communications</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-person-check me-2"></i>Create Reviewer Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Reviewers -->
+            {% if reviewers %}
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people me-2"></i>Existing Reviewers
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Organization</th>
+                                    <th>Assigned Clients</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reviewer in reviewers %}
+                                <tr>
+                                    <td>{{ reviewer.username }}</td>
+                                    <td>{{ reviewer.email }}</td>
+                                    <td>{{ reviewer.organization or 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ reviewer.assigned_clients.count() }}</span>
+                                    </td>
+                                    <td>{{ reviewer.created_at.strftime('%m/%d/%Y') }}</td>
+                                    <td>
+                                        {% if reviewer.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Navigation Buttons -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('invite_client') }}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-person-plus me-2"></i>Invite Client Instead
+                </a>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-people me-2"></i>Manage Users
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-house me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password confirmation validation
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    function validatePassword() {
+        if (password.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity("Passwords don't match");
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+    
+    password.addEventListener('change', validatePassword);
+    confirmPassword.addEventListener('keyup', validatePassword);
+});
+</script>
+{% endblock %}

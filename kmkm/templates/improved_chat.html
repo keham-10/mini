@@ -1,0 +1,954 @@
+{% extends "base.html" %}
+
+{% block title %}Communications - {{ product.name }} - SecureSphere{% endblock %}
+
+{% block head %}
+<style>
+/* Modern Chat Interface Styles */
+.chat-wrapper {
+    height: calc(100vh - 120px);
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.chat-header-info h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.chat-header-info .text-muted {
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 0.9rem;
+}
+
+.chat-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.conversations-sidebar {
+    width: 380px;
+    background: white;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    border: 1px solid #dee2e6;
+    border-radius: 25px;
+    font-size: 14px;
+    background: white;
+}
+
+.search-box i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.conversations-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+.conversation-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.conversation-item:hover {
+    background: #f8f9fa;
+}
+
+.conversation-item.active {
+    background: #e3f2fd;
+    border-right: 3px solid #667eea;
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.conversation-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+    margin: 0;
+}
+
+.conversation-time {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.conversation-preview {
+    font-size: 13px;
+    color: #6c757d;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.conversation-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-approved { background: #d1edff; color: #0c5460; }
+.status-needs-revision { background: #f8d7da; color: #721c24; }
+.status-rejected { background: #f5c6cb; color: #721c24; }
+
+.unread-count {
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.chat-conversation-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.conversation-info h5 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.conversation-info .text-muted {
+    font-size: 14px;
+}
+
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 25px;
+    background: #fafbfc;
+}
+
+.message-group {
+    margin-bottom: 25px;
+}
+
+.message {
+    max-width: 70%;
+    margin-bottom: 12px;
+    animation: fadeInUp 0.3s ease;
+}
+
+.message.sent {
+    margin-left: auto;
+}
+
+.message.received {
+    margin-right: auto;
+}
+
+.message-bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message.sent .message-bubble {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.message.received .message-bubble {
+    background: white;
+    color: #2c3e50;
+    border: 1px solid #e9ecef;
+    border-bottom-left-radius: 6px;
+}
+
+.message-info {
+    display: flex;
+    align-items: center;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.message.sent .message-info {
+    justify-content: flex-end;
+}
+
+.message.received .message-info {
+    justify-content: flex-start;
+}
+
+.message-time {
+    margin: 0 8px;
+}
+
+.message-status {
+    display: flex;
+    align-items: center;
+}
+
+.attachment-preview {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.attachment-preview i {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.chat-input-area {
+    padding: 20px 25px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+}
+
+.input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    background: #f8f9fa;
+    border-radius: 25px;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.input-container:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.message-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    resize: none;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 8px 0;
+    max-height: 120px;
+    min-height: 20px;
+}
+
+.message-input:focus {
+    outline: none;
+}
+
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-upload-btn, .send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-upload-btn {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.file-upload-btn:hover {
+    background: #dee2e6;
+    color: #495057;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.send-btn:hover {
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    color: #6c757d;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.typing-dots {
+    display: inline-flex;
+    margin-left: 8px;
+}
+
+.typing-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #6c757d;
+    margin: 0 1px;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.empty-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    text-align: center;
+    padding: 40px;
+}
+
+.empty-chat i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-chat h4 {
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .chat-body {
+        flex-direction: column;
+    }
+    
+    .conversations-sidebar {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .conversations-list {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    
+    .conversation-item {
+        min-width: 250px;
+        border-bottom: none;
+        border-right: 1px solid #f1f3f4;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+}
+
+/* Status Change Animations */
+.status-change-animation {
+    animation: statusPulse 0.6s ease;
+}
+
+@keyframes statusPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* File Upload Styling */
+.file-input {
+    display: none;
+}
+
+.file-preview {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+}
+
+.file-info i {
+    margin-right: 8px;
+    color: #667eea;
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.remove-file:hover {
+    color: #c82333;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="chat-wrapper">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <h4>{{ product.name }} - Communications</h4>
+                <div class="text-muted">
+                    {% if current_user_role == 'lead' %}
+                        Lead Review Dashboard
+                    {% else %}
+                        Client Communication Portal
+                    {% endif %}
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-light btn-sm me-2" onclick="refreshConversations()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                {% if current_user_role == 'lead' %}
+                <button class="btn btn-light btn-sm" onclick="showNewConversationModal()">
+                    <i class="bi bi-plus-lg"></i> New
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="chat-body">
+            <!-- Conversations Sidebar -->
+            <div class="conversations-sidebar">
+                <div class="sidebar-header">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search conversations..." id="conversationSearch">
+                        <i class="bi bi-search"></i>
+                    </div>
+                </div>
+                
+                <div class="conversations-list" id="conversationsList">
+                    {% if conversation_threads %}
+                        {% for dimension, threads in conversation_threads.items() %}
+                            {% for thread in threads %}
+                                <div class="conversation-item" 
+                                     data-conversation-id="{{ thread.root_comment.id }}"
+                                     onclick="selectConversation('{{ thread.root_comment.id }}')">
+                                    
+                                    <div class="conversation-header">
+                                        <h6 class="conversation-title">
+                                            {% if thread.question_text %}
+                                                Q{{ loop.index }}: {{ thread.question_text[:30] }}...
+                                            {% else %}
+                                                General Discussion
+                                            {% endif %}
+                                        </h6>
+                                        <span class="conversation-time">
+                                            {{ thread.root_comment.created_at.strftime('%m/%d %H:%M') }}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="conversation-preview">
+                                        {{ thread.root_comment.comment[:80] }}...
+                                    </div>
+                                    
+                                    <div class="conversation-meta">
+                                        <span class="status-badge status-{{ thread.root_comment.status }}">
+                                            {% if thread.root_comment.status == 'approved' %}
+                                                <i class="bi bi-check-circle"></i> Approved
+                                            {% elif thread.root_comment.status == 'needs_revision' %}
+                                                <i class="bi bi-exclamation-triangle"></i> Needs Revision
+                                            {% elif thread.root_comment.status == 'rejected' %}
+                                                <i class="bi bi-x-circle"></i> Rejected
+                                            {% else %}
+                                                <i class="bi bi-clock"></i> Pending
+                                            {% endif %}
+                                        </span>
+                                        
+                                        {% set unread_count = thread.messages|selectattr('is_read', 'equalto', false)|list|length %}
+                                        {% if unread_count > 0 %}
+                                            <span class="unread-count">{{ unread_count }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-sidebar">
+                            <div class="text-center p-4 text-muted">
+                                <i class="bi bi-chat-text fs-1 mb-3"></i>
+                                <p>No conversations yet</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="chat-main">
+                {% if conversation_threads %}
+                    {% for dimension, threads in conversation_threads.items() %}
+                        {% for thread in threads %}
+                            <div class="chat-conversation" 
+                                 id="conversation_{{ thread.root_comment.id }}" 
+                                 style="display: none; flex-direction: column; height: 100%;">
+                                
+                                <!-- Conversation Header -->
+                                <div class="chat-conversation-header">
+                                    <div class="conversation-info">
+                                        <h5>
+                                            {% if thread.question_text %}
+                                                Question {{ loop.index }}: {{ thread.question_text[:50] }}...
+                                            {% else %}
+                                                General Discussion - {{ dimension }}
+                                            {% endif %}
+                                        </h5>
+                                        <div class="text-muted">
+                                            Between {{ thread.root_comment.lead.username }} and {{ thread.root_comment.client.username }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Messages Container -->
+                                <div class="messages-container" id="messages_{{ thread.root_comment.id }}">
+                                    <!-- Root Message -->
+                                    <div class="message-group">
+                                        <div class="message {{ 'sent' if thread.root_comment.lead_id == current_user.id else 'received' }}">
+                                            <div class="message-bubble">
+                                                <strong>{{ thread.root_comment.lead.username }}:</strong>
+                                                {{ thread.root_comment.comment }}
+                                            </div>
+                                            <div class="message-info">
+                                                <span class="message-time">{{ thread.root_comment.created_at.strftime('%m/%d/%Y %H:%M') }}</span>
+                                                <span class="status-badge status-{{ thread.root_comment.status }}">
+                                                    {{ thread.root_comment.status.replace('_', ' ').title() }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reply Messages -->
+                                    {% for message in thread.messages %}
+                                        <div class="message-group">
+                                            <div class="message {{ 'sent' if message.lead_id == current_user.id else 'received' }}">
+                                                <div class="message-bubble">
+                                                    <strong>
+                                                        {% if message.lead_id %}
+                                                            {{ message.lead.username }}
+                                                        {% else %}
+                                                            {{ message.client.username }}
+                                                        {% endif %}:
+                                                    </strong>
+                                                    {{ message.comment }}
+                                                    
+                                                    {% if message.attachment_path %}
+                                                        <div class="attachment-preview">
+                                                            <i class="bi bi-paperclip"></i>
+                                                            <a href="{{ url_for('static', filename='uploads/' + message.attachment_path.split('/')[-1]) }}" 
+                                                               target="_blank" class="text-white">
+                                                                {{ message.attachment_path.split('/')[-1] }}
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="message-info">
+                                                    <span class="message-time">{{ message.created_at.strftime('%m/%d/%Y %H:%M') }}</span>
+                                                    {% if message.status %}
+                                                        <span class="status-badge status-{{ message.status }}">
+                                                            {{ message.status.replace('_', ' ').title() }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Chat Input Area -->
+                                <div class="chat-input-area">
+                                    <form method="post" 
+                                          action="{{ url_for('reply_to_conversation', comment_id=thread.root_comment.id) }}" 
+                                          enctype="multipart/form-data" 
+                                          class="chat-form"
+                                          id="chatForm_{{ thread.root_comment.id }}">
+                                        
+                                        <div class="input-container">
+                                            <textarea name="reply" 
+                                                      class="message-input" 
+                                                      placeholder="Type your message..." 
+                                                      required 
+                                                      rows="1"
+                                                      id="messageInput_{{ thread.root_comment.id }}"
+                                                      onInput="autoResize(this); toggleSendButton(this)"></textarea>
+                                            
+                                            <div class="input-actions">
+                                                {% if current_user_role == 'client' and thread.root_comment.status in ['needs_revision', 'rejected'] %}
+                                                    <button type="button" class="file-upload-btn" onclick="triggerFileUpload('{{ thread.root_comment.id }}')">
+                                                        <i class="bi bi-paperclip"></i>
+                                                    </button>
+                                                    <input type="file" 
+                                                           class="file-input" 
+                                                           id="fileInput_{{ thread.root_comment.id }}"
+                                                           name="evidence"
+                                                           accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                           onchange="showFilePreview(this, '{{ thread.root_comment.id }}')">
+                                                {% endif %}
+                                                
+                                                <button type="submit" 
+                                                        class="send-btn" 
+                                                        id="sendBtn_{{ thread.root_comment.id }}"
+                                                        disabled>
+                                                    <i class="bi bi-send"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="file-preview" 
+                                             id="filePreview_{{ thread.root_comment.id }}" 
+                                             style="display: none;">
+                                            <div class="file-info">
+                                                <i class="bi bi-file-text"></i>
+                                                <span class="file-name"></span>
+                                            </div>
+                                            <button type="button" class="remove-file" onclick="removeFile('{{ thread.root_comment.id }}')">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-chat">
+                        <i class="bi bi-chat-text"></i>
+                        <h4>No conversations yet</h4>
+                        <p>
+                            {% if current_user_role == 'lead' %}
+                                Start a new conversation with your clients to provide feedback and guidance.
+                            {% else %}
+                                Your security reviewer will start conversations here to provide feedback.
+                            {% endif %}
+                        </p>
+                        {% if current_user_role == 'lead' %}
+                            <button class="btn btn-primary" onclick="showNewConversationModal()">
+                                <i class="bi bi-plus-lg me-2"></i>Start First Conversation
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Conversation Modal -->
+{% if current_user_role == 'lead' %}
+<div class="modal fade" id="newConversationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Start New Conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('create_new_conversation', product_id=product.id) }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Client</label>
+                                <select name="client_id" class="form-select" required>
+                                    <option value="">Select a client...</option>
+                                    {% if current_user_role == 'lead' and accessible_clients %}
+                                        {% for client in accessible_clients %}
+                                            <option value="{{ client.id }}">{{ client.username }} ({{ client.email }})</option>
+                                        {% endfor %}
+                                    {% elif assigned_client %}
+                                        <option value="{{ assigned_client.id }}">{{ assigned_client.username }}</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select" required>
+                                    <option value="pending">Pending Review</option>
+                                    <option value="needs_revision">Needs Revision</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Related Question (Optional)</label>
+                        <select name="response_id" class="form-select">
+                            <option value="">General discussion</option>
+                            {% if responses %}
+                                {% for response in responses %}
+                                    <option value="{{ response.id }}">Q{{ loop.index }}: {{ response.question[:50] }}...</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="comment" class="form-control" rows="4" placeholder="Type your message..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Start Conversation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+let currentConversationId = null;
+
+// Auto-resize textarea
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+// Toggle send button based on input
+function toggleSendButton(textarea) {
+    const sendBtn = document.getElementById('sendBtn_' + textarea.id.split('_')[1]);
+    sendBtn.disabled = textarea.value.trim() === '';
+}
+
+// Select conversation
+function selectConversation(conversationId) {
+    // Remove active class from all items
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Hide all conversations
+    document.querySelectorAll('.chat-conversation').forEach(conv => {
+        conv.style.display = 'none';
+    });
+    
+    // Show selected conversation
+    const selectedItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+    const selectedConversation = document.getElementById(`conversation_${conversationId}`);
+    
+    if (selectedItem && selectedConversation) {
+        selectedItem.classList.add('active');
+        selectedConversation.style.display = 'flex';
+        currentConversationId = conversationId;
+        
+        // Scroll to bottom
+        const messagesContainer = selectedConversation.querySelector('.messages-container');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Mark messages as read
+        markMessagesAsRead(conversationId);
+    }
+}
+
+// File upload functions
+function triggerFileUpload(conversationId) {
+    document.getElementById(`fileInput_${conversationId}`).click();
+}
+
+function showFilePreview(input, conversationId) {
+    const preview = document.getElementById(`filePreview_${conversationId}`);
+    const fileName = preview.querySelector('.file-name');
+    
+    if (input.files && input.files[0]) {
+        fileName.textContent = input.files[0].name;
+        preview.style.display = 'flex';
+    }
+}
+
+function removeFile(conversationId) {
+    const input = document.getElementById(`fileInput_${conversationId}`);
+    const preview = document.getElementById(`filePreview_${conversationId}`);
+    
+    input.value = '';
+    preview.style.display = 'none';
+}
+
+// Search conversations
+document.getElementById('conversationSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const conversations = document.querySelectorAll('.conversation-item');
+    
+    conversations.forEach(conv => {
+        const title = conv.querySelector('.conversation-title').textContent.toLowerCase();
+        const preview = conv.querySelector('.conversation-preview').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || preview.includes(searchTerm)) {
+            conv.style.display = 'block';
+        } else {
+            conv.style.display = 'none';
+        }
+    });
+});
+
+// Refresh conversations
+function refreshConversations() {
+    location.reload();
+}
+
+// Show new conversation modal
+function showNewConversationModal() {
+    const modal = new bootstrap.Modal(document.getElementById('newConversationModal'));
+    modal.show();
+}
+
+// Mark messages as read
+function markMessagesAsRead(conversationId) {
+    fetch(`/api/mark_messages_read/${conversationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).catch(console.error);
+}
+
+// Auto-select first conversation on load
+document.addEventListener('DOMContentLoaded', function() {
+    const firstConversation = document.querySelector('.conversation-item');
+    if (firstConversation) {
+        const conversationId = firstConversation.dataset.conversationId;
+        selectConversation(conversationId);
+    }
+    
+    // Handle form submissions
+    document.querySelectorAll('.chat-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const textarea = form.querySelector('.message-input');
+            const sendBtn = form.querySelector('.send-btn');
+            
+            if (textarea.value.trim() === '') {
+                e.preventDefault();
+                return;
+            }
+            
+            // Show loading state
+            sendBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            sendBtn.disabled = true;
+        });
+    });
+});
+
+// Real-time updates (optional - can be enhanced with WebSockets)
+setInterval(function() {
+    if (currentConversationId) {
+        // Check for new messages (implement as needed)
+    }
+}, 30000); // Check every 30 seconds
+</script>
+{% endblock %}

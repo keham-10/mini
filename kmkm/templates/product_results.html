@@ -63,6 +63,11 @@
                         <small class="opacity-75">Color-coded visualization of your security maturity across all dimensions</small>
                     </div>
                     <div class="d-flex gap-2">
+                        <a href="{{ url_for('download_product_pdf', product_id=product.id) }}" 
+                           class="btn btn-outline-light btn-sm" 
+                           title="Download Complete PDF Report">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF Report
+                        </a>
                         <button class="btn btn-outline-light btn-sm" onclick="exportHeatmapData()" title="Export heatmap data">
                             <i class="bi bi-download me-1"></i>Export
                         </button>

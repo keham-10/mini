@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+
+{% block title %}Client Management - Admin{% endblock %}
+
+{% block head %}
+<style>
+.client-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.client-row {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.client-row:hover {
+    background-color: #f8f9fa;
+}
+
+.client-row.expanded {
+    background-color: #e3f2fd;
+}
+
+.products-section {
+    display: none;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.products-section.show {
+    display: table-row;
+}
+
+.product-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin: 8px 0;
+    transition: all 0.2s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.product-header {
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 7px 7px 0 0;
+}
+
+.product-content {
+    padding: 15px;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.expand-icon {
+    transition: transform 0.2s ease;
+}
+
+.expand-icon.rotated {
+    transform: rotate(90deg);
+}
+
+.client-stats {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #495057;
+}
+
+.stat-label {
+    font-size: 0.8em;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.product-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+.client-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.client-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.search-filter-bar {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .client-stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Page Header -->
+    <div class="dashboard-header text-center mb-4">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-people me-3"></i>Client Management
+        </h1>
+        <p class="lead mb-0">Manage clients and their security assessment products</p>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="search-filter-bar">
+        <div class="filter-controls">
+            <div class="flex-grow-1">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="clientSearch" 
+                           placeholder="Search clients by name, email, or organization...">
+                </div>
+            </div>
+            <div>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div>
+                <select class="form-select" id="organizationFilter">
+                    <option value="">All Organizations</option>
+                    {% for org in organizations %}
+                        <option value="{{ org }}">{{ org }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clients Table -->
+    <div class="card shadow">
+        <div class="card-header bg-gradient-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-table me-2"></i>Clients Overview
+                </h5>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('invite_client') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-person-plus me-1"></i>Invite Client
+                    </a>
+                    <button class="btn btn-outline-light btn-sm" onclick="exportClientsData()">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover client-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Client</th>
+                            <th>Organization</th>
+                            <th>Products</th>
+                            <th>Progress</th>
+                            <th>Last Activity</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for client in clients %}
+                        <tr class="client-row" data-client-id="{{ client.id }}" onclick="toggleClientProducts({{ client.id }})">
+                            <td>
+                                <i class="bi bi-chevron-right expand-icon" id="icon-{{ client.id }}"></i>
+                            </td>
+                            <td>
+                                <div class="client-info">
+                                    <div class="client-avatar">
+                                        {{ client.username[0].upper() }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ client.username }}</div>
+                                        <small class="text-muted">{{ client.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ client.organization or 'N/A' }}</span>
+                            </td>
+                            <td>
+                                <div class="client-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-value">{{ client.products|length }}</div>
+                                        <div class="stat-label">Total</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value text-success">{{ client.products|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+                                        <div class="stat-label">Complete</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value text-warning">{{ client.products|selectattr('status', 'in', ['in_progress', 'questions_done', 'under_review'])|list|length }}</div>
+                                        <div class="stat-label">In Progress</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% set total_products = client.products|length %}
+                                {% set completed_products = client.products|selectattr('status', 'equalto', 'completed')|list|length %}
+                                {% set progress = (completed_products / total_products * 100) if total_products > 0 else 0 %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
+                                        {{ "%.0f"|format(progress) }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if client.last_login %}
+                                    {{ client.last_login.strftime('%m/%d/%Y') }}
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if client.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td onclick="event.stopPropagation();">
+                                <div class="action-buttons">
+                                    <button class="btn btn-outline-primary btn-sm" 
+                                            onclick="viewClientDetails({{ client.id }})" 
+                                            title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm" 
+                                            onclick="assignReviewer({{ client.id }})" 
+                                            title="Assign Reviewer">
+                                        <i class="bi bi-person-gear"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm" 
+                                            onclick="editClient({{ client.id }})" 
+                                            title="Edit Client">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Products Section (Hidden by default) -->
+                        <tr class="products-section" id="products-{{ client.id }}">
+                            <td colspan="8">
+                                <div class="p-4">
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-box-seam me-2"></i>Products for {{ client.username }}
+                                    </h6>
+                                    
+                                    {% if client.products %}
+                                        <div class="row">
+                                            {% for product in client.products %}
+                                            <div class="col-md-6 col-lg-4 mb-3">
+                                                <div class="product-card">
+                                                    <div class="product-header">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <h6 class="mb-0">{{ product.name }}</h6>
+                                                            <span class="status-badge 
+                                                                {% if product.status == 'completed' %}bg-success
+                                                                {% elif product.status == 'in_progress' %}bg-primary
+                                                                {% elif product.status == 'under_review' %}bg-info
+                                                                {% elif product.status == 'questions_done' %}bg-warning
+                                                                {% else %}bg-secondary{% endif %}">
+                                                                {{ product.status.replace('_', ' ').title() }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="product-content">
+                                                        <div class="row text-center mb-3">
+                                                            <div class="col-6">
+                                                                <div class="stat-value">{{ product.overall_score or 'N/A' }}</div>
+                                                                <div class="stat-label">Maturity Score</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div class="stat-value">{{ product.progress_percentage or 0 }}%</div>
+                                                                <div class="stat-label">Progress</div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="mb-2">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-link me-1"></i>{{ product.product_url[:50] }}...
+                                                            </small>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-code me-1"></i>{{ product.programming_language }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-cloud me-1"></i>{{ product.cloud_platform }}
+                                                            </small>
+                                                        </div>
+                                                        
+                                                        <div class="product-actions">
+                                                            <a href="{{ url_for('product_results', product_id=product.id) }}" 
+                                                               class="btn btn-outline-primary btn-sm">
+                                                                <i class="bi bi-bar-chart me-1"></i>Results
+                                                            </a>
+                                                            <a href="{{ url_for('communication', product_id=product.id) }}" 
+                                                               class="btn btn-outline-info btn-sm">
+                                                                <i class="bi bi-chat-dots me-1"></i>Chat
+                                                            </a>
+                                                            <a href="{{ url_for('download_product_pdf', product_id=product.id) }}" 
+                                                               class="btn btn-outline-danger btn-sm">
+                                                                <i class="bi bi-file-pdf me-1"></i>PDF
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center py-4">
+                                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                                            <h5 class="text-muted">No Products Yet</h5>
+                                            <p class="text-muted">This client hasn't created any security assessment products.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-people me-2"></i>All Users
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+            <i class="bi bi-house me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+// Toggle client products section
+function toggleClientProducts(clientId) {
+    const productsRow = document.getElementById(`products-${clientId}`);
+    const icon = document.getElementById(`icon-${clientId}`);
+    const clientRow = document.querySelector(`[data-client-id="${clientId}"]`);
+    
+    if (productsRow.classList.contains('show')) {
+        productsRow.classList.remove('show');
+        icon.classList.remove('rotated');
+        clientRow.classList.remove('expanded');
+    } else {
+        // Hide all other expanded sections
+        document.querySelectorAll('.products-section.show').forEach(section => {
+            section.classList.remove('show');
+        });
+        document.querySelectorAll('.expand-icon.rotated').forEach(ic => {
+            ic.classList.remove('rotated');
+        });
+        document.querySelectorAll('.client-row.expanded').forEach(row => {
+            row.classList.remove('expanded');
+        });
+        
+        // Show this section
+        productsRow.classList.add('show');
+        icon.classList.add('rotated');
+        clientRow.classList.add('expanded');
+    }
+}
+
+// Search functionality
+document.getElementById('clientSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('.client-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+            // Also show/hide corresponding products section
+            const clientId = row.dataset.clientId;
+            const productsRow = document.getElementById(`products-${clientId}`);
+            if (productsRow) {
+                productsRow.style.display = '';
+            }
+        } else {
+            row.style.display = 'none';
+            // Hide corresponding products section
+            const clientId = row.dataset.clientId;
+            const productsRow = document.getElementById(`products-${clientId}`);
+            if (productsRow) {
+                productsRow.style.display = 'none';
+            }
+        }
+    });
+});
+
+// Filter functionality
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+document.getElementById('organizationFilter').addEventListener('change', applyFilters);
+
+function applyFilters() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const orgFilter = document.getElementById('organizationFilter').value;
+    const rows = document.querySelectorAll('.client-row');
+    
+    rows.forEach(row => {
+        let showRow = true;
+        
+        // Status filter
+        if (statusFilter) {
+            const statusBadge = row.querySelector('.badge');
+            const status = statusBadge.textContent.toLowerCase();
+            if (statusFilter === 'active' && status !== 'active') showRow = false;
+            if (statusFilter === 'inactive' && status !== 'inactive') showRow = false;
+        }
+        
+        // Organization filter
+        if (orgFilter) {
+            const orgBadge = row.querySelectorAll('.badge')[1]; // Second badge is organization
+            const org = orgBadge.textContent;
+            if (org !== orgFilter) showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+        
+        // Handle corresponding products section
+        const clientId = row.dataset.clientId;
+        const productsRow = document.getElementById(`products-${clientId}`);
+        if (productsRow) {
+            productsRow.style.display = showRow ? '' : 'none';
+        }
+    });
+}
+
+function resetFilters() {
+    document.getElementById('clientSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('organizationFilter').value = '';
+    
+    document.querySelectorAll('.client-row').forEach(row => {
+        row.style.display = '';
+    });
+    document.querySelectorAll('.products-section').forEach(section => {
+        section.style.display = '';
+    });
+}
+
+// Action functions
+function viewClientDetails(clientId) {
+    // Could open a modal or redirect to detailed view
+    window.location.href = `/admin/client/${clientId}/details`;
+}
+
+function assignReviewer(clientId) {
+    // Open modal for reviewer assignment
+    alert('Reviewer assignment functionality - to be implemented');
+}
+
+function editClient(clientId) {
+    // Open edit modal or redirect to edit page
+    alert('Client editing functionality - to be implemented');
+}
+
+function exportClientsData() {
+    // Export client data as CSV
+    alert('Export functionality - to be implemented');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Client Management page loaded');
+});
+</script>
+{% endblock %}
