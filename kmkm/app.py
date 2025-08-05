@@ -425,6 +425,84 @@ class RejectedQuestion(db.Model):
     def __repr__(self):
         return f"<RejectedQuestion {self.id}: {self.question_text[:50]}... by U{self.user_id}>"
 
+class QuestionChat(db.Model):
+    """Chat thread for a specific question between client and lead"""
+    __tablename__ = 'question_chats'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    response_id = db.Column(db.Integer, db.ForeignKey('questionnaire_responses.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    lead_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    review_status = db.Column(db.String(20), default='pending')  # pending, approved, needs_revision, rejected
+    is_active = db.Column(db.Boolean, default=True)  # False when approved/finalized
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    response = db.relationship('QuestionnaireResponse', backref='question_chat')
+    client = db.relationship('User', foreign_keys=[client_id], backref='chats_as_client')
+    lead = db.relationship('User', foreign_keys=[lead_id], backref='chats_as_lead')
+    product = db.relationship('Product', backref='question_chats')
+    messages = db.relationship('ChatMessage', backref='chat', lazy='dynamic', cascade='all, delete-orphan', order_by='ChatMessage.created_at')
+    
+    # Indexes for better performance
+    __table_args__ = (
+        db.Index('idx_response_active', 'response_id', 'is_active'),
+        db.Index('idx_status', 'review_status'),
+        db.Index('idx_lead_active', 'lead_id', 'is_active'),
+        db.Index('idx_client_active', 'client_id', 'is_active'),
+    )
+    
+    def __repr__(self):
+        return f'<QuestionChat {self.id}: {self.review_status}>'
+    
+    @property
+    def unread_messages_for_client(self):
+        """Get count of unread messages for client"""
+        return self.messages.filter_by(is_read_by_client=False).filter(ChatMessage.sender_id != self.client_id).count()
+    
+    @property
+    def unread_messages_for_lead(self):
+        """Get count of unread messages for lead"""
+        return self.messages.filter_by(is_read_by_lead=False).filter(ChatMessage.sender_id != self.lead_id).count()
+
+class ChatMessage(db.Model):
+    """Individual message in a question chat"""
+    __tablename__ = 'chat_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    chat_id = db.Column(db.Integer, db.ForeignKey('question_chats.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message_type = db.Column(db.String(20), default='text')  # text, status_change, file_upload, system
+    content = db.Column(db.Text, nullable=False)
+    file_path = db.Column(db.String(500))  # For file attachments
+    file_name = db.Column(db.String(200))  # Original filename
+    is_read_by_client = db.Column(db.Boolean, default=False)
+    is_read_by_lead = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    sender = db.relationship('User', backref='sent_messages')
+    
+    # Indexes for better performance
+    __table_args__ = (
+        db.Index('idx_chat_created', 'chat_id', 'created_at'),
+        db.Index('idx_unread_client', 'is_read_by_client'),
+        db.Index('idx_unread_lead', 'is_read_by_lead'),
+    )
+    
+    def __repr__(self):
+        return f'<ChatMessage {self.id}: {self.message_type}>'
+    
+    def mark_read_by_role(self, role):
+        """Mark message as read by specific role"""
+        if role == 'client':
+            self.is_read_by_client = True
+        elif role == 'lead':
+            self.is_read_by_lead = True
+        db.session.commit()
+
 # Chat models removed - simplified approval workflow
 
 
@@ -1424,7 +1502,14 @@ def dashboard():
         # Get unread comments count for this client
         unread_comments = LeadComment.query.filter_by(client_id=user_id, is_read=False).count()
 
-                # Get rejected questions for this client
+        # Get active chats with unread messages for this client
+        active_chats = QuestionChat.query.filter_by(client_id=user_id, is_active=True).all()
+        unread_chats_count = 0
+        for chat in active_chats:
+            if chat.unread_messages_for_client > 0:
+                unread_chats_count += 1
+
+        # Get rejected questions for this client
         rejected_questions = []
         for product in products:
             product_rejected = db.session.query(RejectedQuestion, QuestionnaireResponse).join(
@@ -1458,7 +1543,12 @@ def dashboard():
                 if question_data:
                     rejected_questions.append((rejected_question, question_data))
 
-        return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments, rejected_questions=rejected_questions)
+        return render_template('dashboard_client.html', 
+                             products=products_with_status, 
+                             unread_comments=unread_comments, 
+                             rejected_questions=rejected_questions,
+                             active_chats=active_chats,
+                             unread_chats_count=unread_chats_count)
     elif role == 'lead':
         # Get the current lead user to check their assigned client
         current_lead = User.query.get(user_id)
@@ -1500,7 +1590,19 @@ def dashboard():
             LeadComment.is_read == False
         ).count()
 
-        return render_template('dashboard_lead.html', clients_data=clients_data, assigned_client=current_lead.assigned_client, unread_client_replies=unread_client_replies)
+        # Get active chats for lead's assigned clients
+        active_chats_for_lead = QuestionChat.query.filter_by(lead_id=user_id, is_active=True).all()
+        unread_chats_count_lead = 0
+        for chat in active_chats_for_lead:
+            if chat.unread_messages_for_lead > 0:
+                unread_chats_count_lead += 1
+
+        return render_template('dashboard_lead.html', 
+                             clients_data=clients_data, 
+                             assigned_client=current_lead.assigned_client, 
+                             unread_client_replies=unread_client_replies,
+                             active_chats_for_lead=active_chats_for_lead,
+                             unread_chats_count_lead=unread_chats_count_lead)
     elif role == 'superuser':
         products = Product.query.all()
 
@@ -2189,16 +2291,129 @@ def review_questionnaire(response_id):
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
-        # Simplified approval workflow - only APPROVED option
         action = request.form.get('action')
+        comment = request.form.get('comment', '').strip()
         
         if action == 'approve':
-            # Approve the question - freeze it with tick mark
+            # APPROVED: Question is frozen and finalized
             resp.is_reviewed = True
             resp.is_approved = True
             resp.needs_client_response = False
             
-            flash('Question approved successfully.')
+            # Check if there's an existing chat for this response
+            existing_chat = QuestionChat.query.filter_by(response_id=response_id, is_active=True).first()
+            if existing_chat:
+                existing_chat.review_status = 'approved'
+                existing_chat.is_active = False
+                existing_chat.updated_at = datetime.now(timezone.utc)
+                
+                # Add system message to chat
+                system_message = ChatMessage(
+                    chat_id=existing_chat.id,
+                    sender_id=session['user_id'],
+                    message_type='status_change',
+                    content='✅ Question approved and finalized by lead',
+                    is_read_by_client=False,
+                    is_read_by_lead=True
+                )
+                db.session.add(system_message)
+            
+            flash('Question approved and frozen successfully.')
+            
+        elif action == 'needs_revision':
+            # NEEDS REVISION: Create/update chat for more evidence
+            resp.is_reviewed = True
+            resp.is_approved = False
+            resp.needs_client_response = True
+            
+            # Create or get existing chat
+            existing_chat = QuestionChat.query.filter_by(response_id=response_id, is_active=True).first()
+            if not existing_chat:
+                chat = QuestionChat(
+                    response_id=response_id,
+                    client_id=resp.user_id,
+                    lead_id=session['user_id'],
+                    product_id=resp.product_id,
+                    review_status='needs_revision',
+                    is_active=True
+                )
+                db.session.add(chat)
+                db.session.flush()  # Get the ID
+                
+                # Add initial message from lead
+                initial_message = ChatMessage(
+                    chat_id=chat.id,
+                    sender_id=session['user_id'],
+                    message_type='text',
+                    content=comment if comment else 'This question needs revision. Please provide more comments and evidence.',
+                    is_read_by_client=False,
+                    is_read_by_lead=True
+                )
+                db.session.add(initial_message)
+            else:
+                existing_chat.review_status = 'needs_revision'
+                existing_chat.updated_at = datetime.now(timezone.utc)
+                
+                # Add comment message
+                if comment:
+                    new_message = ChatMessage(
+                        chat_id=existing_chat.id,
+                        sender_id=session['user_id'],
+                        message_type='text',
+                        content=comment,
+                        is_read_by_client=False,
+                        is_read_by_lead=True
+                    )
+                    db.session.add(new_message)
+            
+            flash('Question marked for revision. Chat created for client communication.')
+            
+        elif action == 'reject':
+            # REJECTED: Question sent back with all 5 options for re-selection
+            resp.is_reviewed = False
+            resp.is_approved = False
+            resp.needs_client_response = True
+            
+            # Create or get existing chat
+            existing_chat = QuestionChat.query.filter_by(response_id=response_id, is_active=True).first()
+            if not existing_chat:
+                chat = QuestionChat(
+                    response_id=response_id,
+                    client_id=resp.user_id,
+                    lead_id=session['user_id'],
+                    product_id=resp.product_id,
+                    review_status='rejected',
+                    is_active=True
+                )
+                db.session.add(chat)
+                db.session.flush()
+                
+                # Add initial rejection message
+                initial_message = ChatMessage(
+                    chat_id=chat.id,
+                    sender_id=session['user_id'],
+                    message_type='status_change',
+                    content=f'❌ Question rejected. Please re-select your answer from all available options. Reason: {comment if comment else "No specific reason provided."}',
+                    is_read_by_client=False,
+                    is_read_by_lead=True
+                )
+                db.session.add(initial_message)
+            else:
+                existing_chat.review_status = 'rejected'
+                existing_chat.updated_at = datetime.now(timezone.utc)
+                
+                # Add rejection message
+                rejection_message = ChatMessage(
+                    chat_id=existing_chat.id,
+                    sender_id=session['user_id'],
+                    message_type='status_change',
+                    content=f'❌ Question rejected. Please re-select your answer. Reason: {comment if comment else "No specific reason provided."}',
+                    is_read_by_client=False,
+                    is_read_by_lead=True
+                )
+                db.session.add(rejection_message)
+            
+            flash('Question rejected. Client will be asked to re-select their answer.')
 
         db.session.commit()
 
@@ -2206,10 +2421,13 @@ def review_questionnaire(response_id):
         update_product_status(resp.product_id, resp.user_id)
         calculate_and_store_scores(resp.product_id, resp.user_id)
 
-        # Redirect back to dashboard after approval
+        # Redirect back to dashboard after action
         return redirect(url_for('dashboard'))
     
-    return render_template('review_questionnaire.html', response=resp)
+    # Check if there's an existing chat for this response
+    existing_chat = QuestionChat.query.filter_by(response_id=response_id, is_active=True).first()
+    
+    return render_template('review_questionnaire.html', response=resp, existing_chat=existing_chat)
 
 @app.route('/admin/product/<int:product_id>/details')
 @login_required('superuser')
@@ -3076,12 +3294,249 @@ def admin_client_details(client_id):
                          client_stats=client_stats,
                          section_ids=SECTION_IDS)
 
-# Communication routes removed - simplified approval workflow
+# ==================== CHAT ROUTES ====================
 
-# Old communication routes removed - simplified approval workflow
+@app.route('/question-chat/<int:chat_id>')
+@login_required()
+def view_question_chat(chat_id):
+    """View individual chat for a question"""
+    chat = QuestionChat.query.get_or_404(chat_id)
+    current_user_id = session['user_id']
+    current_user_role = session.get('role')
+    
+    # Check access permissions
+    if current_user_role == 'client':
+        if chat.client_id != current_user_id:
+            flash('You do not have permission to access this chat.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role == 'lead':
+        current_lead = User.query.get(current_user_id)
+        if not current_lead.can_access_client_data(chat.client_id):
+            flash('You do not have permission to access this chat.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role != 'superuser':
+        flash('You do not have permission to access this feature.')
+        return redirect(url_for('dashboard'))
+    
+    # Mark messages as read based on user role
+    if current_user_role == 'client':
+        unread_messages = chat.messages.filter_by(is_read_by_client=False).filter(ChatMessage.sender_id != current_user_id)
+        for msg in unread_messages:
+            msg.is_read_by_client = True
+    elif current_user_role == 'lead':
+        unread_messages = chat.messages.filter_by(is_read_by_lead=False).filter(ChatMessage.sender_id != current_user_id)
+        for msg in unread_messages:
+            msg.is_read_by_lead = True
+    
+    db.session.commit()
+    
+    # Get all messages
+    messages = chat.messages.order_by(ChatMessage.created_at.asc()).all()
+    
+    return render_template('question_chat.html', chat=chat, messages=messages)
 
+@app.route('/question-chat/<int:chat_id>/send', methods=['POST'])
+@login_required()
+def send_chat_message(chat_id):
+    """Send a message in a question chat"""
+    chat = QuestionChat.query.get_or_404(chat_id)
+    current_user_id = session['user_id']
+    current_user_role = session.get('role')
+    
+    # Check access permissions
+    if current_user_role == 'client':
+        if chat.client_id != current_user_id:
+            flash('You do not have permission to send messages in this chat.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role == 'lead':
+        current_lead = User.query.get(current_user_id)
+        if not current_lead.can_access_client_data(chat.client_id):
+            flash('You do not have permission to send messages in this chat.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role != 'superuser':
+        flash('You do not have permission to send messages in this chat.')
+        return redirect(url_for('dashboard'))
+    
+    # Check if chat is still active
+    if not chat.is_active and current_user_role != 'superuser':
+        flash('This chat has been finalized and is no longer active.')
+        return redirect(url_for('view_question_chat', chat_id=chat_id))
+    
+    message_content = request.form.get('message', '').strip()
+    if not message_content:
+        flash('Message cannot be empty.')
+        return redirect(url_for('view_question_chat', chat_id=chat_id))
+    
+    # Handle file upload
+    file_path = None
+    file_name = None
+    if 'evidence_file' in request.files:
+        file = request.files['evidence_file']
+        if file and file.filename and allowed_file(file.filename):
+            is_valid, error_msg = validate_file_security(file)
+            if is_valid:
+                filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                unique_filename = f"{current_user_id}_{timestamp}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(file_path)
+                file_name = filename
+            else:
+                flash(f'File upload error: {error_msg}')
+                return redirect(url_for('view_question_chat', chat_id=chat_id))
+    
+    # Create message
+    message = ChatMessage(
+        chat_id=chat_id,
+        sender_id=current_user_id,
+        message_type='file_upload' if file_path else 'text',
+        content=message_content,
+        file_path=file_path,
+        file_name=file_name,
+        is_read_by_client=(current_user_role == 'client'),
+        is_read_by_lead=(current_user_role == 'lead')
+    )
+    
+    db.session.add(message)
+    chat.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    
+    flash('Message sent successfully.')
+    return redirect(url_for('view_question_chat', chat_id=chat_id))
 
-# All communication routes removed - simplified approval workflow
+@app.route('/question-chat/<int:chat_id>/approve', methods=['POST'])
+@login_required('lead')
+def approve_from_chat(chat_id):
+    """Approve a question directly from chat interface"""
+    chat = QuestionChat.query.get_or_404(chat_id)
+    current_lead = User.query.get(session['user_id'])
+    
+    # Check permissions
+    if not current_lead.can_access_client_data(chat.client_id):
+        flash('You do not have permission to approve this question.')
+        return redirect(url_for('dashboard'))
+    
+    # Approve the response
+    response = chat.response
+    response.is_reviewed = True
+    response.is_approved = True
+    response.needs_client_response = False
+    
+    # Close the chat
+    chat.review_status = 'approved'
+    chat.is_active = False
+    chat.updated_at = datetime.now(timezone.utc)
+    
+    # Add approval message
+    approval_message = ChatMessage(
+        chat_id=chat_id,
+        sender_id=session['user_id'],
+        message_type='status_change',
+        content='✅ Question approved and finalized by lead',
+        is_read_by_client=False,
+        is_read_by_lead=True
+    )
+    db.session.add(approval_message)
+    
+    db.session.commit()
+    
+    # Update product status and recalculate scores
+    update_product_status(response.product_id, response.user_id)
+    calculate_and_store_scores(response.product_id, response.user_id)
+    
+    flash('Question approved successfully from chat.')
+    return redirect(url_for('view_question_chat', chat_id=chat_id))
+
+@app.route('/question-chats/<int:product_id>')
+@login_required()
+def list_question_chats(product_id):
+    """List all chats for a product"""
+    product = Product.query.get_or_404(product_id)
+    current_user_id = session['user_id']
+    current_user_role = session.get('role')
+    
+    # Check permissions
+    if current_user_role == 'client':
+        if product.owner_id != current_user_id:
+            flash('You do not have permission to access this product.')
+            return redirect(url_for('dashboard'))
+        chats = QuestionChat.query.filter_by(product_id=product_id, client_id=current_user_id).order_by(QuestionChat.updated_at.desc()).all()
+    elif current_user_role == 'lead':
+        current_lead = User.query.get(current_user_id)
+        if not current_lead.can_access_client_data(product.owner_id):
+            flash('You do not have permission to access this product.')
+            return redirect(url_for('dashboard'))
+        chats = QuestionChat.query.filter_by(product_id=product_id, lead_id=current_user_id).order_by(QuestionChat.updated_at.desc()).all()
+    elif current_user_role == 'superuser':
+        chats = QuestionChat.query.filter_by(product_id=product_id).order_by(QuestionChat.updated_at.desc()).all()
+    else:
+        flash('You do not have permission to access this feature.')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('question_chats_list.html', chats=chats, product=product)
+
+@app.route('/download_chat_file/<int:message_id>')
+@login_required()
+def download_chat_file(message_id):
+    """Download a file from a chat message"""
+    message = ChatMessage.query.get_or_404(message_id)
+    chat = message.chat
+    current_user_id = session['user_id']
+    current_user_role = session.get('role')
+    
+    # Check permissions
+    if current_user_role == 'client':
+        if chat.client_id != current_user_id:
+            flash('You do not have permission to download this file.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role == 'lead':
+        current_lead = User.query.get(current_user_id)
+        if not current_lead.can_access_client_data(chat.client_id):
+            flash('You do not have permission to download this file.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role != 'superuser':
+        flash('You do not have permission to download this file.')
+        return redirect(url_for('dashboard'))
+    
+    if not message.file_path or not os.path.exists(message.file_path):
+        flash('File not found.')
+        return redirect(url_for('view_question_chat', chat_id=chat.id))
+    
+    return send_file(
+        message.file_path,
+        as_attachment=True,
+        download_name=message.file_name or os.path.basename(message.file_path)
+    )
+
+@app.route('/admin/all-chats')
+@login_required('superuser')
+def admin_all_chats():
+    """Admin view to see all question chats in the system"""
+    # Get all chats with related data
+    chats = db.session.query(QuestionChat).options(
+        db.joinedload(QuestionChat.client),
+        db.joinedload(QuestionChat.lead),
+        db.joinedload(QuestionChat.product),
+        db.joinedload(QuestionChat.response),
+        db.joinedload(QuestionChat.messages)
+    ).order_by(QuestionChat.updated_at.desc()).all()
+    
+    # Get statistics
+    total_chats = len(chats)
+    active_chats = [chat for chat in chats if chat.is_active]
+    approved_chats = [chat for chat in chats if chat.review_status == 'approved']
+    needs_revision_chats = [chat for chat in chats if chat.review_status == 'needs_revision']
+    rejected_chats = [chat for chat in chats if chat.review_status == 'rejected']
+    
+    stats = {
+        'total_chats': total_chats,
+        'active_chats': len(active_chats),
+        'approved_chats': len(approved_chats),
+        'needs_revision_chats': len(needs_revision_chats),
+        'rejected_chats': len(rejected_chats)
+    }
+    
+    return render_template('admin_all_chats.html', chats=chats, stats=stats)
 
 
 # Rejected Questions Routes

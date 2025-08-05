@@ -82,29 +82,86 @@
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <!-- Simplified Approval Form -->
-                                <form method="post" id="reviewForm">
-                                    <div class="mb-4 text-center">
-                                        <p class="text-muted mb-4">Review the client's response and approve if satisfactory.</p>
-                                        {% if response.is_approved %}
-                                            <div class="alert alert-success d-flex align-items-center">
-                                                <i class="bi bi-check-circle-fill me-2"></i>
-                                                <span>This question has been approved and is frozen.</span>
-                                            </div>
-                                        {% else %}
-                                            <input type="hidden" name="action" value="approve">
-                                            <button type="submit" class="btn btn-success btn-lg px-5">
-                                                <i class="bi bi-check-circle me-2"></i>APPROVE
-                                            </button>
-                                        {% endif %}
+                                {% if response.is_approved %}
+                                    <div class="alert alert-success d-flex align-items-center mb-4">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        <span>This question has been approved and is frozen.</span>
                                     </div>
-
-                                    <div class="d-grid gap-2 mt-4">
-                                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
-                                            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                                    
+                                    {% if existing_chat %}
+                                    <div class="text-center mb-4">
+                                        <a href="{{ url_for('view_question_chat', chat_id=existing_chat.id) }}" class="btn btn-outline-primary">
+                                            <i class="bi bi-chat-dots me-2"></i>View Chat History
                                         </a>
                                     </div>
-                                </form>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Three-Option Review Form -->
+                                    <form method="post" id="reviewForm">
+                                        {% if existing_chat %}
+                                        <div class="mb-4">
+                                            <div class="alert alert-info d-flex align-items-center">
+                                                <i class="bi bi-chat-dots me-2"></i>
+                                                <span>This question has an active chat conversation.</span>
+                                                <a href="{{ url_for('view_question_chat', chat_id=existing_chat.id) }}" class="btn btn-sm btn-outline-primary ms-auto">
+                                                    <i class="bi bi-chat-dots me-1"></i>View Chat
+                                                </a>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="mb-4">
+                                            <label for="leadComment" class="form-label fw-semibold text-primary">
+                                                <i class="bi bi-chat-left-text me-2"></i>Review Comment (Optional):
+                                            </label>
+                                            <textarea id="leadComment" name="comment" class="form-control" rows="3" 
+                                                      placeholder="Add specific feedback, requests for evidence, or reason for rejection..."></textarea>
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Comment is required for "Needs Revision" and recommended for "Reject".
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <p class="text-muted text-center mb-4">Choose your review decision:</p>
+                                            
+                                            <div class="row g-3">
+                                                <div class="col-12 col-md-4">
+                                                    <button type="submit" name="action" value="approve" 
+                                                            class="btn btn-success btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                                        <i class="bi bi-check-circle-fill mb-2" style="font-size: 2rem;"></i>
+                                                        <strong class="mb-1">APPROVE</strong>
+                                                        <small class="text-light">Freeze question</small>
+                                                    </button>
+                                                </div>
+                                                
+                                                <div class="col-12 col-md-4">
+                                                    <button type="submit" name="action" value="needs_revision" 
+                                                            class="btn btn-warning btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                                        <i class="bi bi-pencil-square mb-2" style="font-size: 2rem;"></i>
+                                                        <strong class="mb-1">NEEDS REVISION</strong>
+                                                        <small class="text-dark">Request more evidence</small>
+                                                    </button>
+                                                </div>
+                                                
+                                                <div class="col-12 col-md-4">
+                                                    <button type="submit" name="action" value="reject" 
+                                                            class="btn btn-danger btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                                        <i class="bi bi-x-circle-fill mb-2" style="font-size: 2rem;"></i>
+                                                        <strong class="mb-1">REJECT</strong>
+                                                        <small class="text-light">Return for re-selection</small>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                {% endif %}
+
+                                <div class="d-grid gap-2 mt-4">
+                                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
