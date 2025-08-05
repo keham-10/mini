@@ -58,7 +58,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-0">
-                            <i class="bi bi-bullseye me-2"></i>Security Maturity Spiral Heatmap
+                            <i class="bi bi-bullseye me-2"></i>Heatmap
                         </h5>
                         <small class="opacity-75">Color-coded visualization of your security maturity across all dimensions</small>
                     </div>
@@ -125,27 +125,28 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="ring-legend">
-                                <h6 class="mb-3">Maturity Levels</h6>
-                                <div class="legend-items">
-                                    <div class="legend-item">
-                                        <div class="legend-color level-1"></div>
-                                        <span>Level 1 - Initial</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-2"></div>
-                                        <span>Level 2 - Developing</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-3"></div>
-                                        <span>Level 3 - Defined</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-4"></div>
-                                        <span>Level 4 - Managed</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color level-5"></div>
-                                        <span>Level 5 - Optimized</span>
+                                <div class="maturity-levels-horizontal">
+                                    <div class="d-flex flex-wrap justify-content-start">
+                                        <div class="legend-item-horizontal me-3 mb-2">
+                                            <div class="legend-color level-1"></div>
+                                            <span>Level 1 - Initial</span>
+                                        </div>
+                                        <div class="legend-item-horizontal me-3 mb-2">
+                                            <div class="legend-color level-2"></div>
+                                            <span>Level 2 - Developing</span>
+                                        </div>
+                                        <div class="legend-item-horizontal me-3 mb-2">
+                                            <div class="legend-color level-3"></div>
+                                            <span>Level 3 - Defined</span>
+                                        </div>
+                                        <div class="legend-item-horizontal me-3 mb-2">
+                                            <div class="legend-color level-4"></div>
+                                            <span>Level 4 - Managed</span>
+                                        </div>
+                                        <div class="legend-item-horizontal me-3 mb-2">
+                                            <div class="legend-color level-5"></div>
+                                            <span>Level 5 - Optimized</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -1296,6 +1297,18 @@
 .current-level .badge {
     font-size: 0.9rem;
     padding: 8px 12px;
+}
+
+.legend-item-horizontal {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.legend-item-horizontal .legend-color {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
 }
 </style>
 
