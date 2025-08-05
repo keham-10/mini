@@ -146,6 +146,77 @@
 </div>
 {% endif %}
 
+<!-- Individual Responses with Approval Status -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-gradient-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check me-2"></i>Individual Responses & Approval Status
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if responses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Section</th>
+                                    <th>Question</th>
+                                    <th>Answer</th>
+                                    <th>Evidence</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for response in responses %}
+                                <tr class="response-row" data-section="{{ response.section }}">
+                                    <td>
+                                        <span class="badge bg-primary">{{ response.section }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="question-text">
+                                            {{ response.question[:100] }}{% if response.question|length > 100 %}...{% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ response.answer }}</span>
+                                    </td>
+                                    <td>
+                                        {% if response.evidence_path %}
+                                            <a href="{{ url_for('uploaded_file', filename=response.evidence_path.split('/')[-1]) }}" 
+                                               target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-paperclip me-1"></i>View
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">No evidence</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if response.is_approved %}
+                                            <span class="badge bg-success d-flex align-items-center">
+                                                <i class="bi bi-check-circle-fill me-1"></i>APPROVED
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending Review</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No responses found for this product.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Lead-Client Communications -->
 {% if communications_by_dimension %}
 <div class="row mb-4">
