@@ -17,7 +17,7 @@
             <div class="row align-items-center">
                 <div class="col-8">
                     <h3 class="mb-0" id="totalProducts">{{ products_data|length }}</h3>
-                    <p class="mb-0">Total Products</p>
+                    <p class="mb-0">Products Registered</p>
                 </div>
                 <div class="col-4">
                     <i class="bi bi-box-seam icon"></i>
@@ -31,7 +31,7 @@
             <div class="row align-items-center">
                 <div class="col-8">
                     <h3 class="mb-0" id="avgScore">-</h3>
-                    <p class="mb-0">Average Score</p>
+                    <p class="mb-0">Avg. Maturity Score</p>
                 </div>
                 <div class="col-4">
                     <i class="bi bi-graph-up icon"></i>
@@ -57,22 +57,7 @@
 
 <!-- Interactive Charts Section -->
 <div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card dashboard-card h-100">
-            <div class="card-header bg-gradient-primary text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-pie-chart me-2"></i>Overall Security Distribution
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="overallScoreChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
+    <div class="col-md-12">
         <div class="card dashboard-card h-100">
             <div class="card-header bg-gradient-primary text-white">
                 <h5 class="mb-0">
@@ -390,7 +375,7 @@
 
 <script>
 // Global chart variables
-let overallScoreChart, organizationChart, dimensionChart;
+let organizationChart, dimensionChart;
 
 // Initialize all charts and data
 document.addEventListener('DOMContentLoaded', function() {
@@ -403,7 +388,6 @@ async function loadAllScores() {
         const data = await response.json();
 
         updateStatistics(data);
-        createOverallScoreChart(data);
         createOrganizationChart(data);
         createDimensionChart(data);
     } catch (error) {
@@ -422,62 +406,7 @@ function updateStatistics(data) {
     document.getElementById('completedAssessments').textContent = completedAssessments;
 }
 
-function createOverallScoreChart(data) {
-    const ctx = document.getElementById('overallScoreChart').getContext('2d');
 
-    // Categorize by maturity levels (1-5 scale)
-    const level5 = data.filter(p => p.maturity_score === 5).length; // Optimized
-    const level4 = data.filter(p => p.maturity_score === 4).length; // Managed
-    const level3 = data.filter(p => p.maturity_score === 3).length; // Defined
-    const level2 = data.filter(p => p.maturity_score === 2).length; // Developing
-    const level1 = data.filter(p => p.maturity_score === 1).length; // Initial
-    const notStarted = data.filter(p => !p.maturity_score || p.maturity_score === 0).length;
-
-    if (overallScoreChart) overallScoreChart.destroy();
-
-    overallScoreChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Level 5 - Optimized', 'Level 4 - Managed', 'Level 3 - Defined', 'Level 2 - Developing', 'Level 1 - Initial', 'Not Started'],
-            datasets: [{
-                data: [level5, level4, level3, level2, level1, notStarted],
-                backgroundColor: [
-                    '#10b981', // Green for Optimized
-                    '#3b82f6', // Blue for Managed
-                    '#f59e0b', // Yellow for Defined
-                    '#f97316', // Orange for Developing
-                    '#ef4444', // Red for Initial
-                    '#6b7280'  // Gray for Not Started
-                ],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20,
-                        font: { size: 12 }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw;
-                            return `${label}: ${value} products`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
 
 function createOrganizationChart(data) {
     const ctx = document.getElementById('organizationChart').getContext('2d');

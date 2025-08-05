@@ -283,20 +283,20 @@
                                                                         <button class="btn btn-success btn-sm" disabled>
                                                                             <i class="bi bi-check-circle-fill me-1"></i>Approved
                                                                         </button>
-                                                                        <a href="{{ url_for('question_chats_list', product_id=resp.product_id) }}" 
+                                                                        <a href="{{ url_for('admin_product_details', product_id=resp.product_id) }}" 
                                                                            class="btn btn-outline-secondary btn-sm ms-1"
-                                                                           title="View Question Chats">
-                                                                            <i class="bi bi-chat-dots"></i>
+                                                                           title="View Product Details">
+                                                                            <i class="bi bi-eye"></i>
                                                                         </a>
                                                                     {% else %}
                                                                         <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}"
                                                                            class="btn btn-outline-primary btn-sm">
                                                                             <i class="bi bi-pencil-square me-1"></i>Review
                                                                         </a>
-                                                                        <a href="{{ url_for('question_chats_list', product_id=resp.product_id) }}" 
+                                                                        <a href="{{ url_for('admin_product_details', product_id=resp.product_id) }}" 
                                                                            class="btn btn-outline-info btn-sm ms-1"
-                                                                           title="Question Chats">
-                                                                            <i class="bi bi-chat-dots"></i>
+                                                                           title="Product Details">
+                                                                            <i class="bi bi-eye"></i>
                                                                         </a>
                                                                     {% endif %}
                                                                 </td>

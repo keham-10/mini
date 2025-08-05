@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block title %}Client Details - {{ client.username }} - Admin{% endblock %}
+
+{% block head %}
+<style>
+.client-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.product-header {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 20px;
+}
+
+.responses-table {
+    font-size: 0.9rem;
+}
+
+.section-header {
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin: 15px 0 10px 0;
+    border-radius: 5px;
+}
+
+.response-row {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.evidence-link {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.evidence-link:hover {
+    text-decoration: underline;
+}
+
+.nav-tabs .nav-link {
+    border-radius: 10px 10px 0 0;
+    border: none;
+    color: #666;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.tab-content {
+    background: white;
+    border-radius: 0 0 15px 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.comment-card {
+    background: #f8f9fa;
+    border-left: 4px solid #17a2b8;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.question-text {
+    font-weight: 500;
+    color: #333;
+    line-height: 1.4;
+}
+
+.answer-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.progress-ring {
+    width: 60px;
+    height: 60px;
+}
+
+.progress-ring circle {
+    stroke: #e9ecef;
+    stroke-width: 8;
+    fill: transparent;
+    r: 26;
+    cx: 30;
+    cy: 30;
+}
+
+.progress-ring .progress {
+    stroke: #28a745;
+    stroke-dasharray: 163.36;
+    stroke-dashoffset: 163.36;
+    transition: stroke-dashoffset 0.5s;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Client Header -->
+<div class="client-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-3">
+                <div class="client-avatar me-3" style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+                    {{ client.username[0].upper() }}
+                </div>
+                <div>
+                    <h2 class="mb-0">{{ client.username }}</h2>
+                    <p class="mb-0 opacity-75">{{ client.email }}</p>
+                    <small class="opacity-75">
+                        <i class="bi bi-building me-1"></i>{{ client.organization or 'No Organization' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="d-flex flex-column align-items-md-end">
+                <span class="badge {% if client.is_active %}bg-success{% else %}bg-secondary{% endif %} mb-2" style="font-size: 0.9rem; padding: 8px 16px;">
+                    {{ 'Active' if client.is_active else 'Inactive' }}
+                </span>
+                <small class="opacity-75">
+                    Last Login: {{ client.last_login.strftime('%m/%d/%Y %H:%M') if client.last_login else 'Never' }}
+                </small>
+                <small class="opacity-75">
+                    Member Since: {{ client.created_at.strftime('%m/%d/%Y') if client.created_at else 'Unknown' }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <svg class="progress-ring me-3">
+                    <circle class="progress" style="stroke-dashoffset: {{ 163.36 - (client_stats.completion_rate / 100 * 163.36) }};"></circle>
+                </svg>
+                <div>
+                    <h3 class="mb-0 text-primary">{{ client_stats.total_products }}</h3>
+                    <small class="text-muted">Total Products</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <h3 class="mb-0 text-success">{{ client_stats.completed_products }}</h3>
+            <small class="text-muted">Completed Assessments</small>
+            <div class="mt-2">
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: {{ client_stats.completion_rate }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <h3 class="mb-0 text-warning">{{ client_stats.in_progress_products }}</h3>
+            <small class="text-muted">In Progress</small>
+            <div class="mt-2">
+                <i class="bi bi-clock text-warning"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <h3 class="mb-0 text-info">{{ "%.1f"|format(client_stats.completion_rate) }}%</h3>
+            <small class="text-muted">Completion Rate</small>
+            <div class="mt-2">
+                <i class="bi bi-graph-up text-info"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Back to Client Management -->
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{{ url_for('manage_clients') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Client Management
+        </a>
+    </div>
+</div>
+
+<!-- Products Details -->
+{% if products_data %}
+    {% for product_data in products_data %}
+    <div class="product-card">
+        <div class="product-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">{{ product_data.product.name }}</h4>
+                    <small class="opacity-75">
+                        <i class="bi bi-link me-1"></i>{{ product_data.product.product_url }}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <span class="status-badge 
+                        {% if product_data.product.status == 'completed' %}bg-success
+                        {% elif product_data.product.status == 'in_progress' %}bg-primary
+                        {% elif product_data.product.status == 'under_review' %}bg-info
+                        {% elif product_data.product.status == 'questions_done' %}bg-warning
+                        {% else %}bg-secondary{% endif %}">
+                        {{ product_data.product.status.replace('_', ' ').title() }}
+                    </span>
+                    {% if product_data.overall_maturity_score > 0 %}
+                    <div class="mt-2">
+                        <small class="text-white opacity-75">Maturity Score: </small>
+                        <span class="badge bg-light text-dark">{{ product_data.overall_maturity_score }}/5.0</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4">
+            <!-- Product Info -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <strong>Programming Language:</strong><br>
+                    <span class="badge bg-primary">{{ product_data.product.programming_language }}</span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Cloud Platform:</strong><br>
+                    <span class="badge bg-info">{{ product_data.product.cloud_platform }}</span>
+                </div>
+                <div class="col-md-4">
+                    <strong>CI/CD Platform:</strong><br>
+                    <span class="badge bg-warning text-dark">{{ product_data.product.cicd_platform }}</span>
+                </div>
+            </div>
+
+            <!-- Progress Info -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <small class="text-muted">Sections Completed</small>
+                    <h5 class="text-primary">{{ product_data.sections_completed }}/{{ product_data.total_sections }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Total Responses</small>
+                    <h5 class="text-success">{{ product_data.total_responses }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Lead Comments</small>
+                    <h5 class="text-info">{{ product_data.lead_comments|length }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Rejected Questions</small>
+                    <h5 class="text-warning">{{ product_data.rejected_questions|length }}</h5>
+                </div>
+            </div>
+
+            <!-- Tabbed Content -->
+            <ul class="nav nav-tabs" id="productTabs{{ product_data.product.id }}" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="responses-tab{{ product_data.product.id }}" data-bs-toggle="tab" 
+                            data-bs-target="#responses{{ product_data.product.id }}" type="button" role="tab">
+                        <i class="bi bi-list-check me-2"></i>Responses by Section
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="comments-tab{{ product_data.product.id }}" data-bs-toggle="tab" 
+                            data-bs-target="#comments{{ product_data.product.id }}" type="button" role="tab">
+                        <i class="bi bi-chat-dots me-2"></i>Lead Comments
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="scores-tab{{ product_data.product.id }}" data-bs-toggle="tab" 
+                            data-bs-target="#scores{{ product_data.product.id }}" type="button" role="tab">
+                        <i class="bi bi-graph-up me-2"></i>Scores & Progress
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="productTabsContent{{ product_data.product.id }}">
+                <!-- Responses Tab -->
+                <div class="tab-pane fade show active" id="responses{{ product_data.product.id }}" role="tabpanel">
+                    {% if product_data.responses_by_section %}
+                        {% for section_name, section_responses in product_data.responses_by_section.items() %}
+                        <div class="section-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-collection me-2"></i>{{ section_name }}
+                                <span class="badge bg-primary ms-2">{{ section_responses|length }} responses</span>
+                            </h6>
+                        </div>
+                        
+                        <div class="table-responsive mb-4">
+                            <table class="table table-sm responses-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="50%">Question</th>
+                                        <th width="15%">Answer</th>
+                                        <th width="20%">Evidence</th>
+                                        <th width="15%">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for response in section_responses %}
+                                    <tr class="response-row">
+                                        <td>
+                                            <div class="question-text">
+                                                {{ response.question[:200] }}{% if response.question|length > 200 %}...{% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="answer-badge 
+                                                {% if 'yes' in response.answer.lower() or 'high' in response.answer.lower() %}bg-success text-white
+                                                {% elif 'no' in response.answer.lower() or 'low' in response.answer.lower() %}bg-danger text-white
+                                                {% elif 'partially' in response.answer.lower() or 'medium' in response.answer.lower() %}bg-warning text-dark
+                                                {% else %}bg-info text-white{% endif %}">
+                                                {{ response.answer }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if response.evidence_path %}
+                                                <a href="{{ url_for('uploaded_file', filename=response.evidence_path.split('/')[-1]) }}" 
+                                                   target="_blank" class="evidence-link">
+                                                    <i class="bi bi-paperclip me-1"></i>View Evidence
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">No evidence</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if response.is_approved %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle-fill me-1"></i>Approved
+                                                </span>
+                                            {% elif response.is_reviewed %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-eye-fill me-1"></i>Reviewed
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-clock me-1"></i>Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No Responses Yet</h5>
+                            <p class="text-muted">This product hasn't been assessed yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Comments Tab -->
+                <div class="tab-pane fade" id="comments{{ product_data.product.id }}" role="tabpanel">
+                    {% if product_data.lead_comments %}
+                        {% for comment in product_data.lead_comments %}
+                        <div class="comment-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>{{ comment.lead.username if comment.lead else 'System' }}</strong>
+                                    <small class="text-muted ms-2">{{ comment.created_at.strftime('%m/%d/%Y %H:%M') }}</small>
+                                </div>
+                                <span class="badge 
+                                    {% if comment.status == 'approved' %}bg-success
+                                    {% elif comment.status == 'rejected' %}bg-danger
+                                    {% elif comment.status == 'client_reply' %}bg-info
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ comment.status.replace('_', ' ').title() }}
+                                </span>
+                            </div>
+                            <p class="mb-0">{{ comment.comment }}</p>
+                            {% if comment.response %}
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <small class="text-muted">Related to:</small>
+                                    <div class="text-truncate">{{ comment.response.question[:100] }}...</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat-dots display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No Comments Yet</h5>
+                            <p class="text-muted">No lead comments for this product.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Scores Tab -->
+                <div class="tab-pane fade" id="scores{{ product_data.product.id }}" role="tabpanel">
+                    {% if product_data.latest_scores %}
+                        <div class="row">
+                            {% for score in product_data.latest_scores %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ score.section }}</h6>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="h4 mb-0 text-primary">{{ score.percentage }}%</span>
+                                            <small class="text-muted">{{ score.calculated_at.strftime('%m/%d/%Y') }}</small>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div class="progress-bar bg-primary" style="width: {{ score.percentage }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Overall Score -->
+                        <div class="text-center mt-4 p-4 bg-light rounded">
+                            <h5 class="text-primary">Overall Maturity Score</h5>
+                            <h2 class="text-success">{{ product_data.overall_maturity_score }}/5.0</h2>
+                            <small class="text-muted">Based on {{ product_data.latest_scores|length }} dimension scores</small>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-graph-up display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No Scores Available</h5>
+                            <p class="text-muted">Scores will be calculated after the assessment is completed.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                <a href="{{ url_for('admin_product_details', product_id=product_data.product.id) }}" 
+                   class="btn btn-primary btn-sm">
+                    <i class="bi bi-eye me-1"></i>View Full Details
+                </a>
+                <a href="{{ url_for('product_results', product_id=product_data.product.id) }}" 
+                   class="btn btn-info btn-sm">
+                    <i class="bi bi-bar-chart me-1"></i>Results
+                </a>
+                <a href="{{ url_for('download_product_pdf', product_id=product_data.product.id) }}" 
+                   class="btn btn-danger btn-sm">
+                    <i class="bi bi-file-pdf me-1"></i>Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted mb-4"></i>
+        <h3 class="text-muted">No Products Found</h3>
+        <p class="text-muted">This client hasn't created any security assessment products yet.</p>
+        <a href="{{ url_for('manage_clients') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Client Management
+        </a>
+    </div>
+{% endif %}
+
+<script>
+// Initialize Bootstrap tabs
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-activate first tab for each product
+    const firstTabs = document.querySelectorAll('[id^="responses-tab"]');
+    firstTabs.forEach(tab => {
+        new bootstrap.Tab(tab);
+    });
+});
+</script>
+{% endblock %}
