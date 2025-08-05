@@ -36,7 +36,9 @@ class DatabaseManager:
     
     def ensure_database_exists(self):
         """Ensure database and all required tables exist"""
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        # Only create directories for file-based databases, not in-memory
+        if self.db_path != ':memory:' and self.db_path:
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("PRAGMA foreign_keys = ON")
@@ -588,21 +590,31 @@ class DatabaseManager:
             
             stats = {}
             
+            # Get list of existing tables
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            existing_tables = {row[0] for row in cursor.fetchall()}
+            
             # Table counts
             tables = ['users', 'products', 'questionnaire_responses', 
                      'lead_comments', 'user_invitations', 'audit_log', 'maturity_scores']
             
             for table in tables:
-                cursor.execute(f'SELECT COUNT(*) FROM {table}')
-                stats[f'{table}_count'] = cursor.fetchone()[0]
+                if table in existing_tables:
+                    cursor.execute(f'SELECT COUNT(*) FROM {table}')
+                    stats[f'{table}_count'] = cursor.fetchone()[0]
+                else:
+                    stats[f'{table}_count'] = 0
             
             # Database size
             cursor.execute("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")
             stats['database_size_bytes'] = cursor.fetchone()[0]
             
-            # Recent activity
-            cursor.execute('SELECT COUNT(*) FROM audit_log WHERE timestamp > datetime("now", "-24 hours")')
-            stats['recent_activity_24h'] = cursor.fetchone()[0]
+            # Recent activity (only if audit_log table exists)
+            if 'audit_log' in existing_tables:
+                cursor.execute('SELECT COUNT(*) FROM audit_log WHERE timestamp > datetime("now", "-24 hours")')
+                stats['recent_activity_24h'] = cursor.fetchone()[0]
+            else:
+                stats['recent_activity_24h'] = 0
             
             return stats
 

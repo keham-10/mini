@@ -4,9 +4,33 @@ Integrates the comprehensive DatabaseManager with existing Flask app
 """
 
 from database_manager import DatabaseManager
-from flask import request, session, flash
 from datetime import datetime, timezone
 import logging
+
+# Optional Flask imports - only needed when integrating with Flask app
+try:
+    from flask import request, session, flash
+    FLASK_AVAILABLE = True
+except ImportError:
+    FLASK_AVAILABLE = False
+    # Create mock objects for standalone usage
+    class MockRequest:
+        def __init__(self):
+            self.form = {}
+            self.files = {}
+    
+    class MockSession:
+        def __init__(self):
+            self.data = {}
+        
+        def get(self, key, default=None):
+            return self.data.get(key, default)
+    
+    def flash(message, category='info'):
+        print(f"[{category.upper()}] {message}")
+    
+    request = MockRequest()
+    session = MockSession()
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +43,7 @@ class DatabaseIntegration:
     def __init__(self, app=None):
         self.db_manager = DatabaseManager()
         self.app = app
-        if app:
+        if app and FLASK_AVAILABLE:
             self.init_app(app)
     
     def init_app(self, app):
@@ -309,14 +333,20 @@ class DatabaseIntegration:
         Returns:
             File path if successful, None otherwise
         """
-        if not file or not file.filename:
+        if not file:
+            return None
+        
+        # Handle both Flask FileStorage and mock objects
+        filename = getattr(file, 'filename', None)
+        if not filename:
             return None
         
         try:
             # This would integrate with existing file upload logic
             # For now, return a placeholder
-            filename = f"evidence_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
-            return f"uploads/{filename}"
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            safe_filename = f"evidence_{timestamp}_{filename}"
+            return f"uploads/{safe_filename}"
         except Exception as e:
             logger.error(f"Error handling file upload: {e}")
             return None
