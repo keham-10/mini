@@ -214,6 +214,33 @@ class Product(db.Model):
 
     def __repr__(self):
         return f'<Product {self.name}>'
+    
+    @property
+    def status(self):
+        """Get the current status of the product"""
+        if self.statuses:
+            # Get the most recent status
+            latest_status = max(self.statuses, key=lambda s: s.last_updated)
+            return latest_status.status
+        return 'in_progress'
+    
+    @property
+    def overall_score(self):
+        """Get the overall maturity score for the product"""
+        if self.scores:
+            # Calculate average score across all sections
+            total_percentage = sum(score.percentage for score in self.scores)
+            count = len(self.scores)
+            return round(total_percentage / count, 1) if count > 0 else 0
+        return 0
+    
+    @property
+    def progress_percentage(self):
+        """Get the progress percentage of the product"""
+        if self.statuses:
+            latest_status = max(self.statuses, key=lambda s: s.last_updated)
+            return latest_status.completion_percentage
+        return 0
 
 class ProductStatus(db.Model):
     __tablename__ = 'product_statuses'
@@ -1509,6 +1536,18 @@ def dashboard():
                 else:
                     dimension_scores[dimension]['average'] = 0
 
+            # Calculate overall maturity score
+            if dimension_scores:
+                total_avg = sum(dim_data['average'] for dim_data in dimension_scores.values())
+                maturity_score = total_avg / len(dimension_scores) if dimension_scores else 0
+            else:
+                maturity_score = 0
+
+            # Calculate completion percentage
+            total_questions = QuestionnaireResponse.query.filter_by(product_id=product.id).count()
+            answered_questions = len([r for r in responses if r.answer])
+            completion_percentage = (answered_questions / total_questions * 100) if total_questions > 0 else 0
+
             # Get product owner info
             owner = User.query.get(product.owner_id)
 
@@ -1517,7 +1556,9 @@ def dashboard():
                 'owner': owner,
                 'responses': responses,
                 'dimension_scores': dimension_scores,
-                'total_responses': len(responses)
+                'total_responses': len(responses),
+                'maturity_score': round(maturity_score, 1),
+                'completion_percentage': round(completion_percentage, 1)
             })
 
         # Get all responses and comments for admin view
@@ -2652,19 +2693,22 @@ def api_all_scores():
                 'total_score': total_score,
                 'max_score': total_max_score,
                 'percentage': round(overall_percentage, 1),
+                'maturity_score': round(overall_percentage, 1),  # Add this for dashboard compatibility
                 'section_scores': section_scores,
                 'section_percentages': {k: round((v / section_max_scores.get(k, 1) * 100), 1)
                                        for k, v in section_scores.items()}
             }
         else:
+            owner = User.query.get(product.owner_id)
             product_data = {
                 'id': product.id,
                 'name': product.name,
-                'owner': 'Unknown',
-                'organization': 'Unknown',
+                'owner': owner.username if owner else 'Unknown',
+                'organization': owner.organization if owner else 'Unknown',
                 'total_score': 0,
                 'max_score': 0,
                 'percentage': 0,
+                'maturity_score': 0,  # Add this for dashboard compatibility
                 'section_scores': {},
                 'section_percentages': {}
             }
@@ -3183,7 +3227,7 @@ def download_product_pdf(product_id):
     responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all()
     
     # Get scores for this product
-    scores = ScoreHistory.query.filter_by(product_id=product_id).order_by(ScoreHistory.created_at.desc()).all()
+    scores = ScoreHistory.query.filter_by(product_id=product_id).order_by(ScoreHistory.calculated_at.desc()).all()
     
     # Get product owner
     owner = User.query.get(product.owner_id)
