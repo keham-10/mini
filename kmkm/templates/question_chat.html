@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Question Chat - SecureSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-lg border-0 h-100">
+                <!-- Chat Header -->
+                <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="bi bi-chat-dots me-2"></i>Question Chat
+                        </h5>
+                        <small class="opacity-75">
+                            {{ chat.response.section }} | 
+                            Status: 
+                            <span class="badge 
+                                {% if chat.review_status == 'approved' %}bg-success
+                                {% elif chat.review_status == 'needs_revision' %}bg-warning
+                                {% elif chat.review_status == 'rejected' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ chat.review_status.replace('_', ' ').title() }}
+                            </span>
+                        </small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if session.role == 'lead' and chat.is_active and chat.review_status != 'approved' %}
+                        <form method="post" action="{{ url_for('approve_from_chat', chat_id=chat.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Approve this question and close the chat?')">
+                                <i class="bi bi-check-circle me-1"></i>Approve
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-arrow-left me-1"></i>Back
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Question Context -->
+                <div class="bg-light border-bottom p-3">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="text-primary mb-2">
+                                <i class="bi bi-question-circle me-2"></i>Question:
+                            </h6>
+                            <p class="mb-2">{{ chat.response.question }}</p>
+                            <p class="mb-0">
+                                <strong>Client Answer:</strong> 
+                                <span class="badge bg-info">{{ chat.response.answer }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <strong>Client:</strong> {{ chat.client.username }}<br>
+                                <strong>Lead:</strong> {{ chat.lead.username }}<br>
+                                <strong>Product:</strong> {{ chat.product.name }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Area -->
+                <div class="card-body p-0" style="height: 400px; overflow-y: auto;" id="chatMessages">
+                    <div class="p-3">
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="message-bubble mb-3 
+                                {% if message.sender_id == session.user_id %}text-end{% else %}text-start{% endif %}">
+                                
+                                <div class="d-inline-block p-3 rounded-3 position-relative
+                                    {% if message.sender_id == session.user_id %}
+                                        bg-primary text-white ms-auto
+                                    {% else %}
+                                        bg-light text-dark me-auto
+                                    {% endif %}"
+                                    style="max-width: 70%;">
+                                    
+                                    {% if message.message_type == 'status_change' %}
+                                        <div class="fw-bold small mb-1">
+                                            <i class="bi bi-info-circle me-1"></i>System Message
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="message-content">{{ message.content }}</div>
+                                    
+                                    {% if message.file_path %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('download_chat_file', message_id=message.id) }}" 
+                                           class="btn btn-sm btn-outline-light text-decoration-none">
+                                            <i class="bi bi-paperclip me-1"></i>{{ message.file_name or 'Download File' }}
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="message-meta mt-2 small opacity-75">
+                                        <strong>{{ message.sender.username }}</strong> • 
+                                        {{ message.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-chat-dots display-4 mb-3"></i>
+                                <p>No messages yet. Start the conversation!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Message Input Area -->
+                {% if chat.is_active or session.role == 'superuser' %}
+                <div class="card-footer bg-white border-top">
+                    <form method="post" action="{{ url_for('send_chat_message', chat_id=chat.id) }}" 
+                          enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+                        <div class="flex-grow-1">
+                            <textarea name="message" class="form-control" rows="2" 
+                                      placeholder="Type your message..." required
+                                      style="resize: none;" id="messageInput"></textarea>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="file-upload-wrapper">
+                                <input type="file" name="evidence_file" id="evidenceFile" 
+                                       class="form-control form-control-sm" 
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.zip">
+                                <small class="text-muted">Evidence file (optional)</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-lock me-1"></i>
+                        This chat has been finalized and is no longer active.
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.message-bubble {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.file-upload-wrapper input[type="file"] {
+    font-size: 0.8rem;
+}
+
+#chatMessages {
+    background: #f8f9fa;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+
+<script>
+// Auto-scroll to bottom of chat
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
+
+// Auto-resize textarea
+document.getElementById('messageInput')?.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Send message on Ctrl+Enter
+document.getElementById('messageInput')?.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        this.form.submit();
+    }
+});
+</script>
+{% endblock %}
