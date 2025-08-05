@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Question Chat - {{ chat.response.question[:50] }}... - SecureSphere{% endblock %}
+
+{% block head %}
+<style>
+.chat-container {
+    height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 15px 15px 0 0;
+    flex-shrink: 0;
+}
+
+.question-info {
+    background: #f8f9fa;
+    padding: 15px 25px;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.question-text {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.question-answer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-approved { background: #d1e7dd; color: #0f5132; }
+.status-needs-revision { background: #f8d7da; color: #721c24; }
+.status-rejected { background: #f8d7da; color: #721c24; }
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.message.sent {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.avatar-client { background: #28a745; }
+.avatar-lead { background: #007bff; }
+
+.message-content {
+    max-width: 70%;
+    background: white;
+    border-radius: 18px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.message.sent .message-content {
+    background: #667eea;
+    color: white;
+}
+
+.message-text {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.message.sent .message-time {
+    color: rgba(255,255,255,0.8);
+}
+
+.message-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.status-message {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.status-message .message-content {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 20px;
+    padding: 8px 16px;
+    display: inline-block;
+    max-width: none;
+}
+
+.chat-input-area {
+    padding: 20px 25px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.input-form {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.message-input {
+    flex: 1;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    padding: 12px 20px;
+    resize: none;
+    max-height: 120px;
+    transition: border-color 0.3s;
+}
+
+.message-input:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+.file-upload-btn {
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-upload-btn:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.send-btn:hover {
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.lead-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.approve-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.approve-btn:hover {
+    transform: translateY(-1px);
+}
+
+.chat-inactive {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.chat-inactive i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #28a745;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">
+                                <i class="bi bi-chat-dots me-2"></i>Question Discussion
+                            </h5>
+                            <p class="mb-0 opacity-75">
+                                {{ chat.client.first_name or chat.client.username }} 
+                                {% if current_user_role == 'lead' %}
+                                    • {{ chat.response.section }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="status-badge status-{{ chat.review_status }}">
+                                {% if chat.review_status == 'approved' %}
+                                    <i class="bi bi-check-circle me-1"></i>Approved
+                                {% elif chat.review_status == 'needs_revision' %}
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
+                                {% elif chat.review_status == 'rejected' %}
+                                    <i class="bi bi-x-circle me-1"></i>Rejected
+                                {% else %}
+                                    <i class="bi bi-clock me-1"></i>Pending Review
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Info -->
+                <div class="question-info">
+                    <div class="question-text">{{ chat.response.question }}</div>
+                    <div class="question-answer">
+                        <strong>Answer:</strong>
+                        <span class="badge bg-primary">{{ chat.response.answer }}</span>
+                        {% if chat.response.evidence_path %}
+                            <a href="{{ url_for('uploaded_file', filename=chat.response.evidence_path.split('/')[-1]) }}" 
+                               target="_blank" class="btn btn-link btn-sm p-0">
+                                <i class="bi bi-paperclip"></i> Evidence
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% if chat.response.client_comment %}
+                        <div class="mt-2">
+                            <strong>Comment:</strong> {{ chat.response.client_comment }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if chat.is_active %}
+                    <!-- Chat Messages -->
+                    <div class="chat-messages" id="chatMessages">
+                        {% for message in messages %}
+                            {% if message.message_type == 'status_change' %}
+                                <div class="status-message">
+                                    <div class="message-content">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        {{ message.content }}
+                                        <div class="message-time">
+                                            {{ message.created_at.strftime('%m/%d/%Y %I:%M %p') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="message {% if message.sender_id == user_id %}sent{% endif %}">
+                                    <div class="message-avatar {% if message.sender.role == 'client' %}avatar-client{% else %}avatar-lead{% endif %}">
+                                        {% if message.sender.role == 'client' %}
+                                            <i class="bi bi-person"></i>
+                                        {% else %}
+                                            <i class="bi bi-shield-check"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="message-content">
+                                        <p class="message-text">{{ message.content }}</p>
+                                        {% if message.file_path %}
+                                            <div class="message-file">
+                                                <i class="bi bi-paperclip"></i>
+                                                <a href="{{ url_for('uploaded_file', filename=message.file_path.split('/')[-1]) }}" 
+                                                   target="_blank" class="text-decoration-none">
+                                                    {{ message.file_path.split('/')[-1] }}
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                        <div class="message-time">
+                                            {{ message.created_at.strftime('%m/%d/%Y %I:%M %p') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="chat-input-area">
+                        <form method="POST" action="{{ url_for('send_chat_message', chat_id=chat.id) }}" 
+                              enctype="multipart/form-data" class="input-form">
+                            <label for="evidence" class="file-upload-btn">
+                                <i class="bi bi-paperclip"></i>
+                            </label>
+                            <input type="file" id="evidence" name="evidence" style="display: none;" 
+                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx,.txt,.csv,.zip">
+                            
+                            <textarea name="message" class="message-input" 
+                                      placeholder="Type your message..." rows="1"
+                                      onkeypress="handleEnterKey(event)"></textarea>
+                            
+                            <button type="submit" class="send-btn">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </form>
+
+                        {% if current_user_role == 'lead' and chat.review_status != 'approved' %}
+                            <div class="lead-actions">
+                                <form method="POST" action="{{ url_for('approve_question_from_chat', chat_id=chat.id) }}" 
+                                      style="display: inline;">
+                                    <button type="submit" class="approve-btn" 
+                                            onclick="return confirm('Are you sure you want to approve this question? This action cannot be undone.')">
+                                        <i class="bi bi-check-circle me-1"></i>Approve Question
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <!-- Chat Inactive -->
+                    <div class="chat-inactive">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <h4>Question Approved</h4>
+                        <p>This question has been approved and the discussion is now closed.</p>
+                        <a href="{{ url_for('question_chats_list', product_id=chat.product_id) }}" 
+                           class="btn btn-primary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Chats
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function handleEnterKey(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        event.target.closest('form').submit();
+    }
+}
+
+// Auto-scroll to bottom of messages
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
+
+// File upload preview
+document.getElementById('evidence').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const label = document.querySelector('.file-upload-btn');
+        label.style.background = '#e3f2fd';
+        label.style.borderColor = '#667eea';
+        label.innerHTML = '<i class="bi bi-check"></i>';
+        
+        setTimeout(() => {
+            label.style.background = '#f8f9fa';
+            label.style.borderColor = '#e0e0e0';
+            label.innerHTML = '<i class="bi bi-paperclip"></i>';
+        }, 2000);
+    }
+});
+</script>
+{% endblock %}
