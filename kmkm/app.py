@@ -2941,6 +2941,97 @@ def unassign_client_from_lead(lead_id, client_id):
     
     return redirect(url_for('manage_users'))
 
+@app.route('/admin/client/<int:client_id>/details')
+@login_required('superuser')
+def admin_client_details(client_id):
+    """View comprehensive details for a specific client including all their products and responses"""
+    client = User.query.filter_by(id=client_id, role='client').first_or_404()
+    
+    # Get all products for this client with their responses and assessments
+    products_data = []
+    for product in client.products:
+        # Get all responses for this product
+        responses = QuestionnaireResponse.query.filter_by(
+            product_id=product.id, 
+            user_id=client_id
+        ).order_by(QuestionnaireResponse.section, QuestionnaireResponse.question).all()
+        
+        # Get product status
+        status_record = ProductStatus.query.filter_by(
+            product_id=product.id, 
+            user_id=client_id
+        ).first()
+        
+        # Get latest scores
+        latest_scores = ScoreHistory.query.filter_by(
+            product_id=product.id, 
+            user_id=client_id
+        ).order_by(ScoreHistory.calculated_at.desc()).all()
+        
+        # Calculate overall maturity score
+        if latest_scores:
+            dimension_scores = []
+            for score in latest_scores:
+                dimension_score = (score.percentage / 100) * 5
+                dimension_scores.append(dimension_score)
+            overall_maturity_score = sum(dimension_scores) / len(dimension_scores) if dimension_scores else 0
+        else:
+            overall_maturity_score = 0
+        
+        # Get lead comments for this product
+        lead_comments = LeadComment.query.filter_by(
+            client_id=client_id,
+            product_id=product.id
+        ).order_by(LeadComment.created_at.desc()).all()
+        
+        # Group responses by section for better organization
+        responses_by_section = {}
+        for response in responses:
+            section = response.section
+            if section not in responses_by_section:
+                responses_by_section[section] = []
+            responses_by_section[section].append(response)
+        
+        # Get rejected questions for this product
+        rejected_questions = db.session.query(RejectedQuestion, QuestionnaireResponse).join(
+            QuestionnaireResponse, RejectedQuestion.response_id == QuestionnaireResponse.id
+        ).filter(
+            RejectedQuestion.user_id == client_id,
+            RejectedQuestion.product_id == product.id
+        ).all()
+        
+        products_data.append({
+            'product': product,
+            'responses': responses,
+            'responses_by_section': responses_by_section,
+            'status_record': status_record,
+            'latest_scores': latest_scores,
+            'overall_maturity_score': round(overall_maturity_score, 2),
+            'lead_comments': lead_comments,
+            'rejected_questions': rejected_questions,
+            'total_responses': len(responses),
+            'sections_completed': len(responses_by_section),
+            'total_sections': len(SECTION_IDS)
+        })
+    
+    # Get overall client statistics
+    total_products = len(client.products)
+    completed_products = len([p for p in client.products if p.status == 'completed'])
+    in_progress_products = len([p for p in client.products if p.status in ['in_progress', 'under_review', 'questions_done']])
+    
+    client_stats = {
+        'total_products': total_products,
+        'completed_products': completed_products,
+        'in_progress_products': in_progress_products,
+        'completion_rate': (completed_products / total_products * 100) if total_products > 0 else 0
+    }
+    
+    return render_template('admin_client_details.html', 
+                         client=client, 
+                         products_data=products_data, 
+                         client_stats=client_stats,
+                         section_ids=SECTION_IDS)
+
 # Communication routes removed - simplified approval workflow
 
 # Old communication routes removed - simplified approval workflow

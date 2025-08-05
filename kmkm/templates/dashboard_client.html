@@ -334,9 +334,9 @@
                                         <h6 class="mb-0">
                                             <i class="bi bi-chat-dots me-2"></i>Question Chats
                                         </h6>
-                                        <a href="{{ url_for('question_chats_list', product_id=product.id) }}"
+                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
                                            class="btn btn-outline-info btn-sm rounded-pill">
-                                            <i class="bi bi-chat-dots me-1"></i>View All
+                                            <i class="bi bi-play-circle me-1"></i>Continue
                                         </a>
                                     </div>
                                     <!-- Show latest communication or status -->
@@ -396,12 +396,12 @@
                                             <i class="bi bi-clock me-2"></i>Awaiting Review
                                         </button>
                                     {% elif product.status == 'under_review' %}
-                                        <a href="{{ url_for('question_chats_list', product_id=product.id) }}"
+                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
                                            class="btn btn-info rounded-pill">
                                             <i class="bi bi-eye me-2"></i>View Review Progress
                                         </a>
                                     {% elif product.status == 'needs_client_response' %}
-                                        <a href="{{ url_for('question_chats_list', product_id=product.id) }}"
+                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
                                            class="btn btn-danger rounded-pill">
                                             <i class="bi bi-exclamation-triangle me-2"></i>Review Feedback
                                         </a>
