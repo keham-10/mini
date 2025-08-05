@@ -72,7 +72,7 @@
                     <i class="bi bi-tools me-2"></i>Quick Actions
                 </h5>
                 <a href="{{ url_for('lead_comments') }}" class="btn btn-outline-info btn-lg rounded-pill px-4 me-3">
-                    <i class="bi bi-chat-left-text me-2"></i>Client Communications
+                                            <i class="bi bi-chat-dots me-2"></i>Question Chats
                     {% if unread_client_replies > 0 %}
                         <span class="badge bg-warning text-dark ms-1">{{ unread_client_replies }}</span>
                     {% endif %}
@@ -283,9 +283,9 @@
                                                                         <button class="btn btn-success btn-sm" disabled>
                                                                             <i class="bi bi-check-circle-fill me-1"></i>Approved
                                                                         </button>
-                                                                        <a href="{{ url_for('unified_communication', product_id=resp.product_id) }}" 
+                                                                        <a href="{{ url_for('question_chats_list', product_id=resp.product_id) }}" 
                                                                            class="btn btn-outline-secondary btn-sm ms-1"
-                                                                           title="View Communication History">
+                                                                           title="View Question Chats">
                                                                             <i class="bi bi-chat-dots"></i>
                                                                         </a>
                                                                     {% else %}
@@ -293,9 +293,9 @@
                                                                            class="btn btn-outline-primary btn-sm">
                                                                             <i class="bi bi-pencil-square me-1"></i>Review
                                                                         </a>
-                                                                        <a href="{{ url_for('unified_communication', product_id=resp.product_id) }}" 
+                                                                        <a href="{{ url_for('question_chats_list', product_id=resp.product_id) }}" 
                                                                            class="btn btn-outline-info btn-sm ms-1"
-                                                                           title="Communication">
+                                                                           title="Question Chats">
                                                                             <i class="bi bi-chat-dots"></i>
                                                                         </a>
                                                                     {% endif %}

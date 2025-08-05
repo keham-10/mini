@@ -94,35 +94,44 @@
                                         <label class="form-label fw-semibold text-primary mb-3">
                                             <i class="bi bi-clipboard-check me-2"></i>Review Status:
                                         </label>
-                                        <div class="review-status-options d-flex gap-2 flex-wrap">
-                                            <div class="status-card">
-                                                <input class="form-check-input" type="radio" name="review_status"
-                                                       id="approved" value="approved" checked onchange="handleStatusChange()">
-                                                <label class="status-card-label" for="approved" data-bs-toggle="tooltip" 
-                                                       title="Client questions will be frozen and cannot be modified">
-                                                    <i class="bi bi-check-circle text-success"></i>
-                                                    <span>Approved</span>
-                                                </label>
+                                        <div class="review-status-grid">
+                                            <div class="status-option" onclick="selectStatus('approved')" id="approved-option">
+                                                <input type="radio" name="review_status" value="approved" style="display: none;">
+                                                <div class="status-card-new approved-card">
+                                                    <div class="status-icon">
+                                                        <i class="bi bi-check-circle"></i>
+                                                    </div>
+                                                    <div class="status-text">
+                                                        <strong>Approved</strong>
+                                                        <small>Question is satisfactory and complete</small>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <div class="status-card">
-                                                <input class="form-check-input" type="radio" name="review_status"
-                                                       id="needs_revision" value="needs_revision" onchange="handleStatusChange()">
-                                                <label class="status-card-label" for="needs_revision" data-bs-toggle="tooltip" 
-                                                       title="Client can upload evidence and add comments for this specific question">
-                                                    <i class="bi bi-exclamation-triangle text-warning"></i>
-                                                    <span>Needs Revision</span>
-                                                </label>
+                                            <div class="status-option" onclick="selectStatus('needs_revision')" id="needs-revision-option">
+                                                <input type="radio" name="review_status" value="needs_revision" style="display: none;">
+                                                <div class="status-card-new revision-card">
+                                                    <div class="status-icon">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </div>
+                                                    <div class="status-text">
+                                                        <strong>Needs Revision</strong>
+                                                        <small>Request more evidence through chat</small>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <div class="status-card">
-                                                <input class="form-check-input" type="radio" name="review_status"
-                                                       id="rejected" value="rejected" onchange="handleStatusChange()">
-                                                <label class="status-card-label" for="rejected" data-bs-toggle="tooltip" 
-                                                       title="Client must re-answer the entire question with new evidence">
-                                                    <i class="bi bi-x-circle text-danger"></i>
-                                                    <span>Rejected</span>
-                                                </label>
+                                            <div class="status-option" onclick="selectStatus('rejected')" id="rejected-option">
+                                                <input type="radio" name="review_status" value="rejected" style="display: none;">
+                                                <div class="status-card-new rejected-card">
+                                                    <div class="status-icon">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </div>
+                                                    <div class="status-text">
+                                                        <strong>Rejected</strong>
+                                                        <small>Client must re-select answer option</small>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -146,73 +155,143 @@
 </div>
 
 <style>
-.status-card {
-    position: relative;
+.review-status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-.status-card input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
+.status-option {
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.status-card-label {
+.status-card-new {
+    padding: 20px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    text-align: center;
+    background: white;
+    transition: all 0.3s ease;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px 16px;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
-    min-width: 120px;
-    background: white;
+    justify-content: center;
 }
 
-.status-card-label:hover {
-    border-color: #3b82f6;
-    background-color: #f8fafc;
+.status-option:hover .status-card-new {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.status-card input[type="radio"]:checked + .status-card-label {
-    border-color: #3b82f6;
-    background-color: #eff6ff;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.status-option.selected .status-card-new {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
 }
 
-.status-card-label i {
-    font-size: 1.25rem;
+.status-option.selected .approved-card {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #f8fff8 0%, #d1e7dd 100%);
+    box-shadow: 0 4px 20px rgba(40, 167, 69, 0.2);
+}
+
+.status-option.selected .revision-card {
+    border-color: #ffc107;
+    background: linear-gradient(135deg, #fffdf0 0%, #fff3cd 100%);
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2);
+}
+
+.status-option.selected .rejected-card {
+    border-color: #dc3545;
+    background: linear-gradient(135deg, #fff8f8 0%, #f8d7da 100%);
+    box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2);
+}
+
+.status-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.status-option.selected .approved-card .status-icon {
+    color: #28a745;
+}
+
+.status-option.selected .revision-card .status-icon {
+    color: #ffc107;
+}
+
+.status-option.selected .rejected-card .status-icon {
+    color: #dc3545;
+}
+
+.status-text strong {
+    display: block;
+    font-size: 1.1rem;
     margin-bottom: 4px;
+    color: #2c3e50;
 }
 
-.status-card-label span {
-    font-size: 0.875rem;
-    font-weight: 500;
+.status-text small {
+    font-size: 0.85rem;
+    color: #6c757d;
+    line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+    .review-status-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
 }
 </style>
 
 <script>
-function handleStatusChange() {
-    const status = document.querySelector('input[name="review_status"]:checked').value;
-    const commentTextarea = document.getElementById('lead_comment');
+let selectedStatus = null;
 
-    // Update placeholder based on status
+function selectStatus(status) {
+    // Remove selected class from all options
+    document.querySelectorAll('.status-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    document.getElementById(status + '-option').classList.add('selected');
+    
+    // Set the radio button value
+    document.querySelector(`input[value="${status}"]`).checked = true;
+    selectedStatus = status;
+    
+    // Update comment placeholder
+    updateCommentPlaceholder(status);
+}
+
+function updateCommentPlaceholder(status) {
+    const commentTextarea = document.getElementById('lead_comment');
+    
     if (status === 'approved') {
         commentTextarea.placeholder = 'Add approval comments (optional)...';
     } else if (status === 'needs_revision') {
-        commentTextarea.placeholder = 'Specify what needs to be revised and provide guidance...';
+        commentTextarea.placeholder = 'Specify what evidence is needed and provide guidance through chat...';
     } else if (status === 'rejected') {
-        commentTextarea.placeholder = 'Explain why this response is rejected and what is required...';
+        commentTextarea.placeholder = 'Explain why this answer is rejected and what is required...';
     }
 }
 
 document.getElementById('reviewForm').addEventListener('submit', function(e) {
+    if (!selectedStatus) {
+        e.preventDefault();
+        alert('Please select a review status.');
+        return;
+    }
+    
     const comment = document.getElementById('lead_comment').value.trim();
-    const status = document.querySelector('input[name="review_status"]:checked').value;
 
-    if (!comment && (status === 'needs_revision' || status === 'rejected')) {
+    if (!comment && (selectedStatus === 'needs_revision' || selectedStatus === 'rejected')) {
         e.preventDefault();
         alert('Please add review comments for revision or rejection.');
         document.getElementById('lead_comment').focus();
@@ -220,15 +299,14 @@ document.getElementById('reviewForm').addEventListener('submit', function(e) {
     }
 
     // Show confirmation with specific behavior explanation
-    const statusText = document.querySelector(`label[for="${status}"] span`).textContent.trim();
-    let confirmMessage = `Are you sure you want to submit this review with status: ${statusText}?\n\n`;
-
-    if (status === 'approved') {
-        confirmMessage += 'This will freeze the client\'s answer and they cannot modify it.';
-    } else if (status === 'needs_revision') {
-        confirmMessage += 'The client will be able to upload evidence and add comments for this specific question.';
-    } else if (status === 'rejected') {
-        confirmMessage += 'The client will need to re-answer the entire question with new evidence.';
+    let confirmMessage = '';
+    
+    if (selectedStatus === 'approved') {
+        confirmMessage = 'Are you sure you want to APPROVE this question?\n\n• The question will be frozen and finalized\n• No further changes will be allowed\n• Client cannot modify their answer';
+    } else if (selectedStatus === 'needs_revision') {
+        confirmMessage = 'Are you sure you want to request REVISION for this question?\n\n• A chat will be opened with the client\n• Client can provide more evidence through chat\n• You can approve the question later from the chat';
+    } else if (selectedStatus === 'rejected') {
+        confirmMessage = 'Are you sure you want to REJECT this question?\n\n• Client must re-select their answer option\n• All 5 options will be available again\n• Chat will be opened for discussion';
     }
 
     if (!confirm(confirmMessage)) {
@@ -236,16 +314,10 @@ document.getElementById('reviewForm').addEventListener('submit', function(e) {
     }
 });
 
-// Initialize tooltips and placeholder
+// Initialize the interface
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    // Initialize placeholder
-    handleStatusChange();
+    // Set default selection to approved
+    selectStatus('approved');
 });
 </script>
 {% endblock %}
