@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Invite Client - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Page Header -->
+    <div class="dashboard-header text-center mb-4">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-person-plus me-3"></i>Invite New Client
+        </h1>
+        <p class="lead mb-0">Send invitations to new clients for security assessments</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Navigation Pills -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <nav class="nav nav-pills nav-justified">
+                        <a class="nav-link active" href="{{ url_for('invite_client') }}">
+                            <i class="bi bi-person-plus me-2"></i>Invite Client
+                        </a>
+                        <a class="nav-link" href="{{ url_for('invite_reviewer') }}">
+                            <i class="bi bi-person-gear me-2"></i>Create Reviewer
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Client Invitation Form -->
+            <div class="card shadow">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope me-2"></i>Client Invitation Form
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           placeholder="user@example.com" required>
+                                    <label for="email">Client Email Address</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden field to default role to client -->
+                        <input type="hidden" name="role" value="client">
+                        
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="organization" name="organization"
+                                   placeholder="Organization Name">
+                            <label for="organization">Organization (Optional)</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="first_name" name="first_name"
+                                           placeholder="First Name">
+                                    <label for="first_name">First Name (Optional)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="last_name" name="last_name"
+                                           placeholder="Last Name">
+                                    <label for="last_name">Last Name (Optional)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Client Invitation Process:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Automatic Email:</strong> An invitation email will be sent to the specified email address</li>
+                                <li><strong>Secure Registration:</strong> The email contains a secure registration link that expires in 7 days</li>
+                                <li><strong>Self-Service Setup:</strong> Clients can create their own username and password</li>
+                                <li><strong>Assessment Access:</strong> Once registered, clients can immediately start security assessments</li>
+                                <li><strong>Reviewer Assignment:</strong> You can assign reviewers to clients after they register</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>What Clients Can Do:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Create and manage security assessment products</li>
+                                <li>Complete comprehensive security questionnaires</li>
+                                <li>View detailed maturity scores and recommendations</li>
+                                <li>Communicate with assigned reviewers through integrated chat</li>
+                                <li>Download PDF reports of their assessments</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Email Configuration:</strong> Ensure email settings are configured in environment variables for automatic email delivery. If not configured, a registration link will be provided manually.
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-envelope me-2"></i>Send Client Invitation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Invitations -->
+            {% if recent_invitations %}
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Client Invitations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Organization</th>
+                                    <th>Invited</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invitation in recent_invitations %}
+                                <tr>
+                                    <td>{{ invitation.email }}</td>
+                                    <td>{{ invitation.organization or 'N/A' }}</td>
+                                    <td>{{ invitation.created_at.strftime('%m/%d/%Y') }}</td>
+                                    <td>
+                                        {% if invitation.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Registered</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Navigation Buttons -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('invite_reviewer') }}" class="btn btn-outline-success me-2">
+                    <i class="bi bi-person-gear me-2"></i>Create Reviewer Instead
+                </a>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-people me-2"></i>Manage Users
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-house me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

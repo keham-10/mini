@@ -2,6 +2,53 @@
 
 {% block title %}Client Dashboard - SecureSphere{% endblock %}
 
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.chart-legend {
+    padding: 20px 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-item strong {
+    display: block;
+    font-size: 1.2em;
+    color: #495057;
+}
+
+.stat-item small {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-header text-center mb-4">
     <h1 class="display-6 fw-bold mb-2">
@@ -54,6 +101,70 @@
         </div>
     </div>
 </div>
+
+<!-- Product Comparison Chart -->
+{% if products|length > 1 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>Product Maturity Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <canvas id="productComparisonChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="chart-legend">
+                            <h6 class="mb-3">Maturity Levels</h6>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #dc3545;"></span>
+                                <span>Level 1 - Initial (0-1)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #fd7e14;"></span>
+                                <span>Level 2 - Developing (1-2)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #ffc107;"></span>
+                                <span>Level 3 - Defined (2-3)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #20c997;"></span>
+                                <span>Level 4 - Managed (3-4)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #28a745;"></span>
+                                <span>Level 5 - Optimized (4-5)</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h6>Quick Stats</h6>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <strong>{{ "%.1f"|format(products|map(attribute='overall_score')|list|sum / products|length) }}</strong>
+                                    <small>Average Score</small>
+                                </div>
+                                <div class="stat-item">
+                                    <strong>{{ products|map(attribute='overall_score')|max }}</strong>
+                                    <small>Highest Score</small>
+                                </div>
+                                <div class="stat-item">
+                                    <strong>{{ products|selectattr('overall_score', 'ge', 4)|list|length }}</strong>
+                                    <small>Level 4+ Products</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Action Buttons -->
 <div class="row mb-4">
@@ -268,6 +379,14 @@
                                         </button>
                                     {% endif %}
 
+                                    {% if product.status in ['completed', 'review_done', 'questions_done', 'under_review'] %}
+                                        <a href="{{ url_for('download_product_pdf', product_id=product.id) }}"
+                                           class="btn btn-outline-danger rounded-pill"
+                                           title="Download PDF Report">
+                                            <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF
+                                        </a>
+                                    {% endif %}
+
                                     {% if product.status == 'completed' %}
                                         <button class="btn btn-success rounded-pill" disabled>
                                             <i class="bi bi-check-circle me-2"></i>Assessment Complete
@@ -375,7 +494,110 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(0)';
         });
     });
+
+    // Create product comparison chart
+    {% if products|length > 1 %}
+    createProductComparisonChart();
+    {% endif %}
 });
+
+{% if products|length > 1 %}
+function createProductComparisonChart() {
+    const ctx = document.getElementById('productComparisonChart').getContext('2d');
+    
+    // Product data
+    const productData = [
+        {% for product in products %}
+        {
+            name: "{{ product.name }}",
+            score: {{ product.overall_score or 0 }},
+            status: "{{ product.status }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // Function to get color based on maturity score
+    function getMaturityColor(score) {
+        if (score < 1) return '#dc3545'; // Red - Initial
+        if (score < 2) return '#fd7e14'; // Orange - Developing  
+        if (score < 3) return '#ffc107'; // Yellow - Defined
+        if (score < 4) return '#20c997'; // Teal - Managed
+        return '#28a745'; // Green - Optimized
+    }
+
+    // Create the chart
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: productData.map(p => p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name),
+            datasets: [{
+                label: 'Maturity Score',
+                data: productData.map(p => p.score),
+                backgroundColor: productData.map(p => getMaturityColor(p.score)),
+                borderColor: productData.map(p => getMaturityColor(p.score)),
+                borderWidth: 1,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return productData[context[0].dataIndex].name;
+                        },
+                        label: function(context) {
+                            const score = context.parsed.y;
+                            let level = 'Initial';
+                            if (score >= 4) level = 'Optimized';
+                            else if (score >= 3) level = 'Managed';
+                            else if (score >= 2) level = 'Defined';
+                            else if (score >= 1) level = 'Developing';
+                            
+                            return [
+                                `Maturity Score: ${score.toFixed(1)}`,
+                                `Level: ${Math.ceil(score)} - ${level}`,
+                                `Status: ${productData[context.dataIndex].status.replace('_', ' ').toUpperCase()}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            const levels = ['', 'Initial', 'Developing', 'Defined', 'Managed', 'Optimized'];
+                            return `${value} - ${levels[value] || ''}`;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+}
+{% endif %}
 </script>
 {% endblock %}
 <script>

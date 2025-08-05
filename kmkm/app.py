@@ -1,6 +1,6 @@
 import os
 import csv
-from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, send_from_directory
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from flask_limiter import Limiter
@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from datetime import datetime, timezone
 import hashlib
+from pdf_generator import generate_product_pdf
 # Try to import magic for MIME type detection, but make it optional
 try:
     import magic
@@ -2881,18 +2882,20 @@ def api_admin_review_response():
         print(f"Error in admin review: {e}")
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
 
-@app.route('/admin/invite_user', methods=['GET', 'POST'])
+@app.route('/admin/invite_client', methods=['GET', 'POST'])
 @login_required('superuser')
-def invite_user():
+def invite_client():
     if request.method == 'POST':
         email = request.form['email']
         role = request.form.get('role', 'client')  # Default to client
         organization = request.form.get('organization', '')
+        first_name = request.form.get('first_name', '')
+        last_name = request.form.get('last_name', '')
 
         # Validate inputs
         if not email:
             flash('Email is required.')
-            return redirect(url_for('invite_user'))
+            return redirect(url_for('invite_client'))
 
         # Ensure role is always client for this invitation form
         if role != 'client':
@@ -2901,7 +2904,7 @@ def invite_user():
         # Check if user already exists
         if User.query.filter_by(email=email).first():
             flash('User with this email already exists.')
-            return redirect(url_for('invite_user'))
+            return redirect(url_for('invite_client'))
 
         # Check if there's already a pending invitation
         existing_invitation = InvitationToken.query.filter_by(email=email, is_used=False).first()
@@ -2909,7 +2912,7 @@ def invite_user():
             try:
                 if not existing_invitation.is_expired():
                     flash('There is already a pending invitation for this email.')
-                    return redirect(url_for('invite_user'))
+                    return redirect(url_for('invite_client'))
             except Exception as e:
                 print(f"Error checking existing invitation expiration: {e}")
                 # If there's an error, assume it's expired and continue with new invitation
@@ -2946,11 +2949,39 @@ def invite_user():
         else:
             flash(f'Invitation created but email could not be sent. Registration link: {invitation_link}', 'warning')
 
-        return redirect(url_for('invite_user'))
+        return redirect(url_for('invite_client'))
 
-    # Get all clients for the dropdown in lead creation form
-    clients = User.query.filter_by(role='client').order_by(User.username).all()
-    return render_template('admin_invite_user.html', clients=clients)
+    # Get recent client invitations for display
+    recent_invitations = User.query.filter_by(role='client').order_by(User.created_at.desc()).limit(5).all()
+    return render_template('admin_invite_client.html', recent_invitations=recent_invitations)
+
+@app.route('/admin/invite_reviewer', methods=['GET', 'POST'])
+@login_required('superuser')
+def invite_reviewer():
+    # GET request - show the form
+    clients = User.query.filter_by(role='client', is_active=True).order_by(User.username).all()
+    reviewers = User.query.filter_by(role='lead', is_active=True).order_by(User.created_at.desc()).limit(10).all()
+    return render_template('admin_invite_reviewer.html', clients=clients, reviewers=reviewers)
+
+# Keep the old route for backward compatibility  
+@app.route('/admin/invite_user', methods=['GET', 'POST'])
+@login_required('superuser')
+def invite_user():
+    # Redirect to the new client invitation page
+    return redirect(url_for('invite_client'))
+
+@app.route('/admin/manage_clients')
+@login_required('superuser')
+def manage_clients():
+    # Get all clients with their products
+    clients = User.query.filter_by(role='client').options(
+        db.joinedload(User.products)
+    ).order_by(User.created_at.desc()).all()
+    
+    # Get unique organizations for filter
+    organizations = list(set([client.organization for client in clients if client.organization]))
+    
+    return render_template('admin_client_management.html', clients=clients, organizations=organizations)
 
 @app.route('/admin/manage_users')
 @login_required('superuser')
@@ -3046,10 +3077,9 @@ def unassign_client_from_lead(lead_id, client_id):
     
     return redirect(url_for('manage_users'))
 
-# DISABLED - Old unified communication system replaced by question-based chat
-# @app.route('/communication/<int:product_id>')
-# @login_required()
-def unified_communication_disabled(product_id):
+@app.route('/communication/<int:product_id>')
+@login_required()
+def unified_communication(product_id):
     """Unified communication interface for lead-client conversations organized by dimension"""
     current_user_role = session.get('role')
     user_id = session['user_id']
@@ -3161,7 +3191,7 @@ def unified_communication_disabled(product_id):
         current_lead = User.query.get(user_id)
         accessible_clients = current_lead.get_accessible_clients()
     
-    return render_template('unified_communication.html', 
+    return render_template('improved_chat.html', 
                          product=product,
                          conversations_by_dimension=conversations_by_dimension,
                          current_user_role=current_user_role,
@@ -3171,9 +3201,9 @@ def unified_communication_disabled(product_id):
                          responses=responses)
 
 # DISABLED - Old communication system
-# @app.route('/communication/<int:product_id>/new', methods=['POST'])
-# @login_required('lead')
-def create_new_conversation_disabled(product_id):
+@app.route('/communication/<int:product_id>/new', methods=['POST'])
+@login_required('lead')
+def create_new_conversation(product_id):
     """Create a new conversation thread"""
     product = Product.query.get_or_404(product_id)
     
@@ -3246,9 +3276,9 @@ def approve_client_reply(comment_id):
 
 
 # DISABLED - Old communication system
-# @app.route('/communication/reply/<int:comment_id>', methods=['POST'])
-# @login_required()
-def reply_to_conversation_disabled(comment_id):
+@app.route('/communication/reply/<int:comment_id>', methods=['POST'])
+@login_required()
+def reply_to_conversation(comment_id):
     """Reply to an existing conversation with evidence support"""
     parent_comment = LeadComment.query.get_or_404(comment_id)
     reply_text = request.form.get('reply')
@@ -3619,6 +3649,62 @@ def get_rejected_questions(product_id):
     except Exception as e:
         flash(f"Error loading rejected questions: {str(e)}", "error")
         return redirect(url_for("dashboard_client"))
+
+@app.route('/download_product_pdf/<int:product_id>')
+@login_required()
+def download_product_pdf(product_id):
+    """Download PDF report for a product"""
+    current_user_role = session.get('role')
+    user_id = session['user_id']
+    
+    # Get product and verify access
+    product = Product.query.get_or_404(product_id)
+    
+    # Check access permissions
+    if current_user_role == 'client':
+        if product.owner_id != user_id:
+            flash('You do not have permission to access this product.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role == 'lead':
+        current_lead = User.query.get(user_id)
+        if not current_lead.can_access_client_data(product.owner_id):
+            flash('You do not have permission to access this product.')
+            return redirect(url_for('dashboard'))
+    elif current_user_role != 'superuser':
+        flash('You do not have permission to access this feature.')
+        return redirect(url_for('dashboard'))
+    
+    # Get all responses for this product
+    responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all()
+    
+    # Get scores for this product
+    scores = ScoreHistory.query.filter_by(product_id=product_id).order_by(ScoreHistory.created_at.desc()).all()
+    
+    # Get product owner
+    owner = User.query.get(product.owner_id)
+    
+    try:
+        # Generate PDF filename
+        safe_product_name = "".join(c for c in product.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"SecurityAssessment_{safe_product_name}_{timestamp}.pdf"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Generate PDF
+        pdf_data = generate_product_pdf(product, responses, scores, owner, filepath)
+        
+        # Send file
+        return send_file(
+            filepath,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        flash('Error generating PDF report. Please try again.')
+        return redirect(request.referrer or url_for('dashboard'))
 
 if __name__ == '__main__':
     print("🚀 Starting SecureSphere Application")
