@@ -46,32 +46,7 @@
         </div>
     </div>
 
-    <!-- Average Score Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card stat-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Avg Maturity Score</div>
-                        <div class="h2 mb-0 fw-bold text-white">
-                            {% set total_maturity = products_data|map(attribute='maturity_score')|sum %}
-                            {% if products_data|length > 0 %}
-                                {{ "%.1f"|format(total_maturity / products_data|length) }}%
-                            {% else %}
-                                0.0%
-                            {% endif %}
-                        </div>
-                        <div class="text-white-50 small">
-                            <i class="bi bi-trend-up me-1"></i>Overall performance
-                        </div>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="bi bi-graph-up fs-1 text-white opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Avg Maturity Score Card removed as per requirements -->
 
     <!-- In Progress Card -->
     <div class="col-xl-3 col-lg-6 col-md-6">
@@ -164,7 +139,7 @@
             <div class="card-header bg-white border-bottom-0 py-3">
                 <h5 class="mb-0 text-dark d-flex align-items-center">
                     <i class="bi bi-gear me-2 text-primary"></i>System Management
-                    <span class="badge bg-secondary rounded-pill ms-auto">3</span>
+                    <span class="badge bg-secondary rounded-pill ms-auto">2</span>
                 </h5>
             </div>
             <div class="card-body p-4">
@@ -179,11 +154,7 @@
                             <i class="bi bi-collection me-2"></i>All Products
                         </a>
                     </div>
-                    <div class="col-md-12">
-                        <a href="{{ url_for('invite_reviewer') }}" class="btn btn-outline-info w-100 py-3 rounded-3 shadow-sm">
-                            <i class="bi bi-person-check me-2"></i>Invite Reviewer
-                        </a>
-                    </div>
+                    <!-- Invite Reviewer button removed to avoid duplication with Invite Users -->
                 </div>
             </div>
         </div>
@@ -250,7 +221,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="fw-semibold text-dark small">{{ product_data.product.name }}</div>
-                                <div class="text-muted small">Score: {{ product_data.maturity_score }}%</div>
+                                <div class="text-muted small">Score: {{ product_data.maturity_score }}</div>
                             </div>
                         </div>
                     </div>

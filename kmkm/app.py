@@ -1551,6 +1551,8 @@ def dashboard():
                 'id': product.id,
                 'name': product.name,
                 'owner_id': product.owner_id,
+                'created_at': product.created_at,
+                'updated_at': product.updated_at,
                 'status': status_record.status,
                 'status_display': status_record.status.replace('_', ' ').title(),
                 'completed_sections': completed_sections_count,
@@ -1562,7 +1564,8 @@ def dashboard():
                 'overall_score': round(overall_maturity_score, 2),
                 'last_updated': status_record.last_updated,
                 'rejected_count': rejected_count,
-                'unread_comments': product_unread_comments
+                'unread_comments': product_unread_comments,
+                'is_complete': status_record.status == 'completed'
             }
             products_with_status.append(product_info)
 
@@ -3745,13 +3748,27 @@ def get_rejected_questions(product_id):
             RejectedQuestion.status == "pending"
         ).all()
         
-        return render_template("dashboard_client.html", 
-                             rejected_questions=rejected_questions,
-                             product_id=product_id)
+        # Convert to JSON format for API response
+        questions_data = []
+        for rejected_question, response in rejected_questions:
+            questions_data.append({
+                'id': rejected_question.id,
+                'question_text': rejected_question.question_text,
+                'response_text': response.answer,
+                'status': rejected_question.status
+            })
+        
+        return jsonify({
+            'success': True,
+            'rejected_questions': questions_data,
+            'product_id': product_id
+        })
         
     except Exception as e:
-        flash(f"Error loading rejected questions: {str(e)}", "error")
-        return redirect(url_for("dashboard_client"))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 
