@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from datetime import datetime, timezone
 import hashlib
-from pdf_generator import generate_product_pdf
+
 # Try to import magic for MIME type detection, but make it optional
 try:
     import magic
@@ -194,14 +194,54 @@ class Product(db.Model):
     __tablename__ = 'products'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String(200), nullable=False)  # Keep for backward compatibility
     description = db.Column(db.Text)
-    product_url = db.Column(db.String(500), nullable=False)
-    programming_language = db.Column(db.String(100), nullable=False)
-    cloud_platform = db.Column(db.String(100), nullable=False)
+    
+    # New fields from form
+    application_name = db.Column(db.String(200), nullable=True)
+    product_owner = db.Column(db.String(200), nullable=True)
+    business_criticality = db.Column(db.String(50), nullable=True)
+    
+    # Question responses stored as JSON
+    q1_category = db.Column(db.String(100))
+    q1_description = db.Column(db.Text)
+    q1_other = db.Column(db.String(200))
+    q2_category = db.Column(db.String(100))
+    q2_description = db.Column(db.Text)
+    q2_other = db.Column(db.String(200))
+    q3_category = db.Column(db.String(100))
+    q3_description = db.Column(db.Text)
+    q3_other = db.Column(db.String(200))
+    q4_category = db.Column(db.String(100))
+    q4_description = db.Column(db.Text)
+    q4_other = db.Column(db.String(200))
+    q5_category = db.Column(db.String(100))
+    q5_description = db.Column(db.Text)
+    q5_other = db.Column(db.String(200))
+    q6_category = db.Column(db.String(100))
+    q6_description = db.Column(db.Text)
+    q6_other = db.Column(db.String(200))
+    q7_category = db.Column(db.String(100))
+    q7_description = db.Column(db.Text)
+    q7_other = db.Column(db.String(200))
+    q8_category = db.Column(db.String(100))
+    q8_description = db.Column(db.Text)
+    q8_other = db.Column(db.String(200))
+    q9_category = db.Column(db.String(100))
+    q9_description = db.Column(db.Text)
+    q9_other = db.Column(db.String(200))
+    q10_category = db.Column(db.String(100))
+    q10_description = db.Column(db.Text)
+    q10_other = db.Column(db.String(200))
+    
+    # Legacy fields - keep for backward compatibility
+    product_url = db.Column(db.String(500), nullable=True)
+    programming_language = db.Column(db.String(100), nullable=True)
+    cloud_platform = db.Column(db.String(100), nullable=True)
     cloud_platform_other = db.Column(db.String(200))
-    cicd_platform = db.Column(db.String(100), nullable=False)
+    cicd_platform = db.Column(db.String(100), nullable=True)
     additional_details = db.Column(db.Text)
+    
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -1705,37 +1745,70 @@ def is_assessment_complete(product_id, user_id):
 @login_required('client')
 def add_product():
     if request.method == 'POST':
-        name = request.form['name']
-        product_url = request.form['product_url']
-        programming_language = request.form['programming_language']
-        cloud_platform = request.form['cloud_platform']
-        cloud_platform_other = request.form.get('cloud_platform_other', '')
-        cicd_platform = request.form['cicd_platform']
-        additional_details = request.form.get('additional_details', '')
+        # Get new required fields
+        application_name = request.form.get('application_name', '').strip()
+        product_owner = request.form.get('product_owner', '').strip()
+        business_criticality = request.form.get('business_criticality', '').strip()
 
-
-        if not name or not product_url or not programming_language or not cloud_platform or not cicd_platform:
-            flash('Please fill in all required fields.')
+        # Validate required fields
+        if not application_name or not product_owner or not business_criticality:
+            flash('Please fill in all required fields (Application Name, Product Owner, Business Criticality).')
             return redirect(url_for('add_product'))
 
-        # If cloud_platform is "Other", use the custom value
-        if cloud_platform == 'Other' and cloud_platform_other:
-            cloud_platform = cloud_platform_other
+        # Get all question responses
+        question_data = {}
+        for i in range(1, 11):
+            category = request.form.get(f'q{i}_category', '')
+            description = request.form.get(f'q{i}_description', '')
+            other = request.form.get(f'q{i}_other', '')
+            
+            question_data[f'q{i}_category'] = category
+            question_data[f'q{i}_description'] = description
+            question_data[f'q{i}_other'] = other if category == 'Other' else ''
 
         product = Product(
-            name=name,
-
-            product_url=product_url,
-            programming_language=programming_language,
-            cloud_platform=cloud_platform,
-            cloud_platform_other=cloud_platform_other,
-            cicd_platform=cicd_platform,
-            additional_details=additional_details,
+            name=application_name,  # Use application_name as the main name
+            application_name=application_name,
+            product_owner=product_owner,
+            business_criticality=business_criticality,
+            
+            # Store question responses
+            q1_category=question_data['q1_category'],
+            q1_description=question_data['q1_description'],
+            q1_other=question_data['q1_other'],
+            q2_category=question_data['q2_category'],
+            q2_description=question_data['q2_description'],
+            q2_other=question_data['q2_other'],
+            q3_category=question_data['q3_category'],
+            q3_description=question_data['q3_description'],
+            q3_other=question_data['q3_other'],
+            q4_category=question_data['q4_category'],
+            q4_description=question_data['q4_description'],
+            q4_other=question_data['q4_other'],
+            q5_category=question_data['q5_category'],
+            q5_description=question_data['q5_description'],
+            q5_other=question_data['q5_other'],
+            q6_category=question_data['q6_category'],
+            q6_description=question_data['q6_description'],
+            q6_other=question_data['q6_other'],
+            q7_category=question_data['q7_category'],
+            q7_description=question_data['q7_description'],
+            q7_other=question_data['q7_other'],
+            q8_category=question_data['q8_category'],
+            q8_description=question_data['q8_description'],
+            q8_other=question_data['q8_other'],
+            q9_category=question_data['q9_category'],
+            q9_description=question_data['q9_description'],
+            q9_other=question_data['q9_other'],
+            q10_category=question_data['q10_category'],
+            q10_description=question_data['q10_description'],
+            q10_other=question_data['q10_other'],
+            
             owner_id=session['user_id']
         )
         db.session.add(product)
         db.session.commit()
-        flash('Product added. Now fill the questionnaire.')
+        flash('Product information captured successfully. Now proceeding to detailed security questionnaire.')
         return redirect(url_for('fill_questionnaire_section', product_id=product.id, section_idx=0))
     return render_template('add_product.html')
 
@@ -3653,79 +3726,7 @@ def get_rejected_questions(product_id):
         flash(f"Error loading rejected questions: {str(e)}", "error")
         return redirect(url_for("dashboard_client"))
 
-@app.route('/download_product_pdf/<int:product_id>')
-@login_required()
-def download_product_pdf(product_id):
-    """Download PDF report for a product"""
-    current_user_role = session.get('role')
-    user_id = session['user_id']
-    
-    # Get product and verify access
-    product = Product.query.get_or_404(product_id)
-    
-    # Check access permissions
-    if current_user_role == 'client':
-        if product.owner_id != user_id:
-            flash('You do not have permission to access this product.')
-            return redirect(url_for('dashboard'))
-    elif current_user_role == 'lead':
-        current_lead = User.query.get(user_id)
-        if not current_lead.can_access_client_data(product.owner_id):
-            flash('You do not have permission to access this product.')
-            return redirect(url_for('dashboard'))
-    elif current_user_role != 'superuser':
-        flash('You do not have permission to access this feature.')
-        return redirect(url_for('dashboard'))
-    
-    # Get all responses for this product
-    responses = QuestionnaireResponse.query.filter_by(product_id=product_id).all()
-    
-    # Get scores for this product
-    scores = ScoreHistory.query.filter_by(product_id=product_id).order_by(ScoreHistory.calculated_at.desc()).all()
-    
-    # Get product owner
-    owner = User.query.get(product.owner_id)
-    
-    try:
-        # Ensure upload folder exists
-        os.makedirs(app.config.get('UPLOAD_FOLDER', 'uploads'), exist_ok=True)
-        
-        # Generate PDF filename
-        safe_product_name = "".join(c for c in product.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"SecurityAssessment_{safe_product_name}_{timestamp}.pdf"
-        filepath = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), filename)
-        
-        # Check if we have data to generate PDF
-        if not responses:
-            flash('No assessment data available for PDF generation.')
-            return redirect(request.referrer or url_for('dashboard'))
-        
-        # Generate PDF
-        pdf_data = generate_product_pdf(product, responses, scores, owner, filepath)
-        
-        # Verify PDF was created
-        if not os.path.exists(filepath):
-            raise Exception("PDF file was not created successfully")
-        
-        # Send file
-        return send_file(
-            filepath,
-            as_attachment=True,
-            download_name=filename,
-            mimetype='application/pdf'
-        )
-        
-    except ImportError as e:
-        print(f"PDF generation library error: {e}")
-        flash('PDF generation is currently unavailable. Please contact administrator.')
-        return redirect(request.referrer or url_for('dashboard'))
-    except Exception as e:
-        print(f"Error generating PDF: {e}")
-        import traceback
-        traceback.print_exc()
-        flash(f'Error generating PDF report: {str(e)}. Please try again.')
-        return redirect(request.referrer or url_for('dashboard'))
+
 
 if __name__ == '__main__':
     print("🚀 Starting SecureSphere Application")

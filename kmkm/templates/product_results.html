@@ -62,16 +62,7 @@
                         </h5>
                         <small class="opacity-75">Color-coded visualization of your security maturity across all dimensions</small>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('download_product_pdf', product_id=product.id) }}" 
-                           class="btn btn-outline-light btn-sm" 
-                           title="Download Complete PDF Report">
-                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF Report
-                        </a>
-                        <button class="btn btn-outline-light btn-sm" onclick="exportHeatmapData()" title="Export heatmap data">
-                            <i class="bi bi-download me-1"></i>Export
-                        </button>
-                    </div>
+
                 </div>
             </div>
             <div class="card-body p-4">
@@ -1648,76 +1639,7 @@ function showMatrixCellDetails(impact, likelihood, value, cellElement) {
     alert(details);
 }
 
-// Function to export heatmap data
-function exportHeatmapData() {
-    try {
-        {% if maturity_score and subdimension_scores %}
-        const heatmapData = {
-        product: '{{ product.name|escape if product else "Unknown" }}',
-        overallMaturityScore: {{ maturity_score }},
-        assessmentDate: new Date().toISOString(),
-        subDimensions: [
-            {% for subdimension, score_data in subdimension_scores.items() %}
-            {
-                name: '{{ subdimension|escape }}',
-                score: {{ score_data.average_score }},
-                level: {{ score_data.average_score|round|int }},
-                questionCount: {{ score_data.question_count }},
-                totalScore: {{ score_data.total_score }}
-            }{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ],
-        {% if section_dimensions %}
-        sections: [
-            {% for section, data in section_dimensions.items() %}
-            {
-                name: '{{ section|escape }}',
-                percentage: {{ data.percentage }},
-                questionCount: {{ data.question_count }},
-                totalScore: {{ data.total_score }},
-                maxPossibleScore: {{ data.max_possible_score }}
-            }{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ]
-        {% endif %}
-    };
-    
-    // Download as JSON
-    const dataStr = JSON.stringify(heatmapData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${heatmapData.product}_maturity_heatmap_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    // Show success message
-    const toast = document.createElement('div');
-    toast.className = 'toast-notification';
-    toast.innerHTML = `
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            Heatmap data exported successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.remove();
-        }
-        }, 3000);
-        {% else %}
-        // Show error if no data available
-        alert('No assessment data available for export');
-        {% endif %}
-    } catch (error) {
-        console.error('Error exporting data:', error);
-        alert('Error exporting data. Please try again.');
-    }
-}
+
 
 // Admin Review Functionality
 {% if is_admin_view %}

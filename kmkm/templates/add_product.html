@@ -4,129 +4,380 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
+    <div class="col-lg-8 col-md-10">
         <div class="card shadow-lg border-0">
             <div class="card-header bg-gradient-primary text-white text-center">
                 <div class="mb-3">
                     <i class="bi bi-plus-circle-fill fs-1"></i>
                 </div>
                 <h4 class="fw-bold mb-0">Add New Product</h4>
-                <p class="mb-0 opacity-75">Create a new security assessment</p>
+                <p class="mb-0 opacity-75">Create a comprehensive security assessment</p>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <form method="post" id="addProductForm">
-                    <div class="form-floating mb-4">
-                        <input type="text" name="name" class="form-control" id="productName"
-                               placeholder="Product Name" required>
-                        <label for="productName">
-                            <i class="bi bi-box-seam me-2"></i>Product Name
-                        </label>
-                        <div class="invalid-feedback">Please enter a product name.</div>
+                    <!-- Basic Product Information -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-info-circle me-2"></i>Basic Information
+                        </h5>
+                        
+                        <div class="form-floating mb-3">
+                            <input type="text" name="application_name" class="form-control" id="applicationName"
+                                   placeholder="Application Name" required>
+                            <label for="applicationName">
+                                <i class="bi bi-app me-2"></i>Application Name *
+                            </label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" name="product_owner" class="form-control" id="productOwner"
+                                   placeholder="Product Owner/SPOC" required>
+                            <label for="productOwner">
+                                <i class="bi bi-person-badge me-2"></i>Product Owner/SPOC *
+                            </label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select name="business_criticality" class="form-select" id="businessCriticality" required>
+                                <option value="">Select Business Criticality</option>
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <label for="businessCriticality">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Business Criticality *
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="form-floating mb-4">
-                        <input type="url" name="product_url" class="form-control" id="productUrl"
-                               placeholder="Product URL" required>
-                        <label for="productUrl">
-                            <i class="bi bi-link-45deg me-2"></i>Product URL *
-                        </label>
-                        <div class="invalid-feedback">Please enter a valid product URL.</div>
-                    </div>
+                    <!-- Detailed Assessment Questions -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-clipboard-check me-2"></i>Assessment Questions
+                        </h5>
 
-                    <div class="form-floating mb-4">
-                        <select name="programming_language" class="form-select" id="programmingLanguage" required>
-                            <option value="">Select Programming Language</option>
-                            <option value="Java">Java</option>
-                            <option value="Python">Python</option>
-                            <option value="JavaScript">JavaScript</option>
-                            <option value="TypeScript">TypeScript</option>
-                            <option value="C#">C#</option>
-                            <option value="C++">C++</option>
-                            <option value="PHP">PHP</option>
-                            <option value="Ruby">Ruby</option>
-                            <option value="Go">Go</option>
-                            <option value="Rust">Rust</option>
-                            <option value="Swift">Swift</option>
-                            <option value="Kotlin">Kotlin</option>
-                            <option value="Scala">Scala</option>
-                            <option value="R">R</option>
-                            <option value="MATLAB">MATLAB</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <label for="programmingLanguage">
-                            <i class="bi bi-code-slash me-2"></i>Programming Language *
-                        </label>
-                        <div class="invalid-feedback">Please select a programming language.</div>
-                    </div>
-                    
-                    <div class="form-floating mb-4">
-                        <select name="cloud_platform" class="form-select" id="cloudPlatform" required>
-                            <option value="">Select Cloud Platform</option>
-                            <option value="AWS">Amazon Web Services (AWS)</option>
-                            <option value="Azure">Microsoft Azure</option>
-                            <option value="GCP">Google Cloud Platform (GCP)</option>
-                            <option value="Oracle Cloud">Oracle Cloud</option>
-                            <option value="IBM Cloud">IBM Cloud</option>
-                            <option value="Alibaba Cloud">Alibaba Cloud</option>
-                            <option value="DigitalOcean">DigitalOcean</option>
-                            <option value="Linode">Linode</option>
-                            <option value="Vultr">Vultr</option>
-                            <option value="Heroku">Heroku</option>
-                            <option value="Vercel">Vercel</option>
-                            <option value="Netlify">Netlify</option>
-                            <option value="On-Premises">On-Premises</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <label for="cloudPlatform">
-                            <i class="bi bi-cloud me-2"></i>Cloud Platform *
-                        </label>
-                        <div class="invalid-feedback">Please select a cloud platform.</div>
-                    </div>
-                    
-                    <div class="form-floating mb-4" id="cloudPlatformOtherDiv" style="display: none;">
-                        <input type="text" name="cloud_platform_other" class="form-control" id="cloudPlatformOther" 
-                               placeholder="Specify other cloud platform">
-                        <label for="cloudPlatformOther">
-                            <i class="bi bi-cloud me-2"></i>Specify Cloud Platform
-                        </label>
-                    </div>
-                    
-                    <div class="form-floating mb-4">
-                        <select name="cicd_platform" class="form-select" id="cicdPlatform" required>
-                            <option value="">Select CI/CD Platform</option>
-                            <option value="Jenkins">Jenkins</option>
-                            <option value="GitHub Actions">GitHub Actions</option>
-                            <option value="GitLab CI/CD">GitLab CI/CD</option>
-                            <option value="Azure DevOps">Azure DevOps</option>
-                            <option value="CircleCI">CircleCI</option>
-                            <option value="Travis CI">Travis CI</option>
-                            <option value="Bamboo">Bamboo</option>
-                            <option value="TeamCity">TeamCity</option>
-                            <option value="Buildkite">Buildkite</option>
-                            <option value="AWS CodePipeline">AWS CodePipeline</option>
-                            <option value="Google Cloud Build">Google Cloud Build</option>
-                            <option value="Bitbucket Pipelines">Bitbucket Pipelines</option>
-                            <option value="None">None</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <label for="cicdPlatform">
-                            <i class="bi bi-gear me-2"></i>CI/CD Platform *
-                        </label>
-                        <div class="invalid-feedback">Please select a CI/CD platform.</div>
-                    </div>
-                    
-                    <div class="form-floating mb-4">
-                        <textarea class="form-control" name="additional_details" id="additionalDetails" 
-                                  placeholder="Additional Details" rows="3" style="height: 100px;"></textarea>
-                        <label for="additionalDetails">
-                            <i class="bi bi-file-text me-2"></i>Additional Details (Optional)
-                        </label>
+                        <!-- Question 1 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">1</span>
+                                Brief description of the application, users and its business purpose?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q1_category" class="form-select" id="q1Category">
+                                        <option value="">Select Category</option>
+                                        <option value="Web Application">Web Application</option>
+                                        <option value="Mobile Application">Mobile Application</option>
+                                        <option value="Desktop Application">Desktop Application</option>
+                                        <option value="API/Service">API/Service</option>
+                                        <option value="Database System">Database System</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q1_description" class="form-control" id="q1Description" 
+                                              rows="3" placeholder="Detailed description..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q1OtherDiv" style="display: none;">
+                                <input type="text" name="q1_other" class="form-control" id="q1Other" 
+                                       placeholder="Specify other category">
+                                <label for="q1Other">Specify Category</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 2 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">2</span>
+                                How does the application handle user authentication and authorization?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q2_category" class="form-select" id="q2Category">
+                                        <option value="">Select Method</option>
+                                        <option value="SSO via SAML">SSO via SAML</option>
+                                        <option value="SSO via OIDC">SSO via OIDC</option>
+                                        <option value="Local Database">Local User Database</option>
+                                        <option value="Social Logins">Social Logins</option>
+                                        <option value="JWT Tokens">JWT Tokens</option>
+                                        <option value="Multi-factor Auth">Multi-factor Authentication</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q2_description" class="form-control" id="q2Description" 
+                                              rows="3" placeholder="Detailed description..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q2OtherDiv" style="display: none;">
+                                <input type="text" name="q2_other" class="form-control" id="q2Other" 
+                                       placeholder="Specify authentication method">
+                                <label for="q2Other">Specify Authentication Method</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 3 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">3</span>
+                                What are the primary programming languages, frameworks, and databases used?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q3_category" class="form-select" id="q3Category">
+                                        <option value="">Select Technology Stack</option>
+                                        <option value="Java/Spring">Java/Spring</option>
+                                        <option value="Python/Django">Python/Django</option>
+                                        <option value="Python/Flask">Python/Flask</option>
+                                        <option value="Node.js/Express">Node.js/Express</option>
+                                        <option value="React/Angular">React/Angular</option>
+                                        <option value=".NET Core">.NET Core</option>
+                                        <option value="PHP/Laravel">PHP/Laravel</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q3_description" class="form-control" id="q3Description" 
+                                              rows="3" placeholder="Include databases like PostgreSQL, MySQL, MongoDB, etc."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q3OtherDiv" style="display: none;">
+                                <input type="text" name="q3_other" class="form-control" id="q3Other" 
+                                       placeholder="Specify technology stack">
+                                <label for="q3Other">Specify Technology Stack</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 4 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">4</span>
+                                Where is the application's source code hosted? Please provide a link to the main repository.
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q4_category" class="form-select" id="q4Category">
+                                        <option value="">Select Platform</option>
+                                        <option value="GitHub">GitHub</option>
+                                        <option value="GitLab">GitLab</option>
+                                        <option value="Bitbucket">Bitbucket</option>
+                                        <option value="Azure DevOps">Azure DevOps</option>
+                                        <option value="Internal Git">Internal Git Server</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="url" name="q4_description" class="form-control" id="q4Description" 
+                                           placeholder="Repository URL (e.g., https://github.com/org/repo)">
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q4OtherDiv" style="display: none;">
+                                <input type="text" name="q4_other" class="form-control" id="q4Other" 
+                                       placeholder="Specify hosting platform">
+                                <label for="q4Other">Specify Hosting Platform</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 5 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">5</span>
+                                Where is this application deployed?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q5_category" class="form-select" id="q5Category">
+                                        <option value="">Select Deployment</option>
+                                        <option value="On-premise">On-premise</option>
+                                        <option value="AWS EC2">AWS EC2</option>
+                                        <option value="AWS Lambda">AWS Lambda</option>
+                                        <option value="Azure">Microsoft Azure</option>
+                                        <option value="Google Cloud">Google Cloud</option>
+                                        <option value="Kubernetes">Kubernetes</option>
+                                        <option value="Docker">Docker Containers</option>
+                                        <option value="Serverless">Serverless</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q5_description" class="form-control" id="q5Description" 
+                                              rows="3" placeholder="Provide deployment details..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q5OtherDiv" style="display: none;">
+                                <input type="text" name="q5_other" class="form-control" id="q5Other" 
+                                       placeholder="Specify deployment platform">
+                                <label for="q5Other">Specify Deployment Platform</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 6 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">6</span>
+                                Is there an automated CI/CD pipeline in place? If yes, which tool is used?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q6_category" class="form-select" id="q6Category">
+                                        <option value="">Select CI/CD Tool</option>
+                                        <option value="Jenkins">Jenkins</option>
+                                        <option value="GitLab CI">GitLab CI</option>
+                                        <option value="GitHub Actions">GitHub Actions</option>
+                                        <option value="Azure Pipelines">Azure Pipelines</option>
+                                        <option value="CircleCI">CircleCI</option>
+                                        <option value="Travis CI">Travis CI</option>
+                                        <option value="TeamCity">TeamCity</option>
+                                        <option value="No Pipeline">No Pipeline</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q6_description" class="form-control" id="q6Description" 
+                                              rows="3" placeholder="Describe your CI/CD process..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q6OtherDiv" style="display: none;">
+                                <input type="text" name="q6_other" class="form-control" id="q6Other" 
+                                       placeholder="Specify CI/CD tool">
+                                <label for="q6Other">Specify CI/CD Tool</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 7 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">7</span>
+                                What is the highest sensitivity level of the data this application processes or stores?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q7_category" class="form-select" id="q7Category">
+                                        <option value="">Select Data Sensitivity</option>
+                                        <option value="Public">Public</option>
+                                        <option value="Internal">Internal</option>
+                                        <option value="Confidential">Confidential</option>
+                                        <option value="PII">PII (Personal Identifiable Information)</option>
+                                        <option value="PCI">PCI (Payment Card Industry)</option>
+                                        <option value="HIPAA">HIPAA (Healthcare)</option>
+                                        <option value="Financial">Financial Data</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q7_description" class="form-control" id="q7Description" 
+                                              rows="3" placeholder="Describe the type of sensitive data..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q7OtherDiv" style="display: none;">
+                                <input type="text" name="q7_other" class="form-control" id="q7Other" 
+                                       placeholder="Specify data sensitivity level">
+                                <label for="q7Other">Specify Data Sensitivity Level</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 8 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">8</span>
+                                Are any security scans currently being run against this application?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q8_category" class="form-select" id="q8Category">
+                                        <option value="">Select Scan Type</option>
+                                        <option value="SAST">SAST (Static Application Security Testing)</option>
+                                        <option value="DAST">DAST (Dynamic Application Security Testing)</option>
+                                        <option value="SCA">SCA (Software Composition Analysis)</option>
+                                        <option value="IAST">IAST (Interactive Application Security Testing)</option>
+                                        <option value="Manual Testing">Manual Security Testing</option>
+                                        <option value="No Scans">No Security Scans</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q8_description" class="form-control" id="q8Description" 
+                                              rows="3" placeholder="List specific tools and frequency..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q8OtherDiv" style="display: none;">
+                                <input type="text" name="q8_other" class="form-control" id="q8Other" 
+                                       placeholder="Specify security scan type">
+                                <label for="q8Other">Specify Security Scan Type</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 9 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">9</span>
+                                Does the application rely on any critical third-party services or APIs?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q9_category" class="form-select" id="q9Category">
+                                        <option value="">Select Service Type</option>
+                                        <option value="Payment Processing">Payment Processing (Stripe, PayPal)</option>
+                                        <option value="Communication">Communication (Twilio, SendGrid)</option>
+                                        <option value="Cloud Storage">Cloud Storage (S3, Azure Blob)</option>
+                                        <option value="Analytics">Analytics (Google Analytics, Mixpanel)</option>
+                                        <option value="Authentication">Authentication Services</option>
+                                        <option value="CDN">CDN Services</option>
+                                        <option value="No Dependencies">No Critical Dependencies</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q9_description" class="form-control" id="q9Description" 
+                                              rows="3" placeholder="List third-party services and their criticality..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q9OtherDiv" style="display: none;">
+                                <input type="text" name="q9_other" class="form-control" id="q9Other" 
+                                       placeholder="Specify service type">
+                                <label for="q9Other">Specify Service Type</label>
+                            </div>
+                        </div>
+
+                        <!-- Question 10 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">10</span>
+                                Is this application subject to any specific regulatory or compliance standards?
+                            </label>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <select name="q10_category" class="form-select" id="q10Category">
+                                        <option value="">Select Compliance</option>
+                                        <option value="GDPR">GDPR (General Data Protection Regulation)</option>
+                                        <option value="SOC 2">SOC 2 (Service Organization Control 2)</option>
+                                        <option value="PCI-DSS">PCI-DSS (Payment Card Industry)</option>
+                                        <option value="HIPAA">HIPAA (Healthcare)</option>
+                                        <option value="ISO 27001">ISO 27001</option>
+                                        <option value="SOX">SOX (Sarbanes-Oxley)</option>
+                                        <option value="FedRAMP">FedRAMP</option>
+                                        <option value="No Compliance">No Specific Compliance</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="q10_description" class="form-control" id="q10Description" 
+                                              rows="3" placeholder="Describe compliance requirements and current status..."></textarea>
+                                </div>
+                            </div>
+                            <div class="form-floating mt-2" id="q10OtherDiv" style="display: none;">
+                                <input type="text" name="q10_other" class="form-control" id="q10Other" 
+                                       placeholder="Specify compliance standard">
+                                <label for="q10Other">Specify Compliance Standard</label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
                         <strong>What happens next?</strong><br>
-                        After creating your product, you'll be guided through a comprehensive security questionnaire.
+                        After creating your product, you'll be guided through a comprehensive security questionnaire based on the information provided.
                     </div>
 
                     <button type="submit" class="btn btn-gradient-primary w-100 rounded-pill py-3 mb-3">
@@ -146,37 +397,55 @@
 
 <script>
 document.getElementById('addProductForm').addEventListener('submit', function(e) {
-    const productName = document.getElementById('productName');
+    const applicationName = document.getElementById('applicationName');
+    const productOwner = document.getElementById('productOwner');
+    const businessCriticality = document.getElementById('businessCriticality');
 
-    if (!productName.value.trim()) {
+    let isValid = true;
+
+    // Validate required fields
+    [applicationName, productOwner, businessCriticality].forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+
+    if (!isValid) {
         e.preventDefault();
-        productName.classList.add('is-invalid');
-        productName.focus();
-    } else {
-        productName.classList.remove('is-invalid');
+        applicationName.focus();
     }
 });
 
 // Real-time validation
-document.getElementById('productName').addEventListener('input', function() {
-    if (this.value.trim()) {
-        this.classList.remove('is-invalid');
-    }
+['applicationName', 'productOwner', 'businessCriticality'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('is-invalid');
+        }
+    });
 });
 
-// Show/hide cloud platform other field
-document.getElementById('cloudPlatform').addEventListener('change', function() {
-    const otherDiv = document.getElementById('cloudPlatformOtherDiv');
-    const otherInput = document.getElementById('cloudPlatformOther');
+// Show/hide "Other" input fields for questions 1-10
+for (let i = 1; i <= 10; i++) {
+    const select = document.getElementById(`q${i}Category`);
+    if (select) {
+        select.addEventListener('change', function() {
+            const otherDiv = document.getElementById(`q${i}OtherDiv`);
+            const otherInput = document.getElementById(`q${i}Other`);
 
-    if (this.value === 'Other') {
-        otherDiv.style.display = 'block';
-        otherInput.required = true;
-    } else {
-        otherDiv.style.display = 'none';
-        otherInput.required = false;
-        otherInput.value = '';
+            if (this.value === 'Other') {
+                otherDiv.style.display = 'block';
+                otherInput.required = true;
+            } else {
+                otherDiv.style.display = 'none';
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        });
     }
-});
+}
 </script>
 {% endblock %}
