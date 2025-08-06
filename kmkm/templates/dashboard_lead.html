@@ -279,7 +279,7 @@
                                                         </thead>
                                                         <tbody>
                                                             {% for resp in section_responses %}
-                                                            <tr class="{% if resp.lead_comments|first %}status-{{ (resp.lead_comments|first).status }}{% else %}status-pending{% endif %}">
+                                                            <tr class="status-{{ resp.review_status|default('pending') }}" data-response-id="{{ resp.id }}">
                                                                 <td>
                                                                     <span class="question-number-clean">{{ loop.index }}</span>
                                                                 </td>
@@ -304,34 +304,32 @@
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    {% set lead_comment = resp.lead_comments|first %}
-                                                                    {% if resp.is_approved %}
-                                                                        <span class="badge bg-success">
-                                                                            <i class="bi bi-check-circle me-1"></i>Approved
-                                                                        </span>
-                                                                    {% elif lead_comment %}
-                                                                        {% if lead_comment.status == 'approved' %}
+                                                                    {% set review_status = resp.review_status|default('pending') %}
+                                                                    <div class="d-flex align-items-center gap-2">
+                                                                        {% if review_status == 'approved' %}
                                                                             <span class="badge bg-success">
                                                                                 <i class="bi bi-check-circle me-1"></i>Approved
                                                                             </span>
-                                                                        {% elif lead_comment.status == 'needs_revision' %}
+                                                                        {% elif review_status == 'needs_revision' %}
                                                                             <span class="badge bg-warning">
                                                                                 <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
                                                                             </span>
-                                                                        {% elif lead_comment.status == 'rejected' %}
+                                                                            <span class="notification-badge" id="lead-notif-{{ resp.id }}" style="display: none;">0</span>
+                                                                        {% elif review_status == 'rejected' %}
                                                                             <span class="badge bg-danger">
                                                                                 <i class="bi bi-x-circle me-1"></i>Rejected
                                                                             </span>
+                                                                            <span class="notification-badge" id="lead-notif-{{ resp.id }}" style="display: none;">0</span>
                                                                         {% else %}
-                                                                            <span class="badge bg-secondary">Pending</span>
+                                                                            <span class="badge bg-secondary">
+                                                                                <i class="bi bi-clock me-1"></i>Pending
+                                                                            </span>
                                                                         {% endif %}
-                                                                    {% else %}
-                                                                        <span class="badge bg-secondary">Pending</span>
-                                                                    {% endif %}
+                                                                    </div>
                                                                 </td>
                                                                 <td>
-                                                                    {% set lead_comment = resp.lead_comments|first %}
-                                                                    {% if resp.is_approved or (lead_comment and lead_comment.status == 'approved') %}
+                                                                    {% set review_status = resp.review_status|default('pending') %}
+                                                                    {% if review_status == 'approved' %}
                                                                         <button class="btn btn-success btn-sm" disabled>
                                                                             <i class="bi bi-check-circle-fill me-1"></i>Approved
                                                                         </button>

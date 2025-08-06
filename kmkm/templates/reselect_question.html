@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Reselect Question - SecureSphere{% endblock %}
+
+{% block head %}
+<style>
+.question-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.option-card {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: white;
+}
+
+.option-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+}
+
+.option-card.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.option-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.option-description {
+    color: #6c757d;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.rejected-badge {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.8em;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.current-answer {
+    background: #f8f9fa;
+    border-left: 4px solid #dc3545;
+    padding: 15px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 20px;
+}
+
+.file-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.file-upload-area:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 30px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="question-card p-4 text-center">
+                <h2 class="mb-3">
+                    <i class="bi bi-arrow-repeat me-3"></i>Reselect Your Answer
+                </h2>
+                <p class="mb-0 opacity-90">
+                    Your previous answer was rejected. Please choose a new option from the available choices below.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Details -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary">
+                            <i class="bi bi-question-circle me-2"></i>Question Details
+                        </h5>
+                        <span class="rejected-badge">
+                            <i class="bi bi-x-circle me-1"></i>REJECTED
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Section Info -->
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <strong>Section:</strong> {{ response.section.replace('_', ' ').title() }}
+                        </small>
+                    </div>
+                    
+                    <!-- Question Text -->
+                    <div class="mb-4">
+                        <h6 class="text-dark mb-3">{{ response.question }}</h6>
+                    </div>
+                    
+                    <!-- Current Answer -->
+                    <div class="current-answer mb-4">
+                        <h6 class="text-danger mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Your Previous Answer (Rejected):
+                        </h6>
+                        <p class="mb-0 fw-bold">"{{ response.answer }}"</p>
+                        {% if response.client_comment %}
+                        <p class="mt-2 mb-0"><small><strong>Your comment:</strong> {{ response.client_comment }}</small></p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reselection Form -->
+                    <form method="post" enctype="multipart/form-data" id="reselectionForm">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-list-check me-2"></i>Choose Your New Answer:
+                        </h6>
+                        
+                        <!-- Answer Options -->
+                        <div class="mb-4">
+                            {% for option in question_data.options %}
+                            <div class="option-card" onclick="selectOption('{{ option.value }}')">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="answer" 
+                                           id="option_{{ loop.index }}" value="{{ option.value }}"
+                                           {% if option.value == response.answer %}disabled{% endif %}>
+                                    <label class="form-check-label w-100" for="option_{{ loop.index }}">
+                                        <div class="option-label">{{ option.value }}</div>
+                                        {% if option.description %}
+                                        <div class="option-description">{{ option.description }}</div>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% if option.value == response.answer %}
+                                <small class="text-danger">
+                                    <i class="bi bi-ban me-1"></i>This was your rejected answer
+                                </small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Comment Section -->
+                        <div class="mb-4">
+                            <label for="comment" class="form-label">
+                                <i class="bi bi-chat-text me-2"></i>Additional Comments (Optional)
+                            </label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                      placeholder="Add any additional context or explanation for your new selection..."></textarea>
+                        </div>
+
+                        <!-- Evidence Upload -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-paperclip me-2"></i>Supporting Evidence (Optional)
+                            </label>
+                            <div class="file-upload-area">
+                                <input type="file" class="form-control" name="evidence" id="evidence"
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.zip">
+                                <div class="mt-2">
+                                    <i class="bi bi-cloud-upload fs-1 text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">
+                                        Upload supporting documentation, screenshots, or evidence
+                                    </p>
+                                    <small class="text-muted">
+                                        Supported formats: PDF, Images, Documents, ZIP files (max 10MB)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn submit-btn">
+                                <i class="bi bi-check-circle me-2"></i>Submit New Answer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectOption(value) {
+    // Remove all selected states
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected state to clicked option
+    const radio = document.querySelector(`input[value="${value}"]`);
+    if (radio && !radio.disabled) {
+        radio.checked = true;
+        radio.closest('.option-card').classList.add('selected');
+    }
+}
+
+// Add click handlers for option cards
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.option-card').forEach(card => {
+        const radio = card.querySelector('input[type="radio"]');
+        if (!radio.disabled) {
+            card.addEventListener('click', function() {
+                radio.checked = true;
+                selectOption(radio.value);
+            });
+        } else {
+            card.style.opacity = '0.6';
+            card.style.cursor = 'not-allowed';
+        }
+    });
+    
+    // Form validation
+    document.getElementById('reselectionForm').addEventListener('submit', function(e) {
+        const selectedOption = document.querySelector('input[name="answer"]:checked');
+        if (!selectedOption) {
+            e.preventDefault();
+            alert('Please select a new answer option.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

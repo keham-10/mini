@@ -117,8 +117,13 @@
             <ul class="navbar-nav">
                 {% if session['user_id'] %}
                     <li class="nav-item">
-                        <a class="nav-link text-white fw-medium px-3" href="{{ url_for('dashboard') }}" style="border-radius: 6px; transition: all 0.2s ease;">
+                        <a class="nav-link text-white fw-medium px-3 position-relative" href="{{ url_for('dashboard') }}" style="border-radius: 6px; transition: all 0.2s ease;">
                             <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            {% if session['role'] in ['client', 'lead'] %}
+                            <span id="global-notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 10px;">
+                                0
+                            </span>
+                            {% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
