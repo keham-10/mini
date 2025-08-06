@@ -213,9 +213,7 @@
                     <a href="{{ url_for('invite_client') }}" class="btn btn-light btn-sm">
                         <i class="bi bi-person-plus me-1"></i>Invite Client
                     </a>
-                    <button class="btn btn-outline-light btn-sm" onclick="exportClientsData()">
-                        <i class="bi bi-download me-1"></i>Export
-                    </button>
+                    
                 </div>
             </div>
         </div>
@@ -378,10 +376,7 @@
                                                class="btn btn-outline-info btn-sm">
                                                 <i class="bi bi-chat-dots me-1"></i>Chat
                                             </a>
-                                            <a href="{{ url_for('download_product_pdf', product_id=product.id) }}" 
-                                               class="btn btn-outline-danger btn-sm">
-                                                <i class="bi bi-file-pdf me-1"></i>PDF
-                                            </a>
+
                                         </div>
                                                     </div>
                                                 </div>
@@ -540,10 +535,7 @@ function editClient(clientId) {
     alert('Client editing functionality - to be implemented');
 }
 
-function exportClientsData() {
-    // Export client data as CSV
-    alert('Export functionality - to be implemented');
-}
+
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {

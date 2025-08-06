@@ -79,9 +79,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="btn-group w-100" role="group">
-                            <button class="btn btn-outline-primary" onclick="exportData()">
-                                <i class="bi bi-download me-2"></i>Export
-                            </button>
+                            
                             <button class="btn btn-outline-secondary" onclick="resetFilters()">
                                 <i class="bi bi-arrow-clockwise me-2"></i>Reset
                             </button>
@@ -310,9 +308,7 @@ function resetFilters() {
     filterResponses();
 }
 
-function exportData() {
-    alert('Export functionality - would generate CSV/PDF report of all responses');
-}
+
 
 // Event listeners
 document.getElementById('searchInput').addEventListener('input', filterResponses);

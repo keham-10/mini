@@ -46,398 +46,365 @@
     color: #6c757d;
     font-size: 0.85em;
 }
+
+.dashboard-stat-card {
+    transition: all 0.3s ease;
+    border: none !important;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.product-card {
+    transition: all 0.3s ease;
+    border: none !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.progress-ring {
+    width: 60px;
+    height: 60px;
+}
+
+.welcome-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-header text-center mb-4">
-    <h1 class="display-6 fw-bold mb-2">
-        <i class="bi bi-person-circle me-3"></i>Welcome to Your Dashboard
-    </h1>
-    <p class="lead mb-0">Manage your security assessments and track progress</p>
-</div>
-
-<!-- Dashboard Statistics -->
-<div class="dashboard-stats">
-    <div class="card stat-card text-center">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-8">
-                    <h3 class="mb-0">{{ products|length }}</h3>
-                    <p class="mb-0">Total Products</p>
-                </div>
-                <div class="col-4">
-                    <i class="bi bi-box-seam icon"></i>
-                </div>
-            </div>
+<!-- Enhanced Dashboard Header -->
+<div class="dashboard-header text-center mb-5">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold mb-2 text-start welcome-gradient">
+                <i class="bi bi-person-circle me-3"></i>Welcome Back
+            </h1>
+            <p class="lead mb-0 text-start" style="color: rgba(255,255,255,0.9);">
+                Track your security assessments and monitor progress
+            </p>
         </div>
-    </div>
-
-    <div class="card stat-card text-center">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-8">
-                    <h3 class="mb-0">{{ products|selectattr('is_complete', 'equalto', false)|list|length }}</h3>
-                    <p class="mb-0">In Progress</p>
-                </div>
-                <div class="col-4">
-                    <i class="bi bi-clipboard-check icon"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card stat-card text-center">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-8">
-                    <h3 class="mb-0">{{ products|selectattr('is_complete', 'equalto', true)|list|length }}</h3>
-                    <p class="mb-0">Completed</p>
-                </div>
-                <div class="col-4">
-                    <i class="bi bi-check-circle icon"></i>
-                </div>
+        <div class="col-md-4 text-end">
+            <div class="user-info">
+                <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                    <i class="bi bi-shield-check me-2"></i>Client Portal
+                </span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Product Comparison Chart -->
-{% if products|length > 1 %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card dashboard-card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-bar-chart me-2"></i>Product Maturity Comparison
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-lg-8">
-                        <canvas id="productComparisonChart" width="400" height="200"></canvas>
+<!-- Enhanced Dashboard Statistics -->
+<div class="row g-4 mb-5">
+    <!-- Total Products Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Products</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|length }}</div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-trending-up me-1"></i>All assessments
+                        </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="chart-legend">
-                            <h6 class="mb-3">Maturity Levels</h6>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #dc3545;"></span>
-                                <span>Level 1 - Initial (0-1)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #fd7e14;"></span>
-                                <span>Level 2 - Developing (1-2)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #ffc107;"></span>
-                                <span>Level 3 - Defined (2-3)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #20c997;"></span>
-                                <span>Level 4 - Managed (3-4)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #28a745;"></span>
-                                <span>Level 5 - Optimized (4-5)</span>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <h6>Quick Stats</h6>
-                            <div class="stats-grid">
-                                <div class="stat-item">
-                                    <strong>{{ "%.1f"|format(products|map(attribute='overall_score')|list|sum / products|length) }}</strong>
-                                    <small>Average Score</small>
-                                </div>
-                                <div class="stat-item">
-                                    <strong>{{ products|map(attribute='overall_score')|max }}</strong>
-                                    <small>Highest Score</small>
-                                </div>
-                                <div class="stat-item">
-                                    <strong>{{ products|selectattr('overall_score', 'ge', 4)|list|length }}</strong>
-                                    <small>Level 4+ Products</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-box-seam fs-1 text-white opacity-75"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endif %}
 
-<!-- Action Buttons -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card dashboard-card">
-            <div class="card-body text-center">
-                <h5 class="card-title mb-3">
-                    <i class="bi bi-plus-circle me-2"></i>Quick Actions
-                </h5>
-                <a href="{{ url_for('add_product') }}" class="btn btn-gradient-primary btn-lg rounded-pill px-4 me-3">
-                    <i class="bi bi-plus-lg me-2"></i>Add New Product
-                </a>
-                <button class="btn btn-outline-primary btn-lg rounded-pill px-4" onclick="showHelpModal()">
-                    <i class="bi bi-question-circle me-2"></i>Need Help?
-                </button>
+    <!-- In Progress Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">In Progress</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', false)|list|length }}</div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-clock me-1"></i>Active assessments
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-hourglass-split fs-1 text-white opacity-75"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-
-<!-- Chat Notifications Section -->
-{% if active_chats %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="alert alert-info border-0 shadow-sm">
-            <div class="d-flex align-items-center mb-3">
-                <i class="bi bi-chat-dots-fill text-primary me-2"></i>
-                <h5 class="mb-0">Active Question Chats</h5>
-                {% if unread_chats_count > 0 %}
-                <span class="badge bg-danger ms-2">{{ unread_chats_count }} unread</span>
-                {% endif %}
+    <!-- Completed Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Completed</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', true)|list|length }}</div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-check-circle me-1"></i>Finished assessments
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-check-circle-fill fs-1 text-white opacity-75"></i>
+                    </div>
+                </div>
             </div>
-            <p class="mb-3">You have ongoing conversations with your lead about specific questions.</p>
-            <div class="row">
-                {% for chat in active_chats %}
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card border-primary h-100">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">{{ chat.response.section }}</span>
-                            {% if chat.unread_messages_for_client > 0 %}
-                            <span class="badge bg-danger">{{ chat.unread_messages_for_client }}</span>
+        </div>
+    </div>
+
+    <!-- Average Score Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Avg Score</div>
+                        <div class="h2 mb-0 fw-bold text-white">
+                            {% if products %}
+                                {% set total_score = products|map(attribute='overall_score')|sum %}
+                                {% set completed_count = products|selectattr('is_complete', 'equalto', true)|list|length %}
+                                {% if completed_count > 0 %}
+                                    {{ "%.1f"|format(total_score / completed_count) }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            {% else %}
+                                0%
                             {% endif %}
                         </div>
-                        <div class="card-body">
-                            <p class="card-text small mb-3">{{ chat.response.question[:80] }}{% if chat.response.question|length > 80 %}...{% endif %}</p>
-                            <p class="small text-muted mb-3">
-                                <strong>Status:</strong> 
-                                <span class="badge 
-                                    {% if chat.review_status == 'needs_revision' %}bg-warning text-dark
-                                    {% elif chat.review_status == 'rejected' %}bg-danger
-                                    {% else %}bg-secondary{% endif %}">
-                                    {{ chat.review_status.replace('_', ' ').title() }}
-                                </span>
-                            </p>
-                            <a href="{{ url_for('view_question_chat', chat_id=chat.id) }}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-chat-dots me-1"></i>View Chat
-                            </a>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-graph-up me-1"></i>Overall performance
                         </div>
                     </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-award fs-1 text-white opacity-75"></i>
+                    </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
-{% endif %}
 
-{% if rejected_questions %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="rejected-questions-section">
-            <div class="d-flex align-items-center mb-3">
-                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                <h5 class="mb-0">Questions Requiring Your Attention</h5>
-                <span class="badge bg-warning text-dark ms-2">{{ rejected_questions|length }}</span>
+<!-- Quick Actions and Chart Row -->
+<div class="row g-4 mb-5">
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <h5 class="mb-0 text-dark d-flex align-items-center">
+                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Quick Actions
+                    <span class="badge bg-primary rounded-pill ms-auto">2</span>
+                </h5>
             </div>
-            <p class="text-muted mb-4">The following questions have been marked for revision by your lead. Please provide updated responses.</p>
-            
-            {% for rejected_question, question in rejected_questions %}
-            <div class="rejected-question-item" data-question-id="{{ question.id }}" data-rejected-id="{{ rejected_question.id }}">
-                <div class="rejected-question-header">
-                    <span class="rejected-question-title">Question {{ question.question_number }}</span>
-                    <span class="badge bg-warning">Needs Revision</span>
+            <div class="card-body p-4">
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('add_product') }}" class="btn btn-primary btn-lg rounded-3 shadow-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Start New Assessment
+                    </a>
+                    <a href="#products-section" class="btn btn-outline-secondary btn-lg rounded-3 shadow-sm">
+                        <i class="bi bi-eye me-2"></i>View All Products
+                    </a>
                 </div>
                 
-                <div class="question-text mb-3">
-                    <strong>{{ question.question_text }}</strong>
-                </div>
-                
-                {% if rejected_question.reason %}
-                <div class="rejected-question-reason">
-                    <strong>Lead's Comment:</strong> {{ rejected_question.reason }}
-                </div>
-                {% endif %}
-                
-                <div class="question-options">
-                    {% for option in question.options %}
-                    <div class="option-item" data-option="{{ option }}">
-                        <input type="radio" name="rejected_question_{{ rejected_question.id }}" value="{{ option }}" id="option_{{ rejected_question.id }}_{{ loop.index }}">
-                        <label for="option_{{ rejected_question.id }}_{{ loop.index }}">{{ option }}</label>
+                <!-- Recent Activity -->
+                <div class="mt-4">
+                    <h6 class="text-muted mb-3">Recent Activity</h6>
+                    {% for product in products[:3] %}
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="flex-shrink-0">
+                            {% if product.status == 'completed' %}
+                                <div class="badge bg-success rounded-circle p-1">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                            {% elif product.status == 'in_progress' %}
+                                <div class="badge bg-warning rounded-circle p-1">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                            {% else %}
+                                <div class="badge bg-info rounded-circle p-1">
+                                    <i class="bi bi-eye"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <div class="small fw-semibold text-dark">{{ product.name }}</div>
+                            <div class="text-muted" style="font-size: 0.8em;">
+                                {% if product.updated_at %}
+                                    Updated {{ product.updated_at.strftime('%b %d') }}
+                                {% else %}
+                                    Recently created
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
-                
-                <div class="mt-3">
-                    <button class="btn btn-primary btn-sm" onclick="submitRejectedQuestionResponse({{ rejected_question.id }})">
-                        Submit Updated Response
-                    </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-bar-chart me-2 text-primary"></i>Assessment Progress Overview
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            All Products
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">All Products</a></li>
+                            <li><a class="dropdown-item" href="#">In Progress Only</a></li>
+                            <li><a class="dropdown-item" href="#">Completed Only</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            {% endfor %}
+            <div class="card-body p-4">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endif %}
 
 <!-- Products Section -->
-<div class="row">
+<div class="row" id="products-section">
     <div class="col-12">
-        <div class="card dashboard-card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-grid-3x3-gap me-2"></i>Your Products
-                </h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-collection me-2 text-primary"></i>Your Security Assessments
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="viewToggle" id="gridView" autocomplete="off" checked>
+                            <label class="btn btn-outline-secondary btn-sm" for="gridView">
+                                <i class="bi bi-grid"></i>
+                            </label>
+                            <input type="radio" class="btn-check" name="viewToggle" id="listView" autocomplete="off">
+                            <label class="btn btn-outline-secondary btn-sm" for="listView">
+                                <i class="bi bi-list"></i>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 {% if products %}
-                    <div class="dashboard-content">
+                    <div class="row g-4" id="productsContainer">
                         {% for product in products %}
-                        <div class="card h-100 shadow-sm border-0 product-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-box-seam me-2 text-primary"></i>{{ product.name }}
-                                    </h5>
-                                    <span class="status-badge-clean {{ product.status }}">
-                                        {% if product.status == 'in_progress' %}
-                                            <i class="bi bi-pencil"></i>In Progress
-                                        {% elif product.status == 'questions_done' %}
-                                            <i class="bi bi-clock"></i>Questions Done
+                        <div class="col-lg-6 col-md-6 product-item">
+                            <div class="card product-card h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1 fw-bold text-dark">{{ product.name }}</h6>
+                                            <p class="text-muted small mb-0">
+                                                Created {{ product.created_at.strftime('%B %d, %Y') if product.created_at else 'Recently' }}
+                                            </p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <!-- Progress Circle -->
+                                            <div class="progress-circle">
+                                                <svg class="progress-ring" width="60" height="60">
+                                                    <circle stroke="#e9ecef" stroke-width="4" fill="transparent" r="26" cx="30" cy="30"/>
+                                                    <circle stroke="#4e73df" stroke-width="4" fill="transparent" r="26" cx="30" cy="30" 
+                                                            stroke-dasharray="{{ 2 * 3.14159 * 26 }}" 
+                                                            stroke-dashoffset="{{ 2 * 3.14159 * 26 * (1 - (product.progress_percentage / 100)) }}"
+                                                            stroke-linecap="round"/>
+                                                    <text x="30" y="35" text-anchor="middle" font-size="12" font-weight="bold" fill="#4e73df">
+                                                        {{ product.progress_percentage }}%
+                                                    </text>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status Badge -->
+                                    <div class="mb-3">
+                                        {% if product.status == 'completed' %}
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="bi bi-check-circle me-1"></i>Completed
+                                            </span>
+                                        {% elif product.status == 'in_progress' %}
+                                            <span class="badge bg-warning rounded-pill px-3 py-2">
+                                                <i class="bi bi-clock me-1"></i>In Progress
+                                            </span>
                                         {% elif product.status == 'under_review' %}
-                                            <i class="bi bi-eye"></i>Under Review
-                                        {% elif product.status == 'review_done' %}
-                                            <i class="bi bi-check"></i>Review Done
-                                        {% elif product.status == 'completed' %}
-                                            <i class="bi bi-check-circle"></i>Completed
-                                        {% elif product.status == 'needs_client_response' %}
-                                            <i class="bi bi-exclamation-triangle"></i>Needs Response
+                                            <span class="badge bg-info rounded-pill px-3 py-2">
+                                                <i class="bi bi-eye me-1"></i>Under Review
+                                            </span>
+                                        {% elif product.status == 'questions_done' %}
+                                            <span class="badge bg-primary rounded-pill px-3 py-2">
+                                                <i class="bi bi-check-square me-1"></i>Questions Complete
+                                            </span>
                                         {% else %}
-                                            <i class="bi bi-circle"></i>{{ product.status_display }}
+                                            <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                                <i class="bi bi-hourglass me-1"></i>Starting
+                                            </span>
                                         {% endif %}
-                                    </span>
-                                </div>
-
-                                <!-- Assessment Progress -->
-                                <div class="assessment-progress mb-3">
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar"
-                                             style="width: {{ product.progress_percentage }}%"
-                                             aria-valuenow="{{ product.progress_percentage }}"
-                                             aria-valuemin="0" aria-valuemax="100">
-                                        </div>
+                                        
+                                        {% if product.overall_score > 0 %}
+                                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 ms-2">
+                                                Score: {{ product.overall_score }}%
+                                            </span>
+                                        {% endif %}
                                     </div>
-                                    <div class="progress-info">
-                                        <small>{{ product.completed_sections }} of {{ product.total_sections }} sections</small>
-                                        <small>{{ product.progress_percentage }}% complete</small>
+
+                                    <!-- Action Buttons -->
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        {% if product.status == 'in_progress' %}
+                                            <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=0) }}" 
+                                               class="btn btn-primary rounded-pill flex-grow-1">
+                                                <i class="bi bi-play-circle me-2"></i>Continue Assessment
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('product_results', product_id=product.id) }}" 
+                                               class="btn btn-primary rounded-pill flex-grow-1">
+                                                <i class="bi bi-bar-chart me-2"></i>View Results
+                                            </a>
+                                        {% endif %}
+
+                                        {% if product.status == 'completed' %}
+                                            <button class="btn btn-success rounded-pill" disabled>
+                                                <i class="bi bi-check-circle me-2"></i>Assessment Complete
+                                            </button>
+                                        {% endif %}
                                     </div>
-                                </div>
-
-                                <!-- Stats Row -->
-                                <div class="row text-center mb-3">
-                                    <div class="col-3">
-                                        <div class="text-primary">
-                                            <i class="bi bi-list-check fs-5"></i>
-                                        </div>
-                                        <small class="text-muted">{{ product.answered_questions }}/{{ product.total_questions }} Questions</small>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="text-success">
-                                            <i class="bi bi-shield-check fs-5"></i>
-                                        </div>
-                                        <small class="text-muted">{{ product.completed_sections }}/{{ product.total_sections }} Sections</small>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="text-info">
-                                            <i class="bi bi-graph-up fs-5"></i>
-                                        </div>
-                                        <small class="text-muted">{{ product.overall_score }}/5.0 Maturity</small>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="{% if product.status == 'completed' %}text-success{% elif product.status == 'questions_done' %}text-warning{% elif product.status == 'under_review' %}text-info{% elif product.status == 'needs_client_response' %}text-danger{% else %}text-primary{% endif %}">
-                                            <i class="bi bi-{% if product.status == 'completed' %}check-circle{% elif product.status == 'questions_done' %}clock{% elif product.status == 'under_review' %}eye{% elif product.status == 'needs_client_response' %}exclamation-triangle{% else %}pencil{% endif %} fs-5"></i>
-                                        </div>
-                                        <small class="text-muted">{{ product.status_display }}</small>
-                                    </div>
-                                </div>
-
-                                {% if product.rejected_count > 0 %}
-                                <!-- Rejected Questions Alert -->
-                                <div class="alert alert-danger mb-3">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                        <strong>{{ product.rejected_count }} question{{ 's' if product.rejected_count != 1 else '' }} need{{ '' if product.rejected_count != 1 else 's' }} your attention</strong>
-                                    </div>
-                                    <small class="text-muted">Reviewer has rejected some responses and requires re-submission.</small>
-                                </div>
-                                {% endif %}
-
-
-
-                                <!-- Action Buttons -->
-                                <div class="d-grid gap-2">
-                                    {% if product.status in ['completed', 'review_done', 'questions_done', 'under_review'] %}
-                                        <a href="{{ url_for('product_results', product_id=product.id) }}"
-                                           class="btn btn-outline-primary rounded-pill">
-                                            <i class="bi bi-bar-chart me-2"></i>View Results
-                                        </a>
-                                    {% else %}
-                                        <button class="btn btn-outline-secondary rounded-pill" disabled title="Complete all questions to view results">
-                                            <i class="bi bi-bar-chart me-2"></i>View Results
-                                        </button>
-                                    {% endif %}
-
-                                    {% if product.status in ['completed', 'review_done', 'questions_done', 'under_review'] %}
-                                        <a href="{{ url_for('download_product_pdf', product_id=product.id) }}"
-                                           class="btn btn-outline-danger rounded-pill"
-                                           title="Download PDF Report">
-                                            <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF
-                                        </a>
-                                    {% endif %}
-
-                                    {% if product.status == 'completed' %}
-                                        <button class="btn btn-success rounded-pill" disabled>
-                                            <i class="bi bi-check-circle me-2"></i>Assessment Complete
-                                        </button>
-                                    {% elif product.status == 'questions_done' %}
-                                        <button class="btn btn-warning rounded-pill" disabled>
-                                            <i class="bi bi-clock me-2"></i>Awaiting Review
-                                        </button>
-                                    {% elif product.status == 'under_review' %}
-                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
-                                           class="btn btn-info rounded-pill">
-                                            <i class="bi bi-eye me-2"></i>View Review Progress
-                                        </a>
-                                    {% elif product.status == 'needs_client_response' %}
-                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
-                                           class="btn btn-danger rounded-pill">
-                                            <i class="bi bi-exclamation-triangle me-2"></i>Review Feedback
-                                        </a>
-                                    {% elif product.status == 'review_done' %}
-                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
-                                           class="btn btn-gradient-primary rounded-pill">
-                                            <i class="bi bi-pencil me-2"></i>Address Feedback
-                                        </a>
-                                    {% else %}
-                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
-                                           class="btn btn-gradient-primary rounded-pill">
-                                            <i class="bi bi-play-circle me-2"></i>Continue Assessment
-                                        </a>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
+                    <!-- Empty State -->
                     <div class="text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted mb-3"></i>
-                        <h4 class="text-muted">No Products Yet</h4>
-                        <p class="text-muted mb-4">Start your security assessment journey by adding your first product.</p>
-                        <a href="{{ url_for('add_product') }}" class="btn btn-gradient-primary btn-lg rounded-pill px-4">
-                            <i class="bi bi-plus-lg me-2"></i>Add Your First Product
+                        <i class="bi bi-box-seam display-1 text-muted mb-3"></i>
+                        <h4 class="text-muted mb-3">No Products Yet</h4>
+                        <p class="text-muted mb-4">Get started by creating your first security assessment.</p>
+                        <a href="{{ url_for('add_product') }}" class="btn btn-primary btn-lg rounded-pill">
+                            <i class="bi bi-plus-circle me-2"></i>Create Your First Assessment
                         </a>
                     </div>
                 {% endif %}
@@ -446,242 +413,84 @@
     </div>
 </div>
 
-<!-- Help Modal -->
-<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="helpModalLabel">
-                    <i class="bi bi-question-circle me-2"></i>How to Use Your Dashboard
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-plus-circle me-2"></i>Adding Products</h6>
-                        <p>Click "Add New Product" to create a new security assessment for your product or service.</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-clipboard-check me-2"></i>Assessments</h6>
-                        <p>Complete questionnaires to evaluate your product's security posture across multiple dimensions.</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-bar-chart me-2"></i>Results</h6>
-                        <p>View comprehensive reports and scores for each completed assessment.</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-shield-check me-2"></i>Security</h6>
-                        <p>All your data is encrypted and securely stored. Only you can access your assessments.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-function showHelpModal() {
-    new bootstrap.Modal(document.getElementById('helpModal')).show();
-}
-
-// Add animation to stats cards
 document.addEventListener('DOMContentLoaded', function() {
-    const statsCards = document.querySelectorAll('.stat-card');
-    statsCards.forEach((card, index) => {
-        setTimeout(() => {
-            card.style.transform = 'translateY(-2px)';
-        }, index * 100);
-    });
-
-    // Add hover effect to product cards
-    const productCards = document.querySelectorAll('.product-card');
-    productCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-3px)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-
-    // Create product comparison chart
-    {% if products|length > 1 %}
-    createProductComparisonChart();
-    {% endif %}
-});
-
-{% if products|length > 1 %}
-function createProductComparisonChart() {
-    const ctx = document.getElementById('productComparisonChart').getContext('2d');
+    // Progress Chart
+    const ctx = document.getElementById('progressChart').getContext('2d');
     
-    // Product data
-    const productData = [
-        {% for product in products %}
-        {
-            name: "{{ product.name }}",
-            score: {{ product.overall_score or 0 }},
-            status: "{{ product.status }}"
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
+    // Sample data - in real implementation, this would come from the backend
+    const chartData = {
+        labels: {% if products %}{{ products|map(attribute='name')|list|tojson|safe }}{% else %}[]{% endif %},
+        datasets: [{
+            label: 'Progress %',
+            data: {% if products %}{{ products|map(attribute='progress_percentage')|list|tojson|safe }}{% else %}[]{% endif %},
+            backgroundColor: [
+                'rgba(78, 115, 223, 0.8)',
+                'rgba(28, 200, 138, 0.8)',
+                'rgba(246, 194, 62, 0.8)',
+                'rgba(231, 74, 59, 0.8)',
+                'rgba(133, 135, 150, 0.8)'
+            ],
+            borderColor: [
+                'rgba(78, 115, 223, 1)',
+                'rgba(28, 200, 138, 1)',
+                'rgba(246, 194, 62, 1)',
+                'rgba(231, 74, 59, 1)',
+                'rgba(133, 135, 150, 1)'
+            ],
+            borderWidth: 2
+        }]
+    };
 
-    // Function to get color based on maturity score
-    function getMaturityColor(score) {
-        if (score < 1) return '#dc3545'; // Red - Initial
-        if (score < 2) return '#fd7e14'; // Orange - Developing  
-        if (score < 3) return '#ffc107'; // Yellow - Defined
-        if (score < 4) return '#20c997'; // Teal - Managed
-        return '#28a745'; // Green - Optimized
-    }
-
-    // Create the chart
     new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: productData.map(p => p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name),
-            datasets: [{
-                label: 'Maturity Score',
-                data: productData.map(p => p.score),
-                backgroundColor: productData.map(p => getMaturityColor(p.score)),
-                borderColor: productData.map(p => getMaturityColor(p.score)),
-                borderWidth: 1,
-                borderRadius: 6,
-                borderSkipped: false,
-            }]
-        },
+        type: 'doughnut',
+        data: chartData,
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
                 },
                 tooltip: {
                     callbacks: {
-                        title: function(context) {
-                            return productData[context[0].dataIndex].name;
-                        },
                         label: function(context) {
-                            const score = context.parsed.y;
-                            let level = 'Initial';
-                            if (score >= 4) level = 'Optimized';
-                            else if (score >= 3) level = 'Managed';
-                            else if (score >= 2) level = 'Defined';
-                            else if (score >= 1) level = 'Developing';
-                            
-                            return [
-                                `Maturity Score: ${score.toFixed(1)}`,
-                                `Level: ${Math.ceil(score)} - ${level}`,
-                                `Status: ${productData[context.dataIndex].status.replace('_', ' ').toUpperCase()}`
-                            ];
+                            return context.label + ': ' + context.raw + '%';
                         }
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 5,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            const levels = ['', 'Initial', 'Developing', 'Defined', 'Managed', 'Optimized'];
-                            return `${value} - ${levels[value] || ''}`;
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            animation: {
-                duration: 1500,
-                easing: 'easeInOutQuart'
             }
         }
     });
-}
-{% endif %}
-</script>
-{% endblock %}
-<script>
-// Handle rejected question responses
-function submitRejectedQuestionResponse(rejectedQuestionId) {
-    const selectedOption = document.querySelector(`input[name="rejected_question_${rejectedQuestionId}"]:checked`);
-    
-    if (!selectedOption) {
-        alert('Please select an option before submitting.');
-        return;
-    }
-    
-    const newOption = selectedOption.value;
-    
-    fetch('/submit_rejected_question_response', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            rejected_question_id: rejectedQuestionId,
-            new_option: newOption
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Response updated successfully! Scores will be recalculated.');
-            // Remove the question from the list
-            const questionItem = document.querySelector(`[data-rejected-id="${rejectedQuestionId}"]`);
-            if (questionItem) {
-                questionItem.remove();
-            }
-            
-            // If no more rejected questions, hide the section
-            const remainingQuestions = document.querySelectorAll('.rejected-question-item');
-            if (remainingQuestions.length === 0) {
-                const section = document.querySelector('.rejected-questions-section').parentElement.parentElement;
-                section.style.display = 'none';
-            }
-            
-            // Optionally reload the page to show updated results
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        } else {
-            alert('Error updating response: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the response.');
-    });
-}
 
-// Add click handlers for option selection
-document.addEventListener('DOMContentLoaded', function() {
-    const optionItems = document.querySelectorAll('.option-item');
-    optionItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
-                
-                // Remove selected class from all options in this group
-                const groupName = radio.name;
-                document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
-                    r.closest('.option-item').classList.remove('selected');
-                });
-                
-                // Add selected class to this option
-                this.classList.add('selected');
-            }
+    // View toggle functionality
+    document.getElementById('listView').addEventListener('change', function() {
+        if (this.checked) {
+            document.querySelectorAll('.product-item').forEach(item => {
+                item.className = 'col-12 product-item mb-3';
+            });
+        }
+    });
+
+    document.getElementById('gridView').addEventListener('change', function() {
+        if (this.checked) {
+            document.querySelectorAll('.product-item').forEach(item => {
+                item.className = 'col-lg-6 col-md-6 product-item';
+            });
+        }
+    });
+
+    // Smooth scroll to products section
+    document.querySelector('a[href="#products-section"]').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('products-section').scrollIntoView({
+            behavior: 'smooth'
         });
     });
 });
 </script>
+{% endblock %}

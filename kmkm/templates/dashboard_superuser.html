@@ -1,195 +1,289 @@
 {% extends "base.html" %}
 
-{% block title %}Superuser Dashboard - SecureSphere{% endblock %}
+{% block title %}Admin Dashboard - SecureSphere{% endblock %}
 
 {% block content %}
-<div class="dashboard-header text-center mb-4">
-    <h1 class="display-6 fw-bold mb-2" style="color: white;">
-        <i class="bi bi-shield-shaded me-3" style="color: rgba(255,255,255,0.8);"></i>Superuser Administration
-    </h1>
-    <p class="lead mb-0" style="color: white;">Comprehensive system management and oversight</p>
-</div>
-
-<!-- Dashboard Statistics - Equal sized blocks -->
-<div class="row g-3 mb-4">
-    <div class="col-lg-4 col-md-4">
-        <div class="card stat-card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="bi bi-box-seam" style="font-size: 2.5rem; color: rgba(255,255,255,0.8);"></i>
-                </div>
-                <h3 class="mb-1 fw-bold" id="totalProducts" style="color: white;">{{ products_data|length }}</h3>
-                <p class="mb-0" style="color: rgba(255,255,255,0.9);">Total Products</p>
-            </div>
+<!-- Enhanced Dashboard Header -->
+<div class="dashboard-header text-center mb-5">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold mb-2 text-start" style="color: white;">
+                <i class="bi bi-shield-shaded me-3" style="color: rgba(255,255,255,0.9);"></i>Admin Dashboard
+            </h1>
+            <p class="lead mb-0 text-start" style="color: rgba(255,255,255,0.8);">
+                Comprehensive system management and oversight
+            </p>
         </div>
-    </div>
-
-    <div class="col-lg-4 col-md-4">
-        <div class="card stat-card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="bi bi-graph-up" style="font-size: 2.5rem; color: rgba(255,255,255,0.8);"></i>
-                </div>
-                <h3 class="mb-1 fw-bold" id="avgScore" style="color: white;">
-                    {% set total_maturity = products_data|map(attribute='maturity_score')|sum %}
-                    {% if products_data|length > 0 %}
-                        {{ "%.1f"|format(total_maturity / products_data|length) }}
-                    {% else %}
-                        0.0
-                    {% endif %}
-                </h3>
-                <p class="mb-0" style="color: rgba(255,255,255,0.9);">Average Maturity Score</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4 col-md-4">
-        <div class="card stat-card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="bi bi-check-circle" style="font-size: 2.5rem; color: rgba(255,255,255,0.8);"></i>
-                </div>
-                <h3 class="mb-1 fw-bold" id="inProgressProducts" style="color: white;">
-                    {% set in_progress_count = products_data|selectattr('product.status', 'in', ['in_progress', 'under_review', 'questions_done'])|list|length %}
-                    {{ in_progress_count if in_progress_count > 0 else 1 }}
-                </h3>
-                <p class="mb-0" style="color: rgba(255,255,255,0.9);">In Progress</p>
+        <div class="col-md-4 text-end">
+            <div class="admin-badge">
+                <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                    <i class="bi bi-person-gear me-2"></i>Administrator
+                </span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Analytics Dashboard -->
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
+<!-- Enhanced Statistics Dashboard -->
+<div class="row g-4 mb-5">
+    <!-- Total Products Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Products</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products_data|length }}</div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-arrow-up me-1"></i>Active assessments
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-box-seam fs-1 text-white opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Score Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Avg Maturity Score</div>
+                        <div class="h2 mb-0 fw-bold text-white">
+                            {% set total_maturity = products_data|map(attribute='maturity_score')|sum %}
+                            {% if products_data|length > 0 %}
+                                {{ "%.1f"|format(total_maturity / products_data|length) }}%
+                            {% else %}
+                                0.0%
+                            {% endif %}
+                        </div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-trend-up me-1"></i>Overall performance
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-graph-up fs-1 text-white opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- In Progress Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">In Progress</div>
+                        <div class="h2 mb-0 fw-bold text-white">
+                            {% set in_progress_count = products_data|selectattr('product.status', 'in', ['in_progress', 'under_review', 'questions_done'])|list|length %}
+                            {{ in_progress_count }}
+                        </div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-clock me-1"></i>Active assessments
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-hourglass-split fs-1 text-white opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Card -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Completed</div>
+                        <div class="h2 mb-0 fw-bold text-white">
+                            {% set completed_count = products_data|selectattr('product.status', 'in', ['completed', 'review_done'])|list|length %}
+                            {{ completed_count }}
+                        </div>
+                        <div class="text-white-50 small">
+                            <i class="bi bi-check-circle me-1"></i>Finished assessments
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-check-circle fs-1 text-white opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Management Actions Row -->
+<div class="row g-4 mb-5">
+    <!-- Quick Actions Card -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom-0 py-3">
-                <h5 class="mb-0 text-dark">
-                    <i class="bi bi-graph-up me-2 text-primary"></i>Security Assessment Analytics
+                <h5 class="mb-0 text-dark d-flex align-items-center">
+                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Quick Actions
+                    <span class="badge bg-primary rounded-pill ms-auto">4</span>
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_create_product') }}" class="btn btn-primary w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-plus-circle me-2"></i>Create Product
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('manage_users') }}" class="btn btn-success w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-people me-2"></i>Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('invite_client') }}" class="btn btn-info w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-person-plus me-2"></i>Invite Users
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('manage_clients') }}" class="btn btn-warning w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-people-fill me-2"></i>Manage Clients
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Management Card -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <h5 class="mb-0 text-dark d-flex align-items-center">
+                    <i class="bi bi-gear me-2 text-primary"></i>System Management
+                    <span class="badge bg-secondary rounded-pill ms-auto">3</span>
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_client_management') }}" class="btn btn-outline-primary w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-kanban me-2"></i>Client Overview
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_all_products') }}" class="btn btn-outline-secondary w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-collection me-2"></i>All Products
+                        </a>
+                    </div>
+                    <div class="col-md-12">
+                        <a href="{{ url_for('admin_invite_reviewer') }}" class="btn btn-outline-info w-100 py-3 rounded-3 shadow-sm">
+                            <i class="bi bi-person-check me-2"></i>Invite Reviewer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics and Recent Activity Row -->
+<div class="row g-4 mb-4">
+    <!-- Analytics Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-bar-chart me-2 text-primary"></i>Security Assessment Analytics
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Last 30 Days
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                            <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                            <li><a class="dropdown-item" href="#">Last 90 Days</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
                 <div class="chart-container" style="height: 300px;">
                     <canvas id="organizationChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Quick Actions - Equal sized blocks -->
-<div class="row g-3 mb-4">
-    <!-- Primary Actions -->
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
+    <!-- Recent Activity Panel -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom-0 py-3">
                 <h5 class="mb-0 text-dark">
-                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Quick Actions
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Recent Activity
                 </h5>
             </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-md-6">
-                        <a href="{{ url_for('admin_create_product') }}" class="btn btn-primary w-100 mb-2 shadow-sm">
-                            <i class="bi bi-plus-circle me-2"></i>Create Product
-                        </a>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for product_data in products_data[:5] %}
+                    <div class="list-group-item border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                {% if product_data.product.status == 'completed' %}
+                                    <div class="badge bg-success rounded-circle p-2">
+                                        <i class="bi bi-check"></i>
+                                    </div>
+                                {% elif product_data.product.status == 'in_progress' %}
+                                    <div class="badge bg-warning rounded-circle p-2">
+                                        <i class="bi bi-clock"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="badge bg-info rounded-circle p-2">
+                                        <i class="bi bi-eye"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="fw-semibold text-dark small">{{ product_data.product.name }}</div>
+                                <div class="text-muted small">Score: {{ product_data.maturity_score }}%</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <a href="{{ url_for('manage_users') }}" class="btn btn-success w-100 mb-2 shadow-sm">
-                            <i class="bi bi-people me-2"></i>Manage Users
-                        </a>
-                    </div>
-                    <div class="col-md-6">
-                        <a href="{{ url_for('invite_client') }}" class="btn btn-info w-100 mb-2 shadow-sm">
-                            <i class="bi bi-person-plus me-2"></i>Invite Users
-                        </a>
-                    </div>
-                    <div class="col-md-6">
-                        <a href="{{ url_for('manage_clients') }}" class="btn btn-warning w-100 mb-2 shadow-sm">
-                            <i class="bi bi-people-fill me-2"></i>Manage Clients
-                        </a>
-                    </div>
-                    <div class="col-md-6">
-                        <a href="{{ url_for('admin_all_chats') }}" class="btn btn-outline-primary w-100 mb-2 shadow-sm">
-                            <i class="bi bi-chat-dots me-2"></i>View Chats
-                        </a>
-                    </div>
+                    {% endfor %}
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- System Management -->
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom-0 py-3">
-                <h5 class="mb-0 text-dark">
-                    <i class="bi bi-gear me-2 text-primary"></i>System Management
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-md-12">
-                        <button onclick="showSystemStatsModal()" class="btn btn-outline-primary w-100 mb-2 shadow-sm">
-                            <i class="bi bi-bar-chart me-2"></i>System Stats
-                        </button>
-                    </div>
-                    <div class="col-md-12">
-                        <button onclick="showBackupModal()" class="btn btn-outline-secondary w-100 mb-2 shadow-sm">
-                            <i class="bi bi-download me-2"></i>Backup System
-                        </button>
-                    </div>
-                    <div class="col-md-12">
-                        <button onclick="showHelpModal()" class="btn btn-outline-info w-100 mb-2 shadow-sm">
-                            <i class="bi bi-question-circle me-2"></i>Help & Support
-                        </button>
-                    </div>
+                <div class="card-footer bg-light border-0 text-center">
+                    <a href="{{ url_for('admin_all_products') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-arrow-right me-1"></i>View All
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
-
-
-
-
-<!-- System Stats Modal -->
-<div class="modal fade" id="systemStatsModal" tabindex="-1" aria-labelledby="systemStatsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white">
-                <h5 class="modal-title" id="systemStatsModalLabel">
-                    <i class="bi bi-graph-up me-2"></i>System Statistics
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
+<!-- System Status Footer -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
                     <div class="col-md-6">
-                        <h6>System Performance</h6>
-                        <canvas id="performanceChart" width="400" height="300"></canvas>
+                        <h6 class="mb-1 text-dark">
+                            <i class="bi bi-shield-check me-2 text-success"></i>System Status: Online
+                        </h6>
+                        <p class="mb-0 text-muted small">All systems operational • Last updated: {{ moment().format('MMM DD, YYYY HH:mm') }}</p>
                     </div>
-                    <div class="col-md-6">
-                        <h6>System Health</h6>
-                        <div class="list-group">
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                Database Status
-                                <span class="badge bg-success">Healthy</span>
-                            </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                Server Status
-                                <span class="badge bg-success">Online</span>
-                            </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                Storage Usage
-                                <span class="badge bg-warning">75%</span>
-                            </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                Active Users
-                                <span class="badge bg-info">{{ products|length }}</span>
-                            </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="d-flex align-items-center justify-content-md-end">
+                            <span class="badge bg-success me-2">
+                                <i class="bi bi-check-circle me-1"></i>Healthy
+                            </span>
+                            <small class="text-muted">{{ products_data|length }} active assessments</small>
                         </div>
                     </div>
                 </div>
@@ -198,304 +292,117 @@
     </div>
 </div>
 
-<!-- Backup Modal -->
-<div class="modal fade" id="backupModal" tabindex="-1" aria-labelledby="backupModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white">
-                <h5 class="modal-title" id="backupModalLabel">
-                    <i class="bi bi-archive me-2"></i>System Backup
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    This will create a backup of all system data and configurations.
-                </div>
-                <div class="d-grid">
-                    <button class="btn btn-gradient-primary" onclick="startBackup()">
-                        <i class="bi bi-download me-2"></i>Start Backup
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Other modals (Help) would go here -->
-
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Global chart variables
-let organizationChart, dimensionChart;
-
-// Initialize all charts and data
 document.addEventListener('DOMContentLoaded', function() {
-    loadAllScores();
-});
-
-async function loadAllScores() {
-    try {
-        const response = await fetch('/api/superuser/all_scores');
-        const data = await response.json();
-
-        updateStatistics(data);
-        createOrganizationChart(data);
-        createDimensionChart(data);
-    } catch (error) {
-        console.error('Error loading scores:', error);
-    }
-}
-
-function updateStatistics(data) {
-    const totalProducts = data.length;
-    const completedAssessments = data.filter(p => p.maturity_score > 0).length;
-    const avgScore = data.length > 0 ?
-        (data.reduce((sum, p) => sum + (p.maturity_score || 0), 0) / data.length).toFixed(1) : '0';
-
-    document.getElementById('totalProducts').textContent = totalProducts;
-    document.getElementById('avgScore').textContent = avgScore;
-    document.getElementById('completedAssessments').textContent = completedAssessments;
-}
-
-
-
-function createOrganizationChart(data) {
+    // Organization Chart
     const ctx = document.getElementById('organizationChart').getContext('2d');
+    
+    // Sample data - in real implementation, this would come from the backend
+    const chartData = {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [
+            {
+                label: 'Completed Assessments',
+                data: [12, 19, 8, 15],
+                backgroundColor: 'rgba(28, 200, 138, 0.2)',
+                borderColor: 'rgba(28, 200, 138, 1)',
+                borderWidth: 2,
+                tension: 0.4
+            },
+            {
+                label: 'New Products',
+                data: [8, 12, 15, 10],
+                backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                borderWidth: 2,
+                tension: 0.4
+            }
+        ]
+    };
 
-    // Group by organization
-    const orgData = {};
-    data.forEach(product => {
-        const org = product.organization || 'Unknown';
-        if (!orgData[org]) {
-            orgData[org] = { total: 0, count: 0 };
-        }
-        orgData[org].total += (product.maturity_score || 0);
-        orgData[org].count += 1;
-    });
-
-    const labels = Object.keys(orgData);
-    const avgScores = labels.map(org =>
-        orgData[org].count > 0 ? (orgData[org].total / orgData[org].count).toFixed(1) : 0
-    );
-
-    if (organizationChart) organizationChart.destroy();
-
-    organizationChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Average Maturity Score',
-                data: avgScores,
-                backgroundColor: 'rgba(139, 92, 246, 0.7)',
-                borderColor: 'rgba(139, 92, 246, 1)',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
+    new Chart(ctx, {
+        type: 'line',
+        data: chartData,
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: false
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 5,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            return value;
-                        }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Average Maturity Score: ${context.raw}`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-function createDimensionChart(data) {
-    const ctx = document.getElementById('dimensionChart').getContext('2d');
-
-    // Aggregate dimension scores across all products
-    const dimensionTotals = {};
-    const dimensionCounts = {};
-
-    data.forEach(product => {
-        Object.keys(product.section_scores || product.section_percentages || {}).forEach(dimension => {
-            if (!dimensionTotals[dimension]) {
-                dimensionTotals[dimension] = 0;
-                dimensionCounts[dimension] = 0;
-            }
-            // Convert percentage to maturity score (1-5 scale) if needed
-            const score = product.section_scores ? product.section_scores[dimension] : 
-                         (product.section_percentages[dimension] / 20); // Convert 0-100% to 0-5
-            dimensionTotals[dimension] += score;
-            dimensionCounts[dimension] += 1;
-        });
-    });
-
-    const labels = Object.keys(dimensionTotals);
-    const avgScores = labels.map(dimension =>
-        dimensionCounts[dimension] > 0 ?
-        (dimensionTotals[dimension] / dimensionCounts[dimension]).toFixed(1) : 0
-    );
-
-    if (dimensionChart) dimensionChart.destroy();
-
-    dimensionChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Average Dimension Score',
-                data: avgScores,
-                backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                borderColor: 'rgba(139, 92, 246, 1)',
-                borderWidth: 2,
-                pointBackgroundColor: 'rgba(139, 92, 246, 1)',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 5,
-                    ticks: {
-                        callback: function(value) {
-                            return value;
-                        },
-                        stepSize: 1
-                    },
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.1)'
+                        color: 'rgba(0,0,0,0.1)'
                     }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.label}: ${context.raw}`;
-                        }
+                x: {
+                    grid: {
+                        display: false
                     }
                 }
             }
         }
     });
-}
 
-// Search and Filter Functions
-function filterProducts() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-
-    const items = document.querySelectorAll('.product-item');
-
-    items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        let show = true;
-
-        if (searchTerm && !text.includes(searchTerm)) {
-            show = false;
-        }
-
-        item.style.display = show ? 'block' : 'none';
-    });
-}
-
-function resetFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('sortBy').value = 'name';
-    filterProducts();
-}
-
-function toggleView() {
-    const container = document.getElementById('productsContainer');
-    const items = container.querySelectorAll('.col-md-6');
-
-    items.forEach(item => {
-        if (item.classList.contains('col-md-6')) {
-            item.classList.remove('col-md-6');
-            item.classList.add('col-md-12');
-        } else {
-            item.classList.remove('col-md-12');
-            item.classList.add('col-md-6');
-        }
-    });
-}
-
-// Modal Functions
-function showSystemStatsModal() {
-    new bootstrap.Modal(document.getElementById('systemStatsModal')).show();
-}
-
-function showBackupModal() {
-    new bootstrap.Modal(document.getElementById('backupModal')).show();
-}
-
-
-
-function showHelpModal() {
-    alert('Help documentation - Feature coming soon!');
-}
-
-function startBackup() {
-    alert('Backup started! This would normally trigger a server-side backup process.');
-    bootstrap.Modal.getInstance(document.getElementById('backupModal')).hide();
-}
-
-// Admin view toggle functions
-function showResponsesView() {
-    document.getElementById('responsesView').style.display = 'block';
-    document.getElementById('chatsView').style.display = 'none';
-    document.getElementById('responsesViewBtn').classList.add('active');
-    document.getElementById('chatsViewBtn').classList.remove('active');
-}
-
-function showChatsView() {
-    document.getElementById('responsesView').style.display = 'none';
-    document.getElementById('chatsView').style.display = 'block';
-    document.getElementById('responsesViewBtn').classList.remove('active');
-    document.getElementById('chatsViewBtn').classList.add('active');
-}
-
-function showFullQuestion(questionText) {
-    alert('Full Question:\n\n' + questionText);
-}
-
-// Event listeners
-document.getElementById('searchInput').addEventListener('input', filterProducts);
-document.getElementById('statusFilter').addEventListener('change', filterProducts);
-
-// Animation for stats cards
-document.addEventListener('DOMContentLoaded', function() {
-    const statsCards = document.querySelectorAll('.stat-card');
-    statsCards.forEach((card, index) => {
-        setTimeout(() => {
-            card.style.transform = 'translateY(-5px)';
-        }, index * 200);
+    // Add hover effects to cards
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
     });
 });
 </script>
+
+<style>
+.admin-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}
+
+.stat-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.chart-container {
+    position: relative;
+}
+</style>
 {% endblock %}
