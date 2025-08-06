@@ -2149,8 +2149,7 @@ def client_comments():
         db.joinedload(LeadComment.lead),
         db.joinedload(LeadComment.response)
     ).filter(
-        LeadComment.client_id == session['user_id'],
-        LeadComment.status.in_(['needs_revision', 'rejected', 'pending', 'client_reply'])  # Exclude approved
+        LeadComment.client_id == session['user_id']
     ).order_by(LeadComment.created_at.desc()).all()
     
     # Group comments by dimension/section
@@ -2168,6 +2167,32 @@ def client_comments():
             grouped_comments['General'].append(comment)
     
     return render_template('client_comments.html', comments=comments, grouped_comments=grouped_comments)
+
+@app.route('/client/question-chats')
+@login_required('client')
+def client_question_chats():
+    """Show active question chats for the client"""
+    user_id = session['user_id']
+    
+    # Get all active question chats for this client
+    chats = QuestionChat.query.options(
+        db.joinedload(QuestionChat.response),
+        db.joinedload(QuestionChat.product),
+        db.joinedload(QuestionChat.lead),
+        db.joinedload(QuestionChat.client)
+    ).filter(
+        QuestionChat.client_id == user_id,
+        QuestionChat.is_active == True
+    ).order_by(QuestionChat.updated_at.desc()).all()
+    
+    # Count unread messages for each chat
+    for chat in chats:
+        chat.unread_messages_for_client = ChatMessage.query.filter_by(
+            chat_id=chat.id,
+            is_read_by_client=False
+        ).filter(ChatMessage.sender_id != user_id).count()
+    
+    return render_template('client_question_chats.html', chats=chats)
 
 @app.route('/client/comment/<int:comment_id>/read')
 @login_required('client')
@@ -3951,6 +3976,50 @@ def get_unread_notifications():
         'unread_count': unread_count,
         'role': role
     })
+
+@app.route('/get_active_chats/<int:response_id>')
+@login_required('lead')
+def get_active_chats(response_id):
+    """Get active chats for a specific response"""
+    try:
+        # Get the response to verify it exists
+        response = QuestionnaireResponse.query.get_or_404(response_id)
+        
+        # Get active chats for this response
+        chats = QuestionChat.query.filter_by(
+            response_id=response_id,
+            is_active=True
+        ).all()
+        
+        chat_data = []
+        for chat in chats:
+            # Count unread messages for lead
+            unread_count = ChatMessage.query.filter_by(
+                chat_id=chat.id,
+                is_read_by_lead=False
+            ).filter(ChatMessage.sender_id != session['user_id']).count()
+            
+            chat_data.append({
+                'id': chat.id,
+                'response_id': chat.response_id,
+                'client_username': chat.client.username,
+                'question': chat.response.question,
+                'answer': chat.response.answer,
+                'review_status': chat.review_status,
+                'unread_count': unread_count,
+                'last_updated': chat.updated_at.strftime('%Y-%m-%d %H:%M')
+            })
+        
+        return jsonify({
+            'success': True,
+            'chats': chat_data
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 if __name__ == '__main__':

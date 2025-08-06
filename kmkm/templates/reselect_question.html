@@ -33,6 +33,19 @@
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
 }
 
+.option-card.disabled-option {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.option-card.disabled-option:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: #dee2e6;
+}
+
 .option-label {
     font-weight: 600;
     color: #495057;
@@ -132,6 +145,9 @@
                     <div class="mb-3">
                         <small class="text-muted">
                             <strong>Section:</strong> {{ response.section.replace('_', ' ').title() }}
+                            {% if response.question | question_number %}
+                            <span class="ms-3"><strong>Question #:</strong> {{ response.question | question_number }}</span>
+                            {% endif %}
                         </small>
                     </div>
                     
@@ -160,7 +176,8 @@
                         <!-- Answer Options -->
                         <div class="mb-4">
                             {% for option in question_data.options %}
-                            <div class="option-card" onclick="selectOption('{{ option.value }}')">
+                            <div class="option-card {% if option.value == response.answer %}disabled-option{% endif %}" 
+                                 {% if option.value != response.answer %}onclick="selectOption('{{ option.value }}')"{% endif %}>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="answer" 
                                            id="option_{{ loop.index }}" value="{{ option.value }}"
@@ -173,7 +190,7 @@
                                     </label>
                                 </div>
                                 {% if option.value == response.answer %}
-                                <small class="text-danger">
+                                <small class="text-danger mt-2 d-block">
                                     <i class="bi bi-ban me-1"></i>This was your rejected answer
                                 </small>
                                 {% endif %}
@@ -190,25 +207,7 @@
                                       placeholder="Add any additional context or explanation for your new selection..."></textarea>
                         </div>
 
-                        <!-- Evidence Upload -->
-                        <div class="mb-4">
-                            <label class="form-label">
-                                <i class="bi bi-paperclip me-2"></i>Supporting Evidence (Optional)
-                            </label>
-                            <div class="file-upload-area">
-                                <input type="file" class="form-control" name="evidence" id="evidence"
-                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.zip">
-                                <div class="mt-2">
-                                    <i class="bi bi-cloud-upload fs-1 text-muted mb-2"></i>
-                                    <p class="text-muted mb-0">
-                                        Upload supporting documentation, screenshots, or evidence
-                                    </p>
-                                    <small class="text-muted">
-                                        Supported formats: PDF, Images, Documents, ZIP files (max 10MB)
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between align-items-center">
