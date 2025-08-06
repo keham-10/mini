@@ -96,11 +96,7 @@
             </p>
         </div>
         <div class="col-md-4 text-end">
-            <div class="user-info">
-                <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
-                    <i class="bi bi-shield-check me-2"></i>Client Portal
-                </span>
-            </div>
+            <!-- Client Portal button removed as per requirements -->
         </div>
     </div>
 </div>
@@ -114,7 +110,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Products</div>
-                        <div class="h2 mb-0 fw-bold text-white">{{ products|length }}</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|length if products else 0 }}</div>
                         <div class="text-white-50 small">
                             <i class="bi bi-trending-up me-1"></i>All assessments
                         </div>
@@ -134,7 +130,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <div class="text-white-50 small fw-bold text-uppercase mb-1">In Progress</div>
-                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', false)|list|length }}</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', false)|list|length if products else 0 }}</div>
                         <div class="text-white-50 small">
                             <i class="bi bi-clock me-1"></i>Active assessments
                         </div>
@@ -154,7 +150,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <div class="text-white-50 small fw-bold text-uppercase mb-1">Completed</div>
-                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', true)|list|length }}</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', true)|list|length if products else 0 }}</div>
                         <div class="text-white-50 small">
                             <i class="bi bi-check-circle me-1"></i>Finished assessments
                         </div>
@@ -167,43 +163,13 @@
         </div>
     </div>
 
-    <!-- Average Score Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Avg Score</div>
-                        <div class="h2 mb-0 fw-bold text-white">
-                            {% if products %}
-                                {% set total_score = products|map(attribute='overall_score')|sum %}
-                                {% set completed_count = products|selectattr('is_complete', 'equalto', true)|list|length %}
-                                {% if completed_count > 0 %}
-                                    {{ "%.1f"|format(total_score / completed_count) }}%
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            {% else %}
-                                0%
-                            {% endif %}
-                        </div>
-                        <div class="text-white-50 small">
-                            <i class="bi bi-graph-up me-1"></i>Overall performance
-                        </div>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="bi bi-award fs-1 text-white opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Average Score Card removed as per requirements -->
 </div>
 
-<!-- Quick Actions and Chart Row -->
+<!-- Quick Actions Row -->
 <div class="row g-4 mb-5">
     <!-- Quick Actions -->
-    <div class="col-lg-4">
+    <div class="col-lg-12">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom-0 py-3">
                 <h5 class="mb-0 text-dark d-flex align-items-center">
@@ -224,7 +190,8 @@
                 <!-- Recent Activity -->
                 <div class="mt-4">
                     <h6 class="text-muted mb-3">Recent Activity</h6>
-                    {% for product in products[:3] %}
+                    {% if products %}
+                        {% for product in products[:3] %}
                     <div class="d-flex align-items-center mb-2">
                         <div class="flex-shrink-0">
                             {% if product.status == 'completed' %}
@@ -252,39 +219,16 @@
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted small">No recent activity</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Progress Chart -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom-0 py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-dark">
-                        <i class="bi bi-bar-chart me-2 text-primary"></i>Assessment Progress Overview
-                    </h5>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            All Products
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">All Products</a></li>
-                            <li><a class="dropdown-item" href="#">In Progress Only</a></li>
-                            <li><a class="dropdown-item" href="#">Completed Only</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body p-4">
-                <div class="chart-container" style="height: 300px;">
-                    <canvas id="progressChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Progress Chart section removed as per requirements -->
 </div>
 
 <!-- Products Section -->
@@ -325,19 +269,20 @@
                                             </p>
                                         </div>
                                         <div class="flex-shrink-0">
-                                            <!-- Progress Circle -->
-                                            <div class="progress-circle">
-                                                <svg class="progress-ring" width="60" height="60">
-                                                    <circle stroke="#e9ecef" stroke-width="4" fill="transparent" r="26" cx="30" cy="30"/>
-                                                    <circle stroke="#4e73df" stroke-width="4" fill="transparent" r="26" cx="30" cy="30" 
-                                                            stroke-dasharray="{{ 2 * 3.14159 * 26 }}" 
-                                                            stroke-dashoffset="{{ 2 * 3.14159 * 26 * (1 - (product.progress_percentage / 100)) }}"
-                                                            stroke-linecap="round"/>
-                                                    <text x="30" y="35" text-anchor="middle" font-size="12" font-weight="bold" fill="#4e73df">
-                                                        {{ product.progress_percentage }}%
-                                                    </text>
-                                                </svg>
-                                            </div>
+                                            <!-- Status indicator instead of progress percentage -->
+                                            {% if product.status == 'completed' %}
+                                                <div class="status-indicator completed">
+                                                    <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+                                                </div>
+                                            {% elif product.status == 'in_progress' %}
+                                                <div class="status-indicator in-progress">
+                                                    <i class="bi bi-clock-fill text-warning" style="font-size: 2rem;"></i>
+                                                </div>
+                                            {% else %}
+                                                <div class="status-indicator">
+                                                    <i class="bi bi-hourglass-split text-secondary" style="font-size: 2rem;"></i>
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     </div>
 
@@ -367,7 +312,7 @@
                                         
                                         {% if product.overall_score > 0 %}
                                             <span class="badge bg-light text-dark rounded-pill px-3 py-2 ms-2">
-                                                Score: {{ product.overall_score }}%
+                                                Score: {{ product.overall_score }}
                                             </span>
                                         {% endif %}
                                     </div>

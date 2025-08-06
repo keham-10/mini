@@ -3746,6 +3746,7 @@ def get_rejected_questions(product_id):
         ).all()
         
         return render_template("dashboard_client.html", 
+                             products=[],  # Provide empty list to prevent NoneType error
                              rejected_questions=rejected_questions,
                              product_id=product_id)
         
