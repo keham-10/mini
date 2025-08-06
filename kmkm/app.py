@@ -3432,7 +3432,7 @@ def admin_client_details(client_id):
 @app.route('/question-chat/<int:chat_id>')
 @app.route('/question_chat/<int:chat_id>')
 @login_required()
-def question_chat(chat_id):
+def view_question_chat(chat_id):
     """View individual chat for a question"""
     chat = QuestionChat.query.get_or_404(chat_id)
     current_user_id = session['user_id']
