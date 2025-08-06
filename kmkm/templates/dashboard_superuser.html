@@ -170,17 +170,17 @@
             <div class="card-body p-4">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <a href="{{ url_for('admin_client_management') }}" class="btn btn-outline-primary w-100 py-3 rounded-3 shadow-sm">
+                        <a href="{{ url_for('manage_clients') }}" class="btn btn-outline-primary w-100 py-3 rounded-3 shadow-sm">
                             <i class="bi bi-kanban me-2"></i>Client Overview
                         </a>
                     </div>
                     <div class="col-md-6">
-                        <a href="{{ url_for('admin_all_products') }}" class="btn btn-outline-secondary w-100 py-3 rounded-3 shadow-sm">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary w-100 py-3 rounded-3 shadow-sm">
                             <i class="bi bi-collection me-2"></i>All Products
                         </a>
                     </div>
                     <div class="col-md-12">
-                        <a href="{{ url_for('admin_invite_reviewer') }}" class="btn btn-outline-info w-100 py-3 rounded-3 shadow-sm">
+                        <a href="{{ url_for('invite_reviewer') }}" class="btn btn-outline-info w-100 py-3 rounded-3 shadow-sm">
                             <i class="bi bi-person-check me-2"></i>Invite Reviewer
                         </a>
                     </div>
@@ -257,7 +257,7 @@
                     {% endfor %}
                 </div>
                 <div class="card-footer bg-light border-0 text-center">
-                    <a href="{{ url_for('admin_all_products') }}" class="btn btn-sm btn-primary">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-primary">
                         <i class="bi bi-arrow-right me-1"></i>View All
                     </a>
                 </div>
