@@ -351,11 +351,11 @@
                                                             </div>
                                                         </div>
                                                         
-                                                        <div class="mb-2">
-                                                            <small class="text-muted">
-                                                                <i class="bi bi-link me-1"></i>{{ product.product_url[:50] }}...
-                                                            </small>
-                                                        </div>
+                                                                                                <div class="mb-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-link me-1"></i>{{ (product.product_url[:50] + '...') if product.product_url else 'No URL provided' }}
+                                            </small>
+                                        </div>
                                                         <div class="mb-2">
                                                             <small class="text-muted">
                                                                 <i class="bi bi-code me-1"></i>{{ product.programming_language }}
