@@ -241,7 +241,7 @@
                             <td>
                                 <div class="client-info">
                                     <div class="client-avatar">
-                                        {{ client.username[0].upper() if client.username else 'U' }}
+                                        {{ client.username[0].upper() if client.username and client.username|length > 0 else 'U' }}
                                     </div>
                                     <div>
                                         <div class="fw-bold">{{ client.username }}</div>

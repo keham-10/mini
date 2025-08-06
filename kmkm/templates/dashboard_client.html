@@ -110,7 +110,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Products</div>
-                        <div class="h2 mb-0 fw-bold text-white">{{ products|length if products else 0 }}</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|length }}</div>
                         <div class="text-white-50 small">
                             <i class="bi bi-trending-up me-1"></i>All assessments
                         </div>
@@ -130,7 +130,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <div class="text-white-50 small fw-bold text-uppercase mb-1">In Progress</div>
-                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', false)|list|length if products else 0 }}</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('status', 'in', ['in_progress', 'under_review', 'needs_client_response'])|list|length }}</div>
                         <div class="text-white-50 small">
                             <i class="bi bi-clock me-1"></i>Active assessments
                         </div>
@@ -150,7 +150,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <div class="text-white-50 small fw-bold text-uppercase mb-1">Completed</div>
-                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('is_complete', 'equalto', true)|list|length if products else 0 }}</div>
+                        <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('status', 'equalto', 'completed')|list|length }}</div>
                         <div class="text-white-50 small">
                             <i class="bi bi-check-circle me-1"></i>Finished assessments
                         </div>
@@ -190,8 +190,7 @@
                 <!-- Recent Activity -->
                 <div class="mt-4">
                     <h6 class="text-muted mb-3">Recent Activity</h6>
-                    {% if products %}
-                        {% for product in products[:3] %}
+                    {% for product in products[:3] %}
                     <div class="d-flex align-items-center mb-2">
                         <div class="flex-shrink-0">
                             {% if product.status == 'completed' %}
@@ -219,10 +218,7 @@
                             </div>
                         </div>
                     </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted small">No recent activity</p>
-                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>
