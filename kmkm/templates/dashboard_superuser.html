@@ -4,46 +4,56 @@
 
 {% block content %}
 <div class="dashboard-header text-center mb-4">
-    <h1 class="display-6 fw-bold mb-2">
-        <i class="bi bi-shield-shaded me-3"></i>Superuser Administration
+    <h1 class="display-6 fw-bold mb-2" style="color: white;">
+        <i class="bi bi-shield-shaded me-3" style="color: rgba(255,255,255,0.8);"></i>Superuser Administration
     </h1>
-    <p class="lead mb-0">Comprehensive system management and oversight</p>
+    <p class="lead mb-0" style="color: white;">Comprehensive system management and oversight</p>
 </div>
 
-<!-- Dashboard Statistics - Reorganized for better view -->
+<!-- Dashboard Statistics - Equal sized blocks -->
 <div class="row g-3 mb-4">
-    <div class="col-lg-4 col-md-6">
-        <div class="card stat-card h-100 border-0 shadow-sm">
+    <div class="col-lg-4 col-md-4">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="bi bi-box-seam text-primary" style="font-size: 2.5rem;"></i>
+                    <i class="bi bi-box-seam" style="font-size: 2.5rem; color: rgba(255,255,255,0.8);"></i>
                 </div>
-                <h3 class="mb-1 fw-bold" id="totalProducts">{{ products_data|length }}</h3>
-                <p class="text-muted mb-0">Products Registered</p>
+                <h3 class="mb-1 fw-bold" id="totalProducts" style="color: white;">{{ products_data|length }}</h3>
+                <p class="mb-0" style="color: rgba(255,255,255,0.9);">Total Products</p>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4 col-md-6">
-        <div class="card stat-card h-100 border-0 shadow-sm">
+    <div class="col-lg-4 col-md-4">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="bi bi-graph-up text-success" style="font-size: 2.5rem;"></i>
+                    <i class="bi bi-graph-up" style="font-size: 2.5rem; color: rgba(255,255,255,0.8);"></i>
                 </div>
-                <h3 class="mb-1 fw-bold" id="avgScore">-</h3>
-                <p class="text-muted mb-0">Average Maturity Score</p>
+                <h3 class="mb-1 fw-bold" id="avgScore" style="color: white;">
+                    {% set total_maturity = products_data|map(attribute='maturity_score')|sum %}
+                    {% if products_data|length > 0 %}
+                        {{ "%.1f"|format(total_maturity / products_data|length) }}
+                    {% else %}
+                        0.0
+                    {% endif %}
+                </h3>
+                <p class="mb-0" style="color: rgba(255,255,255,0.9);">Average Maturity Score</p>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4 col-md-6">
-        <div class="card stat-card h-100 border-0 shadow-sm">
+    <div class="col-lg-4 col-md-4">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="bi bi-check-circle text-info" style="font-size: 2.5rem;"></i>
+                    <i class="bi bi-check-circle" style="font-size: 2.5rem; color: rgba(255,255,255,0.8);"></i>
                 </div>
-                <h3 class="mb-1 fw-bold" id="completedAssessments">-</h3>
-                <p class="text-muted mb-0">Completed Assessments</p>
+                <h3 class="mb-1 fw-bold" id="inProgressProducts" style="color: white;">
+                    {% set in_progress_count = products_data|selectattr('product.status', 'in', ['in_progress', 'under_review', 'questions_done'])|list|length %}
+                    {{ in_progress_count if in_progress_count > 0 else 1 }}
+                </h3>
+                <p class="mb-0" style="color: rgba(255,255,255,0.9);">In Progress</p>
             </div>
         </div>
     </div>
@@ -67,12 +77,10 @@
     </div>
 </div>
 
-
-
-<!-- Quick Actions - Reorganized for better UX -->
+<!-- Quick Actions - Equal sized blocks -->
 <div class="row g-3 mb-4">
     <!-- Primary Actions -->
-    <div class="col-lg-8">
+    <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0 py-3">
                 <h5 class="mb-0 text-dark">
@@ -81,28 +89,28 @@
             </div>
             <div class="card-body">
                 <div class="row g-2">
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-6">
                         <a href="{{ url_for('admin_create_product') }}" class="btn btn-primary w-100 mb-2 shadow-sm">
                             <i class="bi bi-plus-circle me-2"></i>Create Product
                         </a>
                     </div>
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-6">
                         <a href="{{ url_for('manage_users') }}" class="btn btn-success w-100 mb-2 shadow-sm">
                             <i class="bi bi-people me-2"></i>Manage Users
                         </a>
                     </div>
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-6">
                         <a href="{{ url_for('invite_client') }}" class="btn btn-info w-100 mb-2 shadow-sm">
                             <i class="bi bi-person-plus me-2"></i>Invite Users
                         </a>
                     </div>
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-6">
                         <a href="{{ url_for('manage_clients') }}" class="btn btn-warning w-100 mb-2 shadow-sm">
-                            <i class="bi bi-building me-2"></i>Manage Clients
+                            <i class="bi bi-people-fill me-2"></i>Manage Clients
                         </a>
                     </div>
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin_all_chats') }}" class="btn btn-secondary w-100 mb-2 shadow-sm">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_all_chats') }}" class="btn btn-outline-primary w-100 mb-2 shadow-sm">
                             <i class="bi bi-chat-dots me-2"></i>View Chats
                         </a>
                     </div>
@@ -111,77 +119,39 @@
         </div>
     </div>
 
-    <!-- System Tools -->
-    <div class="col-lg-4">
+    <!-- System Management -->
+    <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0 py-3">
                 <h5 class="mb-0 text-dark">
-                    <i class="bi bi-gear me-2 text-secondary"></i>System Tools
+                    <i class="bi bi-gear me-2 text-primary"></i>System Management
                 </h5>
             </div>
             <div class="card-body">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-primary" onclick="showSystemStatsModal()">
-                        <i class="bi bi-speedometer2 me-2"></i>System Stats
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="showBackupModal()">
-                        <i class="bi bi-archive me-2"></i>Backup System
-                    </button>
-                    <button class="btn btn-outline-info" onclick="showHelpModal()">
-                        <i class="bi bi-question-circle me-2"></i>Help & Support
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- Search and Filters - Compact Design -->
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body py-3">
-                <div class="row g-3 align-items-center">
-                    <div class="col-lg-5">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search products, organizations, or users...">
-                        </div>
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <button onclick="showSystemStatsModal()" class="btn btn-outline-primary w-100 mb-2 shadow-sm">
+                            <i class="bi bi-bar-chart me-2"></i>System Stats
+                        </button>
                     </div>
-                    <div class="col-lg-2">
-                        <select class="form-select" id="statusFilter">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
-                            <option value="pending">Pending</option>
-                        </select>
+                    <div class="col-md-12">
+                        <button onclick="showBackupModal()" class="btn btn-outline-secondary w-100 mb-2 shadow-sm">
+                            <i class="bi bi-download me-2"></i>Backup System
+                        </button>
                     </div>
-                    <div class="col-lg-2">
-                        <select class="form-select" id="sortBy">
-                            <option value="name">Sort by Name</option>
-                            <option value="date">Sort by Date</option>
-                            <option value="status">Sort by Status</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-secondary" onclick="resetFilters()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Reset
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="toggleView()">
-                                <i class="bi bi-grid-3x3-gap me-1"></i>View
-                            </button>
-                        </div>
+                    <div class="col-md-12">
+                        <button onclick="showHelpModal()" class="btn btn-outline-info w-100 mb-2 shadow-sm">
+                            <i class="bi bi-question-circle me-2"></i>Help & Support
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+
 
 
 

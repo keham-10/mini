@@ -369,20 +369,20 @@
                                                             </small>
                                                         </div>
                                                         
-                                                        <div class="product-actions">
-                                                            <a href="{{ url_for('product_results', product_id=product.id) }}" 
-                                                               class="btn btn-outline-primary btn-sm">
-                                                                <i class="bi bi-bar-chart me-1"></i>Results
-                                                            </a>
-                                                            <a href="{{ url_for('communication', product_id=product.id) }}" 
-                                                               class="btn btn-outline-info btn-sm">
-                                                                <i class="bi bi-chat-dots me-1"></i>Chat
-                                                            </a>
-                                                            <a href="{{ url_for('download_product_pdf', product_id=product.id) }}" 
-                                                               class="btn btn-outline-danger btn-sm">
-                                                                <i class="bi bi-file-pdf me-1"></i>PDF
-                                                            </a>
-                                                        </div>
+                                                                                                <div class="product-actions">
+                                            <a href="{{ url_for('admin_product_results', product_id=product.id) }}" 
+                                               class="btn btn-primary btn-sm">
+                                                <i class="bi bi-eye me-1"></i>View Results
+                                            </a>
+                                            <a href="{{ url_for('list_question_chats', product_id=product.id) }}" 
+                                               class="btn btn-outline-info btn-sm">
+                                                <i class="bi bi-chat-dots me-1"></i>Chat
+                                            </a>
+                                            <a href="{{ url_for('download_product_pdf', product_id=product.id) }}" 
+                                               class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-file-pdf me-1"></i>PDF
+                                            </a>
+                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

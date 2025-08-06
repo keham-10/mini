@@ -3517,8 +3517,7 @@ def admin_all_chats():
         db.joinedload(QuestionChat.client),
         db.joinedload(QuestionChat.lead),
         db.joinedload(QuestionChat.product),
-        db.joinedload(QuestionChat.response),
-        db.selectinload(QuestionChat.messages)
+        db.joinedload(QuestionChat.response)
     ).order_by(QuestionChat.updated_at.desc()).all()
     
     # Get statistics
