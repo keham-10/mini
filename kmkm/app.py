@@ -1943,17 +1943,26 @@ def fill_questionnaire_section(product_id, section_idx):
     ]
     progress = [(i, s, (s in completed_sections)) for i, s in enumerate(sections)]
 
-    # Get review status for questions in this section
+    # Get review status and chat information for questions in this section
     question_review_status = {}
+    question_chats = {}
     if existing_responses:
         response_ids = [resp.id for resp in existing_responses]
         lead_comments = LeadComment.query.filter(LeadComment.response_id.in_(response_ids)).all()
+        
+        # Get chat information for each response
+        chats = QuestionChat.query.filter(QuestionChat.response_id.in_(response_ids)).all()
+        chat_by_response = {chat.response_id: chat for chat in chats}
+        
         for comment in lead_comments:
             for resp in existing_responses:
                 if resp.id == comment.response_id:
                     for i, q in enumerate(questions):
                         if q['question'] == resp.question:
                             question_review_status[i] = comment.status
+                            # Add chat information if exists
+                            if resp.id in chat_by_response:
+                                question_chats[i] = chat_by_response[resp.id]
                             break
 
     return render_template(
@@ -1965,7 +1974,8 @@ def fill_questionnaire_section(product_id, section_idx):
         total_sections=len(sections),
         progress=progress,
         existing_answers=existing_answers,
-        question_review_status=question_review_status
+        question_review_status=question_review_status,
+        question_chats=question_chats
     )
 
 @app.route('/product/<int:product_id>/results')
