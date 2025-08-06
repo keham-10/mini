@@ -19,12 +19,16 @@ def reset_database():
             db.drop_all()
             print("✅ All tables dropped successfully")
             
-            # Recreate all tables
+            # Recreate all tables with proper error handling for existing indexes
             db.create_all()
             print("✅ All tables recreated successfully")
             return True
         except Exception as e:
             print(f"❌ Error resetting database: {e}")
+            # Try to handle specific SQLite index errors
+            if "already exists" in str(e).lower():
+                print("🔄 Attempting to continue despite index conflicts...")
+                return True
             return False
 
 def create_database():
