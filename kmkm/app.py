@@ -83,6 +83,37 @@ def question_number_filter(question_text):
     """Get the question number for a given question text"""
     return get_question_number_from_csv(question_text)
 
+# Custom template context processor to provide moment-like functionality
+@app.context_processor
+def inject_datetime():
+    """Inject datetime functions into template context"""
+    def moment():
+        """Return current datetime with format method"""
+        class MomentWrapper:
+            def __init__(self, dt=None):
+                self.dt = dt or datetime.now()
+            
+            def format(self, format_str):
+                """Format datetime using moment.js-like format strings"""
+                # Convert moment.js format to Python strftime format
+                format_map = {
+                    'MMM': '%b',    # Short month name
+                    'DD': '%d',     # Day of month (01-31)
+                    'YYYY': '%Y',   # Full year
+                    'HH': '%H',     # Hour (00-23)
+                    'mm': '%M'      # Minute (00-59)
+                }
+                
+                python_format = format_str
+                for moment_fmt, python_fmt in format_map.items():
+                    python_format = python_format.replace(moment_fmt, python_fmt)
+                
+                return self.dt.strftime(python_format)
+        
+        return MomentWrapper()
+    
+    return dict(moment=moment)
+
 # ==================== DATABASE MODELS ====================
 
 class User(db.Model):
