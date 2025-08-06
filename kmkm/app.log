@@ -1,12 +1,30 @@
 nohup: ignoring input
+🚀 SecureSphere Application Startup
+==================================================
+🔍 Checking requirements...
+✅ devweb.csv found
+✅ instance directory ready
+✅ uploads directory ready
+📦 Testing app import...
 ✅ Template error handlers and custom filters loaded
-🚀 Starting SecureSphere Application
-Initializing database...
-✅ Database tables initialized
-🔧 Checking for naive datetime entries...
-✅ Fixed 1 naive datetime entries
-✅ Application ready
+✅ App module imports successfully
+🗄️ Initializing database...
+✅ Database initialized successfully
+==================================================
+✅ All checks passed! Starting application...
+🌐 Application will be available at: http://127.0.0.1:5001
+👤 Default admin credentials:
+   Username: admin
+   Password: AdminPass123
+==================================================
  * Serving Flask app 'app'
  * Debug mode: on
-Address already in use
-Port 5001 is in use by another program. Either identify and stop that program, or start the server with a different port.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.30.0.2:5001
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 109-236-550
+127.0.0.1 - - [06/Aug/2025 13:55:57] "HEAD / HTTP/1.1" 200 -
