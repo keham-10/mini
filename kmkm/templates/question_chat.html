@@ -47,10 +47,18 @@
                                 <i class="bi bi-question-circle me-2"></i>Question:
                             </h6>
                             <p class="mb-2">{{ chat.response.question }}</p>
-                            <p class="mb-0">
-                                <strong>Client Answer:</strong> 
-                                <span class="badge bg-info">{{ chat.response.answer }}</span>
-                            </p>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div>
+                                    <strong>Client Answer:</strong> 
+                                    <span class="badge bg-info">{{ chat.response.answer }}</span>
+                                </div>
+                                {% if session.role == 'client' and chat.review_status == 'rejected' and chat.is_active %}
+                                <a href="{{ url_for('reselect_question', response_id=chat.response.id) }}" 
+                                   class="btn btn-danger btn-sm">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Re-select Answer
+                                </a>
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <small class="text-muted">

@@ -74,17 +74,34 @@
                                 <div class="alert 
                                           {% if is_approved %}alert-success{% elif review_status == 'needs_revision' %}alert-warning{% elif review_status == 'rejected' %}alert-danger{% endif %} 
                                           mb-3">
-                                    <div class="d-flex align-items-center">
-                                        {% if is_approved %}
-                                            <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.2em;"></i>
-                                            <strong class="text-success">✓ Question Approved</strong>
-                                        {% else %}
-                                            <i class="bi bi-{% if review_status == 'needs_revision' %}exclamation-triangle{% elif review_status == 'rejected' %}x-circle{% endif %} me-2"></i>
-                                            <strong>
-                                                {% if review_status == 'needs_revision' %}Needs Revision
-                                                {% elif review_status == 'rejected' %}Rejected - Requires Re-submission
-                                                {% endif %}
-                                            </strong>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            {% if is_approved %}
+                                                <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.2em;"></i>
+                                                <strong class="text-success">✓ Question Approved</strong>
+                                            {% else %}
+                                                <i class="bi bi-{% if review_status == 'needs_revision' %}exclamation-triangle{% elif review_status == 'rejected' %}x-circle{% endif %} me-2"></i>
+                                                <strong>
+                                                    {% if review_status == 'needs_revision' %}Needs Revision
+                                                    {% elif review_status == 'rejected' %}Rejected - Requires Re-submission
+                                                    {% endif %}
+                                                </strong>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if not is_approved and (review_status == 'needs_revision' or review_status == 'rejected') %}
+                                            {% if question_chats.get(loop.index0) %}
+                                                <div class="d-flex align-items-center">
+                                                    {% if question_chats[loop.index0].unread_messages_for_client > 0 %}
+                                                        <span class="badge bg-danger me-2">{{ question_chats[loop.index0].unread_messages_for_client }}</span>
+                                                    {% endif %}
+                                                    <a href="{{ url_for('view_question_chat', chat_id=question_chats[loop.index0].id) }}" 
+                                                       class="btn btn-sm {% if review_status == 'needs_revision' %}btn-warning{% else %}btn-danger{% endif %}">
+                                                        <i class="bi bi-chat-dots me-1"></i>
+                                                        {% if review_status == 'needs_revision' %}Chat{% else %}Re-select{% endif %}
+                                                    </a>
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                     {% if lead_comment and lead_comment.comment %}

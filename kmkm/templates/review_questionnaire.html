@@ -212,9 +212,26 @@
 </style>
 
 <script>
-// Simple confirmation for approval
+// Confirmation for different review actions
 document.getElementById('reviewForm')?.addEventListener('submit', function(e) {
-    if (!confirm('Are you sure you want to APPROVE this question?\n\nThe question will be frozen and finalized with a tick mark.')) {
+    const action = e.submitter?.value;
+    let confirmMessage = '';
+    
+    switch(action) {
+        case 'approve':
+            confirmMessage = 'Are you sure you want to APPROVE this question?\n\nThe question will be frozen and finalized with a tick mark.';
+            break;
+        case 'needs_revision':
+            confirmMessage = 'Are you sure you want to mark this question as NEEDS REVISION?\n\nThe client will be able to provide additional evidence and comments.';
+            break;
+        case 'reject':
+            confirmMessage = 'Are you sure you want to REJECT this question?\n\nThe client will need to re-select their answer.';
+            break;
+        default:
+            confirmMessage = 'Are you sure you want to proceed with this action?';
+    }
+    
+    if (!confirm(confirmMessage)) {
         e.preventDefault();
     }
 });
