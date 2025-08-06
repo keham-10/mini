@@ -3901,51 +3901,6 @@ def get_question_status(response_id):
         'needs_client_response': response.needs_client_response
     })
 
-@app.route('/approve_from_chat/<int:chat_id>', methods=['POST'])
-@login_required('lead')
-def approve_from_chat(chat_id):
-    """Approve a question directly from the chat interface"""
-    chat = QuestionChat.query.get_or_404(chat_id)
-    
-    # Verify lead can access this chat
-    lead = User.query.get(session['user_id'])
-    if not lead.can_access_client_data(chat.client_id):
-        flash('You are not authorized to approve this question.')
-        return redirect(url_for('dashboard'))
-    
-    # Update response status to approved
-    response = chat.response
-    response.is_reviewed = True
-    response.is_approved = True
-    response.needs_client_response = False
-    response.review_status = 'approved'
-    response.updated_at = datetime.now(timezone.utc)
-    
-    # Close the chat
-    chat.review_status = 'approved'
-    chat.is_active = False
-    chat.updated_at = datetime.now(timezone.utc)
-    
-    # Add approval message to chat
-    approval_message = ChatMessage(
-        chat_id=chat_id,
-        sender_id=session['user_id'],
-        message_type='status_change',
-        content='✅ Question approved and finalized by lead',
-        is_read_by_client=False,
-        is_read_by_lead=True
-    )
-    db.session.add(approval_message)
-    
-    db.session.commit()
-    
-    # Recalculate scores
-    calculate_and_store_scores(response.product_id, response.user_id)
-    update_product_status(response.product_id, response.user_id)
-    
-    flash('Question approved successfully!')
-    return redirect(url_for('question_chat', chat_id=chat_id))
-
 @app.route('/get_unread_notifications')
 @login_required()
 def get_unread_notifications():
