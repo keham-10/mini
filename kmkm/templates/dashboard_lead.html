@@ -339,13 +339,11 @@
                                                             <i class="bi bi-pencil-square me-1"></i>Review
                                                         </a>
                                                         {% if review_status in ['needs_revision', 'rejected'] %}
-                                                        <button class="btn btn-outline-info btn-sm ms-1 view-chats-btn"
-                                                                data-response-id="{{ resp.id }}"
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#activeChatsModal"
-                                                                title="View Active Question Chats">
+                                                        <a href="{{ url_for('list_question_chats', product_id=product_id) }}" 
+                                                           class="btn btn-outline-info btn-sm ms-1"
+                                                           title="View Question Chats">
                                                             <i class="bi bi-eye"></i>
-                                                        </button>
+                                                        </a>
                                                         {% endif %}
                                                     {% endif %}
                                                                 </td>
@@ -496,119 +494,10 @@ function showHelpModal() {
 </script>
 </div>
 
-<!-- Active Question Chats Modal -->
-<div class="modal fade" id="activeChatsModal" tabindex="-1" aria-labelledby="activeChatsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="activeChatsModalLabel">
-                    <i class="bi bi-chat-dots me-2"></i>Active Question Chats
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="activeChatsContent">
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <script>
-// Handle view chats button click
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.view-chats-btn')) {
-        const btn = e.target.closest('.view-chats-btn');
-        const responseId = btn.dataset.responseId;
-        loadActiveChats(responseId);
-    }
-});
-
-function loadActiveChats(responseId) {
-    const content = document.getElementById('activeChatsContent');
-    content.innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-    `;
-    
-    // Fetch active chats for this response
-    fetch(`/get_active_chats/${responseId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displayActiveChats(data.chats);
-            } else {
-                content.innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        No active chats found for this question.
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            content.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-circle me-2"></i>
-                    Error loading chats. Please try again.
-                </div>
-            `;
-        });
-}
-
-function displayActiveChats(chats) {
-    const content = document.getElementById('activeChatsContent');
-    
-    if (chats.length === 0) {
-        content.innerHTML = `
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                No active chats found for this question.
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<div class="row">';
-    chats.forEach(chat => {
-        const statusClass = chat.review_status === 'needs_revision' ? 'warning' : 'danger';
-        const statusIcon = chat.review_status === 'needs_revision' ? 'exclamation-triangle' : 'x-circle';
-        
-        html += `
-            <div class="col-12 mb-3">
-                <div class="card">
-                    <div class="card-header bg-${statusClass} text-white d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-${statusIcon} me-1"></i>${chat.review_status.replace('_', ' ').toUpperCase()}</span>
-                        ${chat.unread_count > 0 ? `<span class="badge bg-danger">${chat.unread_count} unread</span>` : ''}
-                    </div>
-                    <div class="card-body">
-                        <h6 class="card-title">Client: ${chat.client_username}</h6>
-                        <p class="card-text small text-muted mb-2">${chat.question}</p>
-                        <p class="small mb-2"><strong>Answer:</strong> <span class="badge bg-info">${chat.answer}</span></p>
-                        <p class="small text-muted mb-3">Last updated: ${chat.last_updated}</p>
-                        <div class="d-flex gap-2">
-                            <a href="/question_chat/${chat.id}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-chat-dots me-1"></i>View Chat
-                            </a>
-                            <a href="/review_questionnaire/${chat.response_id}" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-pencil-square me-1"></i>Review Question
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    
-    content.innerHTML = html;
-}
+// Dashboard functionality
 </script>
 
 {% endblock %}
