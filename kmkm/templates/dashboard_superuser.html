@@ -10,62 +10,56 @@
     <p class="lead mb-0">Comprehensive system management and oversight</p>
 </div>
 
-<!-- Dashboard Statistics -->
-<div class="dashboard-stats">
-    <div class="card stat-card text-center">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-8">
-                    <h3 class="mb-0" id="totalProducts">{{ products_data|length }}</h3>
-                    <p class="mb-0">Products Registered</p>
+<!-- Dashboard Statistics - Reorganized for better view -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-4 col-md-6">
+        <div class="card stat-card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-box-seam text-primary" style="font-size: 2.5rem;"></i>
                 </div>
-                <div class="col-4">
-                    <i class="bi bi-box-seam icon"></i>
-                </div>
+                <h3 class="mb-1 fw-bold" id="totalProducts">{{ products_data|length }}</h3>
+                <p class="text-muted mb-0">Products Registered</p>
             </div>
         </div>
     </div>
 
-    <div class="card stat-card text-center">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-8">
-                    <h3 class="mb-0" id="avgScore">-</h3>
-                    <p class="mb-0">Avg. Maturity Score</p>
+    <div class="col-lg-4 col-md-6">
+        <div class="card stat-card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-graph-up text-success" style="font-size: 2.5rem;"></i>
                 </div>
-                <div class="col-4">
-                    <i class="bi bi-graph-up icon"></i>
-                </div>
+                <h3 class="mb-1 fw-bold" id="avgScore">-</h3>
+                <p class="text-muted mb-0">Average Maturity Score</p>
             </div>
         </div>
     </div>
 
-    <div class="card stat-card text-center">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-8">
-                    <h3 class="mb-0" id="completedAssessments">-</h3>
-                    <p class="mb-0">Completed</p>
+    <div class="col-lg-4 col-md-6">
+        <div class="card stat-card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-check-circle text-info" style="font-size: 2.5rem;"></i>
                 </div>
-                <div class="col-4">
-                    <i class="bi bi-check-circle icon"></i>
-                </div>
+                <h3 class="mb-1 fw-bold" id="completedAssessments">-</h3>
+                <p class="text-muted mb-0">Completed Assessments</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Interactive Charts Section -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card dashboard-card h-100">
-            <div class="card-header bg-gradient-primary text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-bar-chart me-2"></i>Score Distribution by Organization
+<!-- Analytics Dashboard -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <h5 class="mb-0 text-dark">
+                    <i class="bi bi-graph-up me-2 text-primary"></i>Security Assessment Analytics
                 </h5>
             </div>
             <div class="card-body">
-                <div class="chart-container">
+                <div class="chart-container" style="height: 300px;">
                     <canvas id="organizationChart"></canvas>
                 </div>
             </div>
@@ -75,75 +69,67 @@
 
 
 
-<!-- Admin Tools -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card dashboard-card">
-            <div class="card-header bg-gradient-primary text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-tools me-2"></i>Admin Tools
+<!-- Quick Actions - Reorganized for better UX -->
+<div class="row g-3 mb-4">
+    <!-- Primary Actions -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <h5 class="mb-0 text-dark">
+                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Quick Actions
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <a href="{{ url_for('admin_create_product') }}" class="btn btn-gradient-primary rounded-pill">
-                                <i class="bi bi-plus-circle me-2"></i>Create Product
-                            </a>
-                        </div>
+                <div class="row g-2">
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin_create_product') }}" class="btn btn-primary w-100 mb-2 shadow-sm">
+                            <i class="bi bi-plus-circle me-2"></i>Create Product
+                        </a>
                     </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('manage_users') }}" class="btn btn-success w-100 mb-2 shadow-sm">
+                            <i class="bi bi-people me-2"></i>Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('invite_client') }}" class="btn btn-info w-100 mb-2 shadow-sm">
+                            <i class="bi bi-person-plus me-2"></i>Invite Users
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('manage_clients') }}" class="btn btn-warning w-100 mb-2 shadow-sm">
+                            <i class="bi bi-building me-2"></i>Manage Clients
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin_all_chats') }}" class="btn btn-secondary w-100 mb-2 shadow-sm">
+                            <i class="bi bi-chat-dots me-2"></i>View Chats
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <a href="{{ url_for('manage_users') }}" class="btn btn-primary rounded-pill">
-                                <i class="bi bi-people me-2"></i>User Management
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <a href="{{ url_for('invite_client') }}" class="btn btn-success rounded-pill" style="background: #059669; border-color: #059669;">
-                                <i class="bi bi-person-plus me-2"></i>Invite Users
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <a href="{{ url_for('manage_clients') }}" class="btn btn-info rounded-pill" style="background: #0ea5e9; border-color: #0ea5e9;">
-                                <i class="bi bi-people me-2"></i>Manage Clients
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <a href="{{ url_for('admin_all_chats') }}" class="btn btn-warning rounded-pill" style="background: #f59e0b; border-color: #f59e0b;">
-                                <i class="bi bi-chat-dots me-2"></i>View All Chats
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <button class="btn btn-outline-primary rounded-pill" onclick="showSystemStatsModal()">
-                                <i class="bi bi-speedometer2 me-2"></i>System Stats
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="d-grid">
-                            <button class="btn btn-outline-secondary rounded-pill" onclick="showBackupModal()">
-                                <i class="bi bi-archive me-2"></i>Backup System
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="d-grid">
-                            <button class="btn btn-outline-info rounded-pill" onclick="showHelpModal()">
-                                <i class="bi bi-question-circle me-2"></i>Help
-                            </button>
-                        </div>
-                    </div>
+    <!-- System Tools -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <h5 class="mb-0 text-dark">
+                    <i class="bi bi-gear me-2 text-secondary"></i>System Tools
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="showSystemStatsModal()">
+                        <i class="bi bi-speedometer2 me-2"></i>System Stats
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="showBackupModal()">
+                        <i class="bi bi-archive me-2"></i>Backup System
+                    </button>
+                    <button class="btn btn-outline-info" onclick="showHelpModal()">
+                        <i class="bi bi-question-circle me-2"></i>Help & Support
+                    </button>
                 </div>
             </div>
         </div>
@@ -152,21 +138,21 @@
 
 
 
-<!-- Filter and Search -->
-<div class="row mb-4">
+<!-- Search and Filters - Compact Design -->
+<div class="row g-3 mb-4">
     <div class="col-12">
-        <div class="card dashboard-card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-lg-5">
                         <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-search"></i>
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search text-muted"></i>
                             </span>
-                            <input type="text" class="form-control" id="searchInput" placeholder="Search products...">
+                            <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search products, organizations, or users...">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-2">
                         <select class="form-select" id="statusFilter">
                             <option value="">All Status</option>
                             <option value="active">Active</option>
@@ -174,17 +160,22 @@
                             <option value="pending">Pending</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-2">
                         <select class="form-select" id="sortBy">
                             <option value="name">Sort by Name</option>
                             <option value="date">Sort by Date</option>
                             <option value="status">Sort by Status</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-outline-primary w-100" onclick="resetFilters()">
-                            <i class="bi bi-arrow-clockwise"></i> Reset
-                        </button>
+                    <div class="col-lg-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="toggleView()">
+                                <i class="bi bi-grid-3x3-gap me-1"></i>View
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

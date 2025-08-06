@@ -3518,7 +3518,7 @@ def admin_all_chats():
         db.joinedload(QuestionChat.lead),
         db.joinedload(QuestionChat.product),
         db.joinedload(QuestionChat.response),
-        db.joinedload(QuestionChat.messages)
+        db.selectinload(QuestionChat.messages)
     ).order_by(QuestionChat.updated_at.desc()).all()
     
     # Get statistics
@@ -3688,14 +3688,26 @@ def download_product_pdf(product_id):
     owner = User.query.get(product.owner_id)
     
     try:
+        # Ensure upload folder exists
+        os.makedirs(app.config.get('UPLOAD_FOLDER', 'uploads'), exist_ok=True)
+        
         # Generate PDF filename
         safe_product_name = "".join(c for c in product.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"SecurityAssessment_{safe_product_name}_{timestamp}.pdf"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), filename)
+        
+        # Check if we have data to generate PDF
+        if not responses:
+            flash('No assessment data available for PDF generation.')
+            return redirect(request.referrer or url_for('dashboard'))
         
         # Generate PDF
         pdf_data = generate_product_pdf(product, responses, scores, owner, filepath)
+        
+        # Verify PDF was created
+        if not os.path.exists(filepath):
+            raise Exception("PDF file was not created successfully")
         
         # Send file
         return send_file(
@@ -3705,9 +3717,15 @@ def download_product_pdf(product_id):
             mimetype='application/pdf'
         )
         
+    except ImportError as e:
+        print(f"PDF generation library error: {e}")
+        flash('PDF generation is currently unavailable. Please contact administrator.')
+        return redirect(request.referrer or url_for('dashboard'))
     except Exception as e:
         print(f"Error generating PDF: {e}")
-        flash('Error generating PDF report. Please try again.')
+        import traceback
+        traceback.print_exc()
+        flash(f'Error generating PDF report: {str(e)}. Please try again.')
         return redirect(request.referrer or url_for('dashboard'))
 
 if __name__ == '__main__':
