@@ -294,6 +294,11 @@
                             </td>
                             <td onclick="event.stopPropagation();">
                                 <div class="action-buttons">
+                                    <a href="{{ url_for('admin_client_products', client_id=client.id) }}" 
+                                       class="btn btn-primary btn-sm" 
+                                       title="View Products">
+                                        <i class="bi bi-box-seam"></i>
+                                    </a>
                                     <button class="btn btn-outline-primary btn-sm" 
                                             onclick="viewClientDetails({{ client.id }})" 
                                             title="View Details">
@@ -368,15 +373,10 @@
                                                         </div>
                                                         
                                                                                                 <div class="product-actions">
-                                            <a href="{{ url_for('admin_product_results', product_id=product.id) }}" 
+                                            <a href="{{ url_for('admin_client_products', client_id=client.id) }}" 
                                                class="btn btn-primary btn-sm">
-                                                <i class="bi bi-eye me-1"></i>View Results
+                                                <i class="bi bi-box-seam me-1"></i>View Products
                                             </a>
-                                            <a href="{{ url_for('list_question_chats', product_id=product.id) }}" 
-                                               class="btn btn-outline-info btn-sm">
-                                                <i class="bi bi-chat-dots me-1"></i>Chat
-                                            </a>
-
                                         </div>
                                                     </div>
                                                 </div>

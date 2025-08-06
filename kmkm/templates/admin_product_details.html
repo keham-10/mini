@@ -55,6 +55,125 @@
     </div>
 </div>
 
+<!-- Product Details Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-gradient-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Application Name</h6>
+                            <p class="mb-0">{{ product.application_name or product.name or 'Not specified' }}</p>
+                        </div>
+                        
+                        {% if product.description %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Description</h6>
+                            <p class="mb-0">{{ product.description }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.product_owner %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Product Owner</h6>
+                            <p class="mb-0">{{ product.product_owner }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.business_criticality %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Business Criticality</h6>
+                            <span class="badge bg-{{ 'danger' if product.business_criticality == 'High' else 'warning' if product.business_criticality == 'Medium' else 'success' }}">
+                                {{ product.business_criticality }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        {% if product.product_url %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Product URL</h6>
+                            <a href="{{ product.product_url }}" target="_blank" class="text-primary">
+                                <i class="bi bi-link-45deg me-1"></i>{{ product.product_url }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.programming_language %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Programming Language</h6>
+                            <span class="badge bg-info">{{ product.programming_language }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.cloud_platform %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Cloud Platform</h6>
+                            <span class="badge bg-primary">{{ product.cloud_platform }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.cicd_platform %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">CI/CD Platform</h6>
+                            <span class="badge bg-secondary">{{ product.cicd_platform }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.additional_details %}
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Additional Details</h6>
+                            <p class="mb-0">{{ product.additional_details }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Product Creation Questions -->
+                {% if product.q1_description or product.q2_description or product.q3_description or product.q4_description or product.q5_description %}
+                <hr class="my-4">
+                <h6 class="text-muted mb-3">Client Provided Information</h6>
+                <div class="row">
+                    {% for i in range(1, 11) %}
+                        {% set category_field = 'q' + i|string + '_category' %}
+                        {% set description_field = 'q' + i|string + '_description' %}
+                        {% set other_field = 'q' + i|string + '_other' %}
+                        {% set category = product[category_field] %}
+                        {% set description = product[description_field] %}
+                        {% set other = product[other_field] %}
+                        
+                        {% if description %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body py-3">
+                                    {% if category %}
+                                    <div class="mb-2">
+                                        <span class="badge bg-outline-primary">{{ category }}</span>
+                                        {% if other %}
+                                        <span class="badge bg-outline-secondary">{{ other }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                    <p class="mb-0 small">{{ description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Action Buttons -->
 <div class="row mb-4">
     <div class="col-12">

@@ -3226,6 +3226,22 @@ def manage_clients():
     
     return render_template('admin_client_management.html', clients=clients, organizations=organizations)
 
+@app.route('/admin/client/<int:client_id>/products')
+@login_required('superuser')
+def admin_client_products(client_id):
+    # Get the client
+    client = User.query.get_or_404(client_id)
+    
+    # Ensure the user is a client
+    if client.role != 'client':
+        flash('Invalid client selected.', 'error')
+        return redirect(url_for('manage_clients'))
+    
+    # Get all products for this client
+    products = Product.query.filter_by(owner_id=client_id).order_by(Product.created_at.desc()).all()
+    
+    return render_template('admin_client_products.html', client=client, products=products)
+
 @app.route('/admin/manage_users')
 @login_required('superuser')
 def manage_users():

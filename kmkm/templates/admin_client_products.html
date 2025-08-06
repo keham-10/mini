@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Client Products - {{ client.username }} - Admin{% endblock %}
+
+{% block head %}
+<style>
+.product-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.product-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 11px 11px 0 0;
+}
+
+.product-content {
+    padding: 20px;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.product-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.client-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.client-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 2rem;
+    margin: 0 auto 15px;
+}
+
+.description-preview {
+    max-height: 60px;
+    overflow: hidden;
+    position: relative;
+}
+
+.description-preview.expanded {
+    max-height: none;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    margin-top: 5px;
+}
+
+@media (max-width: 768px) {
+    .product-actions {
+        justify-content: center;
+    }
+    
+    .product-meta {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Client Header -->
+    <div class="client-header">
+        <div class="client-avatar">
+            {{ client.username[0].upper() if client.username and client.username|length > 0 else 'U' }}
+        </div>
+        <h1 class="display-6 fw-bold mb-2">{{ client.username }}'s Products</h1>
+        <p class="lead mb-0">{{ client.email }}</p>
+        {% if client.organization %}
+        <p class="mb-0"><i class="bi bi-building me-2"></i>{{ client.organization }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Products Grid -->
+    {% if products %}
+    <div class="row">
+        {% for product in products %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">{{ product.application_name or product.name }}</h5>
+                            <small class="opacity-75">Created {{ product.created_at.strftime('%m/%d/%Y') }}</small>
+                        </div>
+                        <span class="status-badge 
+                            {% if product.status == 'completed' %}bg-success
+                            {% elif product.status == 'in_progress' %}bg-primary
+                            {% elif product.status == 'under_review' %}bg-info
+                            {% elif product.status == 'questions_done' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ product.status.replace('_', ' ') if product.status else 'Draft' }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="product-content">
+                    <!-- Product Details -->
+                    {% if product.description %}
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Description</h6>
+                        <div class="description-preview" id="desc-{{ product.id }}">
+                            {{ product.description }}
+                        </div>
+                        {% if product.description|length > 150 %}
+                        <button class="expand-btn" onclick="toggleDescription({{ product.id }})">
+                            <span id="toggle-text-{{ product.id }}">Show more</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Product Meta Information -->
+                    <div class="product-meta">
+                        {% if product.product_owner %}
+                        <div class="meta-item">
+                            <i class="bi bi-person-fill"></i>
+                            <span>{{ product.product_owner }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.business_criticality %}
+                        <div class="meta-item">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>{{ product.business_criticality }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.programming_language %}
+                        <div class="meta-item">
+                            <i class="bi bi-code-slash"></i>
+                            <span>{{ product.programming_language }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.cloud_platform %}
+                        <div class="meta-item">
+                            <i class="bi bi-cloud-fill"></i>
+                            <span>{{ product.cloud_platform }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="fw-bold text-primary">{{ product.responses|length if product.responses else 0 }}</div>
+                            <small class="text-muted">Responses</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-success">{{ product.overall_score or 'N/A' }}</div>
+                            <small class="text-muted">Score</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-info">{{ product.progress_percentage or 0 }}%</div>
+                            <small class="text-muted">Progress</small>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="product-actions">
+                        <a href="{{ url_for('admin_product_details', product_id=product.id) }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </a>
+                        <a href="{{ url_for('admin_product_results', product_id=product.id) }}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-bar-chart me-1"></i>View Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No Products State -->
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted mb-4"></i>
+        <h3 class="text-muted">No Products Found</h3>
+        <p class="text-muted">{{ client.username }} hasn't created any security assessment products yet.</p>
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('manage_clients') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Client Management
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-house me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+function toggleDescription(productId) {
+    const descElement = document.getElementById(`desc-${productId}`);
+    const toggleText = document.getElementById(`toggle-text-${productId}`);
+    
+    if (descElement.classList.contains('expanded')) {
+        descElement.classList.remove('expanded');
+        toggleText.textContent = 'Show more';
+    } else {
+        descElement.classList.add('expanded');
+        toggleText.textContent = 'Show less';
+    }
+}
+</script>
+{% endblock %}
