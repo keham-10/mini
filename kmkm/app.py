@@ -2185,12 +2185,7 @@ def client_question_chats():
         QuestionChat.is_active == True
     ).order_by(QuestionChat.updated_at.desc()).all()
     
-    # Count unread messages for each chat
-    for chat in chats:
-        chat.unread_messages_for_client = ChatMessage.query.filter_by(
-            chat_id=chat.id,
-            is_read_by_client=False
-        ).filter(ChatMessage.sender_id != user_id).count()
+    # The unread_messages_for_client property will handle the count automatically
     
     return render_template('client_question_chats.html', chats=chats)
 
@@ -3251,21 +3246,7 @@ def manage_clients():
     
     return render_template('admin_client_management.html', clients=clients, organizations=organizations)
 
-@app.route('/admin/client/<int:client_id>/products')
-@login_required('superuser')
-def admin_client_products(client_id):
-    # Get the client
-    client = User.query.get_or_404(client_id)
-    
-    # Ensure the user is a client
-    if client.role != 'client':
-        flash('Invalid client selected.', 'error')
-        return redirect(url_for('manage_clients'))
-    
-    # Get all products for this client
-    products = Product.query.filter_by(owner_id=client_id).order_by(Product.created_at.desc()).all()
-    
-    return render_template('admin_client_products.html', client=client, products=products)
+
 
 @app.route('/admin/manage_users')
 @login_required('superuser')

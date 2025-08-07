@@ -102,16 +102,16 @@
 </div>
 
 <!-- Enhanced Dashboard Statistics -->
-<div class="row g-4 mb-5">
+<div class="row g-4 mb-5 justify-content-center">
     <!-- Total Products Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6">
+    <div class="col-lg-4 col-md-6">
         <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Products</div>
+                        <div class="text-white small fw-bold text-uppercase mb-1">Total Products</div>
                         <div class="h2 mb-0 fw-bold text-white">{{ products|length }}</div>
-                        <div class="text-white-50 small">
+                        <div class="text-white small">
                             <i class="bi bi-trending-up me-1"></i>All assessments
                         </div>
                     </div>
@@ -124,14 +124,14 @@
     </div>
 
     <!-- In Progress Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6">
+    <div class="col-lg-4 col-md-6">
         <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <div class="text-white-50 small fw-bold text-uppercase mb-1">In Progress</div>
+                        <div class="text-white small fw-bold text-uppercase mb-1">In Progress</div>
                         <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('status', 'in', ['in_progress', 'under_review', 'needs_client_response'])|list|length }}</div>
-                        <div class="text-white-50 small">
+                        <div class="text-white small">
                             <i class="bi bi-clock me-1"></i>Active assessments
                         </div>
                     </div>
@@ -144,14 +144,14 @@
     </div>
 
     <!-- Completed Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6">
+    <div class="col-lg-4 col-md-6">
         <div class="card dashboard-stat-card h-100" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <div class="text-white-50 small fw-bold text-uppercase mb-1">Completed</div>
+                        <div class="text-white small fw-bold text-uppercase mb-1">Completed</div>
                         <div class="h2 mb-0 fw-bold text-white">{{ products|selectattr('status', 'equalto', 'completed')|list|length }}</div>
-                        <div class="text-white-50 small">
+                        <div class="text-white small">
                             <i class="bi bi-check-circle me-1"></i>Finished assessments
                         </div>
                     </div>
